@@ -1,7 +1,6 @@
 import json
 import datetime
 import logging
-
 from flask import request, jsonify, session
 from main_app.models.user.user import User
 from main_app.models.user.reward import Reward
@@ -40,7 +39,7 @@ except FileNotFoundError:
     # Fallback error messages if configuration file is missing
     error_messages = {
         "username_exists": "Username already exists",
-        "email_exists": "Email already exists", 
+        "email_exists": "Email already exists",
         "user_not_found": "User not found",
         "incorrect_password": "Incorrect password",
         "invalid_data": "Invalid or missing data",
@@ -71,8 +70,6 @@ def get_error(error_key):
         str: Corresponding error message or generic fallback
     """
     return error_messages.get(error_key, "An unexpected error occurred")
-
-
 
 # ==================
 

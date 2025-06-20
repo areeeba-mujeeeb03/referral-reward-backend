@@ -2,9 +2,7 @@ import uuid
 import datetime
 import smtplib
 from email.mime.text import MIMEText
-
 from twilio.base.values import unset
-
 from main_app.models.user.user import User
 from flask import request,jsonify
 

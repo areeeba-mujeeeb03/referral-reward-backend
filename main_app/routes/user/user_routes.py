@@ -76,7 +76,7 @@ def login_verify_otp():
 # ==============
 
 
-@user_bp.route("login/forgot_password", methods = ["POST"])
+@user_bp.route("/login/forgot_password", methods = ["POST"])
 def user_forgot_password():
     """
     Handle forgot password request - send reset link to email
@@ -139,7 +139,7 @@ def referrals(user_id):
 
 
 @user_bp.route("/my-rewards/<user_id>", methods = ["GET"])
-def register(user_id):
+def rewards(user_id):
     """
     Display user's earned rewards and points
     Accepts: GET request
@@ -157,7 +157,7 @@ def register(user_id):
 
 
 @user_bp.route("/profile/<user_id>", methods = ["GET"])
-def register(user_id):
+def profile(user_id):
     """
     Display and manage user profile information
     Accepts: GET request
