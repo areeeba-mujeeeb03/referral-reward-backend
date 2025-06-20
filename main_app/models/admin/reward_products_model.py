@@ -9,3 +9,6 @@ class Products(Document):
     expiry_date = DateTimeField(required = True)
 
     meta = {"collection" : "offers"}
+
+
+
