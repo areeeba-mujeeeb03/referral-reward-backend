@@ -16,3 +16,4 @@ class User(Document):
         if not self.admin_uid:
             self.admin_uid = f"AD_UID_{User.objects.count() + 1}"
         return super(User, self).save(*args, **kwargs)
+
