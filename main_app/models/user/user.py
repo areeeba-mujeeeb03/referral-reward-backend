@@ -1,4 +1,7 @@
-from mongoengine import *
+from xmlrpc.client import Boolean
+
+from bson.json_util import default
+from mongoengine import StringField, IntField, EmailField, Document, DateTimeField, BooleanField
 from main_app.utils.user.helpers import generate_tag_id, generate_invite_link
 
 class User(Document):
@@ -12,9 +15,14 @@ class User(Document):
     invitation_code = StringField()
     access_token = StringField()
     session_id = StringField()
+    referred_by = StringField(default=None)
+    joining_status = StringField(default="pending")
+    created_at = DateTimeField()
+    is_active = BooleanField()
     expiry_time = DateTimeField()
     otp = IntField()
     expires_at = DateTimeField()
+    login_count = IntField()
 
     meta = {'collection': 'users'}
 
