@@ -7,7 +7,8 @@ error_messages = {
   "registration_failed": "Registration failed",
   "login_failed": "Login failed",
   "missing_required_field": "Required field is missing",
-  "server_error": "Internal server error occurred"
+  "server_error": "Internal server error occurred",
+  "failed_to_update" : "Failed to Update referral status and reward points"
 }
 
 # { "FileNotFoundError": {

@@ -1,62 +1,3 @@
-# import datetime
-# import random
-# from twilio.rest import Client
-# from flask import request
-# from main_app.models.user.user import User
-
-
-# ##--------------------------------------OTP GENERATION AND VERIFICATION-------------------------------##
-# # -----------------------------------------------------Twilio--------------------------------------------------------##
-# TWILIO_PHONE_NUMBER = '+13253356908'
-# TWILIO_ACCOUNT_SID = 'AC6d5d2ae07a30dfe9f2a2d2d2339ec05c'
-# TWILIO_access_token = 'ba25186ce60d719aaaf91acd54d9c6e3'
-# # sent_otp = 123456
-# twilio_client = Client(TWILIO_ACCOUNT_SID, TWILIO_access_token)
-# try:
-#     client = Client(TWILIO_ACCOUNT_SID, TWILIO_access_token)
-#     client.api.accounts(TWILIO_ACCOUNT_SID).fetch()
-#     print("Authentication successful!")
-# except Exception as e:
-#     print(f"Authentication failed: {e}")
-
-# def generate_and_send_otp():
-#     data = request.json
-#     mobile_number = data.get("mobile_number")
-#     user = User.objects(mobile_number=mobile_number).first()
-
-#     if not user:
-#         return ({"success": False, "message": "User not registered"}), 400
-
-#     sent_otp = f"{random.randint(100000, 999999)}"
-#     sent_otp = 123456
-
-
-#     return sent_otp
-
-# def verify_user_otp():
-#     data = request.json
-#     mobile_number = data.get("mobile_number")
-#     otp_input = int(data.get("otp_input"))
-#     user = User.objects(mobile_number = mobile_number).first()
-#     if not user:
-#         return ({"success": False, "message": "User not found"}), 404
-
-#     if not otp_input or type(otp_input) != int or not user.otp or not user.expires_at:
-#         return ({"success": False, "message": "OTP not found"}), 400
-
-#     if otp_input != user.otp:
-#         return ({"success": False, "message": "Invalid OTP"}), 400
-
-#     if datetime.datetime.now() > user.expires_at:
-#         return ({"success": False, "message": "OTP expired"}), 400
-
-#     User.objects(user_id="WE_UID_1").update(unset__otp=1, unset__expires_at=1)
-
-#     return ({"success": True, "message": "OTP Verified Successfully"}), 400
-
-
-
-
 import datetime
 import random
 import logging
@@ -64,6 +5,8 @@ import os
 from twilio.rest import Client
 from twilio.base.exceptions import TwilioException
 from flask import request, jsonify
+
+from main_app.controllers.user.referral_controllers import update_referral_status_and_reward
 from main_app.models.user.user import User
 
 # =============
@@ -85,7 +28,7 @@ TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN', 'ba25186ce60d719aaaf91acd54d9
 OTP_LENGTH = 6
 OTP_EXPIRY_MINUTES = 5
 MAX_OTP_ATTEMPTS = 3
-OTP_RATE_LIMIT_MINUTES = 1  # Minimum time between OTP requests
+OTP_RATE_LIMIT_MINUTES = 1  \
 
 # Development mode flag - set to False in production
 DEVELOPMENT_MODE = os.getenv('FLASK_ENV') == 'development'
@@ -460,7 +403,14 @@ def verify_user_otp():
                     "success": False,
                     "message": "Maximum OTP attempts exceeded. Please request a new OTP."
                 }), 429
-        
+
+        referee = User.objects(mobile_number = mobile_number).first()
+        referrer = referee.referred_by
+        if referrer:
+            referee_id = referee.user_id
+            referrer_id = User.objects(user_id = referrer).first()
+            update_referral_status_and_reward(referrer_id, referee_id)
+
         # Step 9: OTP is valid - clear it from database
         user.update(
             unset__otp=1,

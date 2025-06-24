@@ -19,7 +19,10 @@ def hash_tag_id(username, mobile_number):
     byte_tag_id = tag_id.encode('utf-8')
     salt = bcrypt.gensalt()
     hashed_tag_id = bcrypt.hashpw(byte_tag_id, salt)
-    return hashed_tag_id.decode('utf-8') , tag_id
+    return hashed_tag_id.decode('utf-8'), tag_id
+
+def verify_tag_id(tag_id: str, hashed: str) -> bool:
+    return bcrypt.checkpw(tag_id.encode('utf-8'), hashed.encode('utf-8'))
 
 def hash_password(password):
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
