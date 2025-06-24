@@ -120,7 +120,7 @@ def my_profile():
         data = request.json()
         user_id = data.get("user_id")
         user = User.objects(user_id = user_id).first()
-
+ 
         if not user_id:
             return jsonify({"message" : "Unauthorized User"})
         if not user :

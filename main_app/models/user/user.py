@@ -8,7 +8,7 @@ class User(Document):
     user_id = StringField(required=True, unique=True)
     username = StringField(required=True, unique=True)
     email = EmailField(required=True, unique=True)
-    mobile_number = IntField(required=True, unique=True)
+    mobile_number = StringField(required=True, unique=True)
     password = StringField(required=True)
     tag_id = StringField()
     invitation_link = StringField()

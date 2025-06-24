@@ -218,8 +218,7 @@ def generate_invite_link_with_expiry(tag_id):
     existing = User.objects(tag_id=tag_id).first()
     if existing:
         return jsonify({"message": "Link already exists", "link": existing.invitation_link}), 200
-
-    now = datetime.datetime.utcnow()
+    now = datetime.datetime.now()
     gen_str = int(now.strftime("%Y%m%d%H%M%S"))
     expiry_time = now + datetime.timedelta(hours=5)
     exp_str = int(expiry_time.strftime("%Y%m%d%H%M%S"))

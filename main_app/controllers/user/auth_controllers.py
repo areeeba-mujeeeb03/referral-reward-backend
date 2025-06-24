@@ -1,5 +1,6 @@
 import datetime
 import logging
+import re
 from flask import request, jsonify, session
 from main_app.models.user.user import User
 from main_app.controllers.user.referral_controllers import (process_referral_code_and_reward, initialize_user_records)
@@ -72,6 +73,14 @@ def handle_registration():
         if email_validation:
             return email_validation
             
+
+        if not re.match(r'^\d{10}$',data["mobile_number"]):
+            return jsonify({"error": "Mobile must be 10 digits"}), 400
+
+        if data["password"] != data["confirm_password"]:
+            return jsonify({"error": "Password and Confirm Password do not match"}), 400
+
+
         password_validation = _validate_password_strength(data["password"])
         if password_validation:
             return password_validation
@@ -170,7 +179,11 @@ def _validate_email_format(email):
         Flask Response or None: Error response if invalid, None if valid
     """
     import re
-    email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    
+
+    email_pattern = r'^[a-zA-Z0-9._%+-]+@gmail\.com$'
+    # email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+
     if not re.match(email_pattern, email):
         logger.warning(f"Invalid email format provided: {email}")
         return jsonify({"error": "Invalid email format"}), 400
