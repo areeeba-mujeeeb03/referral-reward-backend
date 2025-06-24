@@ -5,4 +5,4 @@ class UserData(Document):
     total_referrals = IntField()
     succeccful_referrals = IntField()
 
-    meta = {"collection" : ""}
+    meta = {"db_alias" : "admin-db", "collection" : "user_data"}

@@ -8,7 +8,7 @@ class Products(Document):
     start_date = DateTimeField(required = True)
     expiry_date = DateTimeField(required = True)
 
-    meta = {"collection" : "offers"}
+    meta = {"db_alias" : "admin-db", "collection" : "offers"}
 
 
 

@@ -24,7 +24,7 @@ class User(Document):
     expires_at = DateTimeField()
     login_count = IntField()
 
-    meta = {'collection': 'users'}
+    meta = {"db" : "user-db", 'collection': 'users'}
 
     def save(self, *args, **kwargs):
         if not self.user_id:

@@ -1,10 +1,22 @@
 from flask import Flask, Blueprint
+from main_app.controllers.admin.admin_auth_controller import admin_register
 from main_app.controllers.admin.admin_auth_controller import handle_admin_login
 from main_app.controllers.admin.forgotpassword_controllers import forgot_password, reset_password
 from main_app.controllers.admin.profile_controllers import edit_profile_data
 
 
 admin_bp = Blueprint("admin_routes", __name__)
+
+
+# Admin Register
+
+@admin_bp.route("/admin/register", methods=["POST"])
+def register_Admin():
+    """
+    Handle admin register using email and password
+    Accepts: POST request with email and password
+    """
+    return admin_register()
 
 
 # ============
@@ -30,7 +42,7 @@ def login_email():
 # ==============
 
 
-@admin_bp.route("login/forgot_password", methods = ["POST"])
+@admin_bp.route("/login/forgot_password", methods = ["POST"])
 def user_forgot_password():
     """
     Handle forgot password request - send reset link to email
@@ -49,7 +61,7 @@ def user_reset_password(token):
     """
     return reset_password(token)
 
-@admin_bp.route("edit/<admin_uid>", methods = ["POST"])
+@admin_bp.route("/edit/<admin_uid>", methods = ["POST"])
 def edit_profile(admin_uid):
     """
     Handle profile data updates like username, email

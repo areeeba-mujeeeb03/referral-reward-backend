@@ -10,4 +10,4 @@ class Reward(Document):
     discount_coupons = ListField(DictField())
     reward_history = ListField(DictField())
 
-    meta = {'collection' : 'rewards'}
+    meta = {"db" : "user_db", 'collection' : 'rewards'}

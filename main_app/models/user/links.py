@@ -7,4 +7,4 @@ class Link(Document):
     sent_at  = DateTimeField()
     changed_on = DateTimeField()
 
-    meta = {"collection"  : "links"}
+    meta = {"db" : "user-db" ,"collection"  : "links"}
