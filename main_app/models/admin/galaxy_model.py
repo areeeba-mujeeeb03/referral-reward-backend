@@ -6,6 +6,3 @@
 #     all_galaxies = ListField(DictField)
 #
 #     meta = {'collection': 'galaxy_milestones'}
-
-
-

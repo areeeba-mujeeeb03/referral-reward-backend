@@ -4,6 +4,7 @@ import smtplib
 from email.mime.text import MIMEText
 from twilio.base.values import unset
 from main_app.models.user.user import User
+from main_app.models.user.links import Link
 from flask import request,jsonify
 
 
@@ -12,9 +13,14 @@ def forgot_password():
     email = data.get("email")
     password_reset_token = str(uuid.uuid4())
     expiry = datetime.datetime.now() + datetime.timedelta(minutes=30)
-
-    User.update(token = password_reset_token, expiry = expiry)
-    reset_link = f"http://127.0.0.1:4000/reset-password/{password_reset_token}"
+    user = User.objects(email = email).first()
+    link = Link(
+        user_id = user.user_id,
+        token = password_reset_token,
+        expiry = expiry,
+        sent_at = datetime.datetime.now()
+    ).save()
+    reset_link = f"http://127.0.0.1:5000/login/reset-password/{password_reset_token}"
     email_body = (f"To change your password click on the link below/n"
                   f"{reset_link}")
     try:
@@ -36,17 +42,18 @@ def reset_password(token):
     new_password = data.get("new_password")
 
     user = User.objects(email = email).first()
-
+    link = Link.objects(user_id = user.user_id).first()
     if not user:
         return jsonify({"message": "Invalid reset link"}), 404
 
-    tokens = user.get("token")
-    expiry = user.get("password_token_expires")
+    tokens = link.token
+    expiry = link.expiry
+
     if token !=  tokens:
         return jsonify({"error": "Unauthorized"}), 404
     if not expiry or datetime.datetime.now() > expiry:
         return jsonify({"message": "Reset link expired"}), 404
 
     user.update(set__password = new_password)
-    user.update(unset__token =  True, unset__expiry = True)
+    link.update(unset__token =  True, unset__expiry = True, set__changed_on = datetime.datetime.now())
     return jsonify({"message": "Password updated successfully!"}), 201

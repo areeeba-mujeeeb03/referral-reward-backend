@@ -1,8 +1,11 @@
-from flask import Flask, Blueprint
-from main_app.controllers.user.auth_controllers import handle_registration, handle_email_login
+from flask import Blueprint
+from main_app.controllers.user.auth_controllers import handle_registration
+from main_app.controllers.user.OTP_controllers import generate_and_send_otp, verify_user_otp
+from main_app.controllers.user.login_controllers import handle_email_login, logout_user
 from main_app.controllers.user.forgotpassword_controllers import reset_password, forgot_password
-from main_app.utils.user.otp import generate_and_send_otp, verify_user_otp
-from main_app.controllers.user.langingpage_controllers import home_page, my_rewards, my_referrals, my_profile, home_page
+from main_app.controllers.user.langingpage_controllers import my_rewards, my_referrals, my_profile, home_page
+from main_app.controllers.user.referral_controllers import handle_invitation_visit, generate_invite_link_with_expiry
+from main_app.utils.user.string_encoding import decode
 
 user_bp = Blueprint("user_routes", __name__)
 
@@ -85,7 +88,7 @@ def user_forgot_password():
     """
     return forgot_password()
 
-@user_bp.route("/login/reset_password/<token>", methods = ["POST"])
+@user_bp.route("/login/reset-password/<token>", methods = ["POST"])
 def user_reset_password(token):
     """
     Handle password reset using token from email
@@ -103,16 +106,15 @@ def user_reset_password(token):
 # ====================
 
 
-@user_bp.route("/home/<user_id>", methods = ["GET"])
-def home(user_id):
+@user_bp.route("/home", methods = ["POST"])
+def home():
     """
     Display user's home/dashboard page
-    Accepts: GET request
+    Accepts: POST request
     Args: user_id (str) - Unique identifier for user
     Returns: User's home page data
     """
-    return home_page(user_id)
-
+    return home_page()
 
 # ====================
 
@@ -121,15 +123,15 @@ def home(user_id):
 # ====================
 
 
-@user_bp.route("/my-referrals/<user_id>", methods = ["GET"])
-def referrals(user_id):
+@user_bp.route("/my-referrals", methods = ["POST"])
+def referrals():
     """
     Display user's referral information and statistics
-    Accepts: GET request
+    Accepts: POST request
     Args: user_id (str) - Unique identifier for user
     Returns: User's referral data and history
     """
-    return my_referrals(user_id)
+    return my_referrals()
 
 # ====================
 
@@ -138,15 +140,15 @@ def referrals(user_id):
 # ====================
 
 
-@user_bp.route("/my-rewards/<user_id>", methods = ["GET"])
-def rewards(user_id):
+@user_bp.route("/my-rewards", methods = ["POST"])
+def rewards():
     """
     Display user's earned rewards and points
-    Accepts: GET request
+    Accepts: POST request
     Args: user_id (str) - Unique identifier for user
     Returns: User's rewards and points data
     """
-    return my_rewards(user_id)
+    return my_rewards()
 
 
 # ====================
@@ -156,15 +158,15 @@ def rewards(user_id):
 # ====================
 
 
-@user_bp.route("/profile/<user_id>", methods = ["GET"])
-def profile(user_id):
+@user_bp.route("/profile", methods = ["POST"])
+def profile():
     """
     Display and manage user profile information
-    Accepts: GET request
-    Args: user_id (str) - Unique identifier for user
+    Accepts: POST request
+     (str) - Unique identifier for user
     Returns: User's profile data for viewing/editing
     """
-    return my_profile(user_id)
+    return my_profile()
 
 @user_bp.route("/referral/update", methods=["POST"])
 def update_referral():
@@ -175,3 +177,41 @@ def update_referral():
     """
     # Logic to update referral information goes here
     return update_referral()
+
+@user_bp.route("/logout", methods=["POST"])
+def logout():
+    """
+    unsets access token, session_id and expiry_time
+    Accepts: POST request with user_id
+    Returns: Confirmation of logout
+    """
+    # Logic to update referral information goes here
+    return logout_user()
+
+@user_bp.route("/wealth-elite/share-link/<tag_id>", methods=['POST'])
+def generate_invite_link(tag_id):
+    """
+    generates invitation link
+    Accepts: POST request
+    Returns: Confirmation of registration
+    """
+    return generate_invite_link_with_expiry(tag_id)
+
+@user_bp.route("/wealth-elite/referral-program/invite_link/<encoded_gen_str>/<tag_id>/<encoded_exp_str>", methods=["POST"])
+def visit_invitation_link(encoded_gen_str, tag_id, encoded_exp_str):
+    """
+    handles the visit on invitation link
+    Accepts: POST request
+    Returns: Confirmation of registration
+    """
+    return handle_invitation_visit(encoded_gen_str, tag_id, encoded_exp_str)
+
+
+@user_bp.route("/decode_encoded_string", methods=["POST"])
+def decode_str():
+    """
+    decodes the str in key and valyes
+    Accepts: POST request
+    Returns: Confirmation of registration
+    """
+    return decode()
