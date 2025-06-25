@@ -1,9 +1,9 @@
 from flask import Flask, Blueprint
 from main_app.controllers.admin.admin_auth_controller import admin_register
 from main_app.controllers.admin.admin_auth_controller import handle_admin_login
-from main_app.controllers.admin.forgotpassword_controllers import forgot_password, reset_password
+from main_app.controllers.admin.forgotpassword_controllers import forgot_otp_email, verify_otp, reset_password
 from main_app.controllers.admin.profile_controllers import edit_profile_data
-
+# from main_app.controllers.admin.forgotpassword_controllers import verify_otp
 
 admin_bp = Blueprint("admin_routes", __name__)
 
@@ -42,24 +42,28 @@ def login_email():
 # ==============
 
 
-@admin_bp.route("/login/forgot_password", methods = ["POST"])
+@admin_bp.route("/admin/login/forgot_password", methods = ["POST"])
 def user_forgot_password():
     """
     Handle forgot password request - send reset link to email
     Accepts: POST request with email address
     Returns: Password reset link sent confirmation
     """
-    return forgot_password()
+    return forgot_otp_email()
 
-@admin_bp.route("/login/reset_password/<token>", methods = ["POST"])
-def user_reset_password(token):
+@admin_bp.route("/admin/forgot/verify_otp", methods = ["POST"])
+def forget_otp_verify():
+    return verify_otp()
+
+@admin_bp.route("/admin/login/reset_password", methods = ["POST"])
+def user_reset_password():
     """
     Handle password reset using token from email
     Accepts: POST request with new password and reset token
     Args: token (str) - Password reset token from email
     Returns: Password reset confirmation response
     """
-    return reset_password(token)
+    return reset_password()
 
 @admin_bp.route("/edit/<admin_uid>", methods = ["POST"])
 def edit_profile(admin_uid):

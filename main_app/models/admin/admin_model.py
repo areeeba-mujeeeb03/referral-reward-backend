@@ -9,7 +9,7 @@ class Admin(Document):
     password = StringField(required=True)
     access_token = StringField()
     session_id = StringField()
-    # expiry_time = DateTimeField()
+    expiry_time = DateTimeField()
     # OTP Fields
     otp = StringField()
     otp_expiry = DateTimeField()
