@@ -320,7 +320,7 @@ def verify_user_otp():
         
         mobile_number = data.get("mobile_number", "").strip()
         otp_input = data.get("otp_input")
-        
+
         # Step 2: Validate required fields
         if not mobile_number or otp_input is None:
             logger.warning("OTP verification with missing required fields")
@@ -351,6 +351,10 @@ def verify_user_otp():
                 "success": False,
                 "message": "User not found"
             }), 404
+        is_member = user.is_member
+
+        if not is_member == True:
+            return "Need to purchase before logging in!"
         
         # Step 5: Check if OTP exists
         if not hasattr(user, 'otp') or user.otp is None:
@@ -466,7 +470,7 @@ def _check_otp_attempts(user):
 
 # ==============
 
-def cleanup_expired_otps():
+def cleanup_expired_otp():
     """
     Utility function to clean up expired OTPs from database
     This should be run periodically as a background job

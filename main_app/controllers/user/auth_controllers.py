@@ -252,30 +252,46 @@ def _check_user_conflicts(username, email):
 # ==================
 
 
-def validate_session_token(access_token):
+import datetime
+
+
+import datetime
+
+def validate_session_token(user_id, access_token, session_id):
     """
-    Validate if access token is still valid and not expired
-    
-    Args:
-        access_token (str): Access token to validate
-        
+    Validate if access token is valid, not expired, and tied to the correct session.
+
     Returns:
-        tuple: (is_valid: bool, user: User or None, error_message: str or None)
+        tuple: (is_valid: bool, user: User or None, error_message: str or None, status_code: int)
     """
     try:
+        if not user_id:
+            return False, None, "User ID is required", 400
+
         if not access_token:
-            return False, None, "Access token is required"
-        
-        user = User.objects(access_token=access_token).first()
+            return False, None, "Access token is required", 400
+
+        if not session_id:
+            return False, None, "Session ID is required", 400
+
+        user = User.objects(user_id=user_id).first()
+
         if not user:
-            return False, None, "Invalid access token"
-        
+            return False, None, "User not found", 404
+
+        if user.access_token != access_token:
+            return False, None, "Invalid access token", 401
+
+        if user.session_id != session_id:
+            return False, None, "Session mismatch or invalid session", 403
+
         if hasattr(user, 'expiry_time') and user.expiry_time:
             if datetime.datetime.now() > user.expiry_time:
-                return False, None, "Access token has expired"
-        
-        return True, user, None
-        
+                return False, None, "Access token has expired", 401
+
+        return True, user, None, 200
+
     except Exception as e:
         logger.error(f"Token validation error: {str(e)}")
-        return False, None, "Token validation failed"
+        return False, None, "Token validation failed", 500  # ✅ always return 4 values
+

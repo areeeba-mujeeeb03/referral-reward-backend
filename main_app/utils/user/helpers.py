@@ -41,7 +41,6 @@ def create_user_session(user_id):
     session['session_id'] = session_id
     session['user_id'] = user_id
 
-
     session_data = {
         "session_id": session_id,
         "created_at": datetime.datetime.now()

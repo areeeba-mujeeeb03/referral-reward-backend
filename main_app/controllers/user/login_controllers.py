@@ -19,6 +19,20 @@ SESSION_EXPIRY_MINUTES = 30
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
+
+def product_purchase():
+    data = request.get_json()
+    user_id = data.get("user_id")
+
+    user = User.objects(user_id = user_id).first()
+    if not user :
+        return jsonify({"message": "User not Found", "success" : False}), 404
+
+    user.update(
+        set__is_member = True
+    )
+    return jsonify({"message" : "Purchase Done", "success" : True}), 200
 # ==================
 
 # User Authentication Controllers
@@ -73,9 +87,15 @@ def handle_email_login():
 
         # Step 3: Find user by email
         user = User.objects(email=email).first()
+
         if not user:
             logger.warning(f"Login attempt with unknown email: {email}")
             return jsonify({"error": get_error("user_not_found")}), 404
+
+        is_member = user.is_member
+
+        if not is_member == True:
+            return "Need to purchase before logging in!"
 
         # Step 4: Check if account is active
         if hasattr(user, "is_active") and not user.is_active:
@@ -110,8 +130,8 @@ def handle_email_login():
         logger.info(f"Successful login for user: {user.user_id}")
         return jsonify({
             "message": "Logged in successfully",
-            "access_token": access_token,
-            "session_id": session_id,
+            "mode": access_token,
+            "log_alt": session_id,
             "user_id": user.user_id,
             "username": user.username,
             "email": user.email,

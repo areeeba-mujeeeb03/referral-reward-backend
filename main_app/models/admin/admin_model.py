@@ -1,5 +1,4 @@
 from mongoengine import StringField, Document, EmailField, DateTimeField
-import datetime
 
 class User(Document):
     admin_uid = StringField(required=True, unique=True)
@@ -10,7 +9,7 @@ class User(Document):
     session_id = StringField()
     expiry_time = DateTimeField()
 
-    meta = {'collection': 'admin'}
+    meta = {"db_alias" : "admin-db", 'collection': 'admin'}
 
     def save(self, *args, **kwargs):
         if not self.admin_uid:

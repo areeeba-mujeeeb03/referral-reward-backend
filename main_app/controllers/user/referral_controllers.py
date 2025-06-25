@@ -172,83 +172,13 @@ def initialize_user_records(user_id):
         logger.error(f"Failed to initialize user records for {user_id}: {str(e)}")
         # This is non-critical, so we don't fail the registration
 
-# ==================
-
-# Special invitation link with expiry
-
-# ==================
-
-##-------------------------------------Encryption of timestamp-----------------------------------------------##
-def encode_timestamp(number):
-    if not isinstance(number, int):
-        raise TypeError("Input must be an integer.")
-
-    alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    base = len(alphabet)
-
-    if number == 0:
-        return alphabet[0]
-
-    encoded_string = ""
-    while number > 0:
-        remainder = number % base
-        encoded_string = alphabet[remainder] + encoded_string
-        number //= base
-    return encoded_string
-
-
-##-------------------------------------Decryption of timestamp-----------------------------------------------##
-def decode_timestamp(encoded_string):
-    alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    base = len(alphabet)
-    number = 0
-    for char in encoded_string:
-        number = number * base + alphabet.index(char)
-    return number
-
-##---------------------------GENERATION OF INVITATION LINK------------------------------------------##
-def generate_invite_link_with_expiry(tag_id):
-    """Args:
-        tag_id (str): ID of the user referring
-    """
-    user = User.objects(tag_id=tag_id).first()
-    if not user:
-        return jsonify({"message": "Invalid tag ID"}), 404
-
-    existing = User.objects(tag_id=tag_id).first()
-    if existing:
-        return jsonify({"message": "Link already exists", "link": existing.invitation_link}), 200
-
-    now = datetime.datetime.utcnow()
-    gen_str = int(now.strftime("%Y%m%d%H%M%S"))
-    expiry_time = now + datetime.timedelta(hours=5)
-    exp_str = int(expiry_time.strftime("%Y%m%d%H%M%S"))
-
-    encoded_gen_str = encode_timestamp(gen_str)
-    encoded_exp_str = encode_timestamp(exp_str)
-
-    base_url = "http://127.0.0.1:4000/wealth-elite/referral-program/invite_link"
-    invitation_link = f"{base_url}/{encoded_gen_str}/{tag_id}/{encoded_exp_str}"
-
-    user(
-        tag_id=tag_id,
-        invitation_link=invitation_link,
-        generation_time=gen_str,
-        link_expiry_time=exp_str,
-        created_at=now
-    ).save()
-
-    return jsonify({
-        "message": "Hi, I use the Wealth Elite software."
-                "Join Wealth Elite by accepting my invitation and get offers on their products"
-                f"Use my invitation link : {invitation_link}"})
-
 
 # ==================
 
 # Handles rewards for special offer
 
 # ==================
+
 def reward_referrer_by_tag(tag_id: str):
     user = User.objects(tag_id=tag_id).first()
     if not user:
@@ -273,7 +203,7 @@ def reward_referrer_by_tag(tag_id: str):
         "earned_by_action": "link_visit",
         "earned_meteors": SUCCESS_REFERRAL_REWARD_POINTS,
         "referral_status": "Visited",
-        "referred_user_id": "anonymous",
+        "referred_user_id": f"{tag_id}",
         "referred_on": datetime.datetime.utcnow(),
         "transaction_type": "credit"
     })
@@ -286,6 +216,7 @@ def handle_invitation_visit(encoded_gen_str, tag_id, encoded_exp_str):
         encoded_gen_str : generation time of link
         encoded_exp_str : expiry time of link
     """
+
     try:
         decoded_gen_str = decode_timestamp(encoded_gen_str)
         decoded_exp_str = decode_timestamp(encoded_exp_str)

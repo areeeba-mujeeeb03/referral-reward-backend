@@ -1,58 +1,28 @@
 import bcrypt
-from flask import request, jsonify
-from main_app.models.user.user import User
 
-def generate_encoded_string(data: dict, fields_to_encode: list) -> str:
-    parts = []
+def generate_encoded_string(info: dict, fields_to_encode: list):
+    # Step 1: Extract values
+    values = [str(info.get(field, "")) for field in fields_to_encode]
 
-    for field in fields_to_encode:
-        value = data.get(field)
+    # Step 2: Add special characters before each value
+    original_string = "".join([f"#$" + val for val in values])
 
-        if type(value) == str:
-            parts.append("#$" + value)
-        elif type(value) == list:
-            for item in value:
-                parts.append("#$" + str(item))
-        elif type(value) == dict:
-            for key in value:
-                parts.append("#$" + str(key) + ":" + str(value[key]))
-        elif value is not None:
-            parts.append("#$" + str(value))
+    # Step 3: Reverse the string
+    reversed_string = original_string[::-1]
 
-    final_string = " ".join(parts)
+    # Step 4: Hash with bcrypt
+    encrypted_string = bcrypt.hashpw(reversed_string.encode(), bcrypt.gensalt()).decode()
 
-    hashed = bcrypt.hashpw(final_string.encode(), bcrypt.gensalt(rounds=12)).decode()
-    reversed_hash = hashed[::-1]
+    # Step 5: Reverse the encrypted string again
+    final_string = encrypted_string[::-1]
 
-    return reversed_hash
+    # Step 6: Map each encoded field to R1, R2
+    result_parts = {}
+    for i, field in enumerate(fields_to_encode):
+        result_parts[f"R{i + 1}"] = info.get(field, "")
 
-def decode():
-    try:
-        data = request.get_json()
-        encoded = data.get('encoded_string')
-        parts = int(data.get('parts'))
-
-        if not encoded:
-            return jsonify({"success": False, "error": "No 'encoded_string' provided"}), 400
-
-        reversed_back = encoded[::-1]
-        length = len(reversed_back)
-        part_size = (length + 3) // 4
-
-        # result = {
-        #     "R1": reversed_back[0:part],
-        #     "R2": reversed_back[part:part * 2],
-        #     "R3": reversed_back[part * 2:part * 3],
-        #     "R4": reversed_back[part * 3:]
-        # }
-        result = {}
-        for i in range(parts):
-            start = i * part_size
-            end = start + part_size
-            result[f"R{i + 1}"] = reversed_back[start:end]
-
-        return jsonify({"success": True, "decoded_parts": result}), 200
-
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
-
+    return {
+        "original_string": original_string,
+        "final_string": final_string,
+        "parts": result_parts
+    }

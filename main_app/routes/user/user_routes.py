@@ -1,11 +1,13 @@
+from itertools import product
+
 from flask import Blueprint
 from main_app.controllers.user.auth_controllers import handle_registration
 from main_app.controllers.user.OTP_controllers import generate_and_send_otp, verify_user_otp
-from main_app.controllers.user.login_controllers import handle_email_login, logout_user
+from main_app.controllers.user.login_controllers import handle_email_login, logout_user, product_purchase
 from main_app.controllers.user.forgotpassword_controllers import reset_password, forgot_password
 from main_app.controllers.user.langingpage_controllers import my_rewards, my_referrals, my_profile, home_page
-from main_app.controllers.user.referral_controllers import handle_invitation_visit, generate_invite_link_with_expiry
-from main_app.utils.user.string_encoding import decode
+from main_app.controllers.user.referral_controllers import handle_invitation_visit
+from main_app.controllers.user.invite import send_whatsapp_invite, send_telegram_invite, send_twitter_invite, send_facebook_invite
 
 user_bp = Blueprint("user_routes", __name__)
 
@@ -27,6 +29,19 @@ def register():
     return handle_registration()
 
 
+# =============
+
+# Purchase product
+
+# =============
+@user_bp.route("/purchase", methods=["POST"])
+def purchase():
+    """
+    handles the visit on wealth elite product purchase
+    Accepts: POST request
+    Returns: Confirmation of purchase
+    """
+    return product_purchase()
 
 # =============
  
@@ -98,13 +113,27 @@ def user_reset_password(token):
     """
     return reset_password(token)
 
+# ====================
+
+# Logout
+
+# ====================
+
+@user_bp.route("/logout", methods=["POST"])
+def logout():
+    """
+    unsets access token, session_id and expiry_time
+    Accepts: POST request with user_id
+    Returns: Confirmation of logout
+    """
+    # Logic to update referral information goes here
+    return logout_user()
 
 # ==================== 
 
 # Landing Page APIs 
 
 # ====================
-
 
 @user_bp.route("/home", methods = ["POST"])
 def home():
@@ -168,6 +197,8 @@ def profile():
     """
     return my_profile()
 
+
+
 @user_bp.route("/referral/update", methods=["POST"])
 def update_referral():
     """
@@ -178,24 +209,15 @@ def update_referral():
     # Logic to update referral information goes here
     return update_referral()
 
-@user_bp.route("/logout", methods=["POST"])
-def logout():
-    """
-    unsets access token, session_id and expiry_time
-    Accepts: POST request with user_id
-    Returns: Confirmation of logout
-    """
-    # Logic to update referral information goes here
-    return logout_user()
 
-@user_bp.route("/wealth-elite/share-link/<tag_id>", methods=['POST'])
-def generate_invite_link(tag_id):
-    """
-    generates invitation link
-    Accepts: POST request
-    Returns: Confirmation of registration
-    """
-    return generate_invite_link_with_expiry(tag_id)
+# @user_bp.route("/wealth-elite/share-link/<tag_id>", methods=['POST'])
+# def generate_invite_link(tag_id):
+#     """
+#     generates invitation link
+#     Accepts: POST request
+#     Returns: Confirmation of registration
+#     """
+#     return generate_invite_link_with_expiry(tag_id)
 
 @user_bp.route("/wealth-elite/referral-program/invite_link/<encoded_gen_str>/<tag_id>/<encoded_exp_str>", methods=["POST"])
 def visit_invitation_link(encoded_gen_str, tag_id, encoded_exp_str):
@@ -206,12 +228,44 @@ def visit_invitation_link(encoded_gen_str, tag_id, encoded_exp_str):
     """
     return handle_invitation_visit(encoded_gen_str, tag_id, encoded_exp_str)
 
+# ====================
 
-@user_bp.route("/decode_encoded_string", methods=["POST"])
-def decode_str():
+# Invitation Links
+
+# ====================
+
+@user_bp.route("/send-whatsapp-invite", methods=["POST"])
+def send_link_on_whatsapp():
     """
-    decodes the str in key and valyes
+    handles sending invitation link on Whatsapp
     Accepts: POST request
-    Returns: Confirmation of registration
+    Redirects : on WhatsApp with pre-typed message
     """
-    return decode()
+    return send_whatsapp_invite()
+
+@user_bp.route("/send-twitter-invite", methods=["POST"])
+def send_link_on_twitter():
+    """
+    handles sending invitation link on Twitter
+    Accepts: POST request
+    Redirects : on Twitter with pre-typed message
+    """
+    return send_twitter_invite()
+
+@user_bp.route("/send-telegram-invite", methods=["POST"])
+def send_link_on_telegram():
+    """
+    handles sending invitation link on telegram
+    Accepts: POST request
+    Redirects : on Telegram with pre-typed message
+    """
+    return send_telegram_invite()
+
+@user_bp.route("/send-facebook-invite", methods=["POST"])
+def send_link_on_facebook():
+    """
+    handles sending invitation link on facebook
+    Accepts: POST request
+    Redirects : on facebook with invite-link NO pre-typed message
+    """
+    return send_facebook_invite()
