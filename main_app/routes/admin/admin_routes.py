@@ -3,7 +3,7 @@ from main_app.controllers.admin.admin_auth_controller import admin_register
 from main_app.controllers.admin.admin_auth_controller import handle_admin_login
 from main_app.controllers.admin.forgotpassword_controllers import forgot_otp_email, verify_otp, reset_password
 from main_app.controllers.admin.profile_controllers import edit_profile_data
-# from main_app.controllers.admin.forgotpassword_controllers import verify_otp
+from main_app.controllers.admin.product_controllers import add_product
 
 admin_bp = Blueprint("admin_routes", __name__)
 
@@ -53,17 +53,44 @@ def user_forgot_password():
 
 @admin_bp.route("/admin/forgot/verify_otp", methods = ["POST"])
 def forget_otp_verify():
-    return verify_otp()
+     """
+    Handle verify otp request - send to email
+    Accepts: POST request with email
+    Returns: Password reset confirmation response
+     """
+     return verify_otp()
 
 @admin_bp.route("/admin/login/reset_password", methods = ["POST"])
 def user_reset_password():
     """
-    Handle password reset using token from email
-    Accepts: POST request with new password and reset token
-    Args: token (str) - Password reset token from email
+    Handle password reset using code(otp) from email
+    Accepts: POST request with new password and reset 
     Returns: Password reset confirmation response
     """
     return reset_password()
+
+
+
+@admin_bp.route("/admin/add_product", methods = ["POST"])
+def admin_add_product():
+    """
+    Handle password reset using code(otp) from email
+    Accepts: POST request with new password and reset 
+    Returns: Password reset confirmation response
+    """
+    return add_product()
+
+
+
+
+
+
+
+
+
+
+
+
 
 @admin_bp.route("/edit/<admin_uid>", methods = ["POST"])
 def edit_profile(admin_uid):
