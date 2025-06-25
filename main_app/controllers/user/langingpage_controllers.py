@@ -6,6 +6,7 @@ from main_app.utils.user.error_handling import get_error
 import logging
 from flask import request, jsonify
 from main_app.utils.user.string_encoding import generate_encoded_string
+from main_app.controllers.user.auth_controllers import validate_session_token
 
 
 # Configure logging for better debugging and monitoring
@@ -16,15 +17,16 @@ def home_page():
     try:
         data = request.get_json()
         user_id = data.get("user_id")
+        access_token = data.get("mode")
+        session_id = data.get("log_alt")
 
-        if not user_id:
-            return jsonify({"message": "Unauthorized User", "success": False}), 401
+        if not access_token or not session_id:
+            return jsonify({"message": "Missing token or session", "success": False}), 400
 
-        user = User.objects(user_id=user_id).first()
-        reward = Reward.objects(user_id=user_id).first()
+        # Validate token and session
+        is_valid, user, error_msg, status_code = validate_session_token(access_token, session_id, user_id)
 
-        if not user or not reward:
-            return jsonify({"message": "User or Reward Not Found", "success": False}), 404
+        reward = Reward.objects(user_id = user_id).first()
 
         info = {
             "total_stars": reward.total_stars,
@@ -51,7 +53,18 @@ def my_rewards():
     try:
         data = request.get_json()
         user_id = data.get("user_id")
-        user = User.objects(user_id = user_id).first()
+        access_token = data.get("mode")
+        session_id = data.get("log_alt")
+
+        if not access_token or not session_id:
+            return jsonify({"message": "Missing token or session", "success": False}), 400
+
+        # Validate token and session
+        is_valid, user, error_msg, status_code = validate_session_token(access_token, session_id, user_id)
+
+        if not is_valid:
+            return jsonify({"success": False, "message": error_msg}), status_code
+
         user_reward = Reward.objects(user_id = user_id).first()
         if not user_id:
             return jsonify({"message" : "Unauthorized User"})
@@ -59,7 +72,7 @@ def my_rewards():
             return jsonify({"message" : "User Not Found", "success": False}), 404
         if user :
             info = {
-                "invitation_link": User.invitation_link,
+                "invitation_link": user.invitation_link,
                 "total_stars": user_reward.total_stars,
                 "total_meteors": user_reward.total_meteors,
                 "galaxy_name": user_reward.galaxy_name,
@@ -87,12 +100,18 @@ def my_referrals():
     try:
         data = request.get_json()
         user_id = data.get("user_id")
-        user  = User.objects(user_id = user_id).first()
-        referral = Referral.objects(user_id = user_id).first()
-        if not user_id:
-            return jsonify({"message" : "Unauthorized User"})
-        if not user :
-            return jsonify({"message" : "User Not Found", "success": False}), 404
+        access_token = data.get("mode")
+        session_id = data.get("log_alt")
+
+        if not access_token or not session_id:
+            return jsonify({"message": "Missing token or session", "success": False}), 400
+
+        # Validate token and session
+        is_valid, user, error_msg, status_code = validate_session_token(access_token, session_id, user_id)
+
+        referral = Referral.objects(user_id = user.user_id).first()
+        if not is_valid:
+            return jsonify({"success": False, "message": error_msg}), status_code
         if user:
             info = {"total_referrals" : referral.total_referrals,
                     "referral_earning": referral.referral_earning,
@@ -119,12 +138,15 @@ def my_profile():
     try:
         data = request.json()
         user_id = data.get("user_id")
-        user = User.objects(user_id = user_id).first()
+        access_token = data.get("mode")
+        session_id = data.get("log_alt")
 
-        if not user_id:
-            return jsonify({"message" : "Unauthorized User"})
-        if not user :
-            return jsonify({"message" : "User Not Found", "success": False}), 404
+        if not access_token or not session_id:
+            return jsonify({"message": "Missing token or session", "success": False}), 400
+
+        # Validate token and session
+        is_valid, user, error_msg, status_code = validate_session_token(access_token, session_id, user_id)
+
         if user:
             info = {"username" : user.mobile_number,
                     "email" : user.email,

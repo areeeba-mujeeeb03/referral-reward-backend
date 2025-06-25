@@ -8,6 +8,7 @@ from main_app.controllers.user.forgotpassword_controllers import reset_password,
 from main_app.controllers.user.langingpage_controllers import my_rewards, my_referrals, my_profile, home_page
 from main_app.controllers.user.referral_controllers import handle_invitation_visit
 from main_app.controllers.user.invite import send_whatsapp_invite, send_telegram_invite, send_twitter_invite, send_facebook_invite
+from main_app.controllers.user.user_profile_controllers import update_profile
 
 user_bp = Blueprint("user_routes", __name__)
 
@@ -196,6 +197,16 @@ def profile():
     Returns: User's profile data for viewing/editing
     """
     return my_profile()
+
+@user_bp.route("/update-profile", methods = ["POST"])
+def update_user_profile():
+    """
+    User's profile data for viewing/editing
+    Accepts: POST request
+     (str) - Unique identifier for user
+    Returns: Updated user info
+    """
+    return update_profile()
 
 
 

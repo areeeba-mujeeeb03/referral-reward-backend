@@ -2,7 +2,7 @@ import os
 from flask import Flask
 from mongoengine import connect
 from main_app.routes.user.user_routes import user_bp
-# from main_app.routes.admin.admin_routes import admin_bp
+from main_app.routes.admin.admin_routes import admin_bp
 
 
 app = Flask(__name__)
@@ -19,7 +19,7 @@ connect(db="LoyaltyProgram", host="localhost", port=27017)
 app.register_blueprint(user_bp)
 
 # Admin Routes
-# app.register_blueprint(admin_bp)
+app.register_blueprint(admin_bp)
 
 if __name__ == "__main__":
     app.run(port=9000, debug =True)
