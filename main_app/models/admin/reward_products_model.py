@@ -8,4 +8,11 @@ class Products(Document):
     start_date = DateTimeField(required = True)
     expiry_date = DateTimeField(required = True)
 
+<<<<<<< HEAD
     meta = {"db_alias" : "admin-db", "collection" : "offers"}
+=======
+    meta = {"db_alias" : "admin-db", "collection" : "offers"}
+
+
+
+>>>>>>> 16e33ae1762c16826d81f55eaaffff57d8b569c0

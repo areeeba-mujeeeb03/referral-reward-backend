@@ -24,7 +24,7 @@ class User(Document):
     link_expiry_time = IntField()
     is_member = BooleanField(default= False)
 
-    meta = {'collection': 'users'}
+    meta = {"db" : "user-db", 'collection': 'users'}
 
     def save(self, *args, **kwargs):
         if not self.user_id:

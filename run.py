@@ -13,7 +13,10 @@ app = Flask(__name__)
 app.config["SECRET_KEY"] = "areeba-mujeeb-is-Smart"
 
 # Connect to MongoDB using mongoengine
-connect(db="LoyaltyProgram", host="localhost", port=27017)
+#user's DB
+connect(db="LoyaltyProgram-user", alias="user-db", host="localhost", port=27017)
+#admin's DB
+connect(db="LoyaltyProgram-admin", alias="admin-db", host="localhost", port=27017)
 
 # User Routes
 app.register_blueprint(user_bp)
@@ -22,4 +25,4 @@ app.register_blueprint(user_bp)
 app.register_blueprint(admin_bp)
 
 if __name__ == "__main__":
-    app.run(port=9000, debug =True)
+    app.run(port=4000, debug =True)
