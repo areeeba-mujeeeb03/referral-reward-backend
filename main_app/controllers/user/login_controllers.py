@@ -102,6 +102,9 @@ def handle_email_login():
             logger.warning(f"Inactive account login attempt: {email}")
             return jsonify({"error": "Account is deactivated"}), 403
 
+        if not user.password.startswith("$2"):
+            logger.warning("Invalid or corrupt password hash")
+            return jsonify({"success": False, "message": "Something went wrong. Please reset your password."}), 400
         # Step 5: Verify password
         if not check_password(password, user.password):
             logger.warning(f"Incorrect password attempt for: {email}")

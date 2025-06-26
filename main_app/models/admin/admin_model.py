@@ -13,12 +13,8 @@ class Admin(Document):
     otp = StringField()
     otp_expiry = DateTimeField()
 
-<<<<<<< HEAD
-    meta = {"db_alias" : "admin-db", 'collection': 'admin'}
-=======
 
-    meta = {'db_alias' : 'admin-db' , 'collection': 'admin'}
->>>>>>> 16e33ae1762c16826d81f55eaaffff57d8b569c0
+    meta = {"db_alias" : "admin-db", 'collection': 'admin'}
 
     def save(self, *args, **kwargs):
         if not self.admin_uid:

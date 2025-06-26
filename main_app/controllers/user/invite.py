@@ -29,24 +29,24 @@ def send_whatsapp_invite():
         access_token = data.get("mode")
         session_id = data.get("log_alt")
 
-        user = User.objects(user_id=user_id).first()
+        user_exist = User.objects(user_id=user_id).first()
 
-        if not user:
-            return jsonify({"message": "User not found", "success": False}), 400
-
+        if not user_exist:
+            return jsonify({"success": False, "message": "User does not exist"})
         if not access_token or not session_id:
             return jsonify({"message": "Missing token or session", "success": False}), 400
+        if user_exist.access_token != access_token:
+            return ({"success": False,
+                     "message": "Invalid access token"}), 401
 
-        # Validate token and session first
-        is_valid, user, error_msg, status_code = validate_session_token(user_id, access_token, session_id)
+        if user_exist.session_id != session_id:
+            return ({"success": False,
+                     "message": "Session mismatch or invalid session"}), 403
 
-        if not is_valid:
-            return jsonify({"success": False, "message": error_msg}), status_code
-
-        if not user or not user.invitation_link:
+        if not user_exist or not user_exist.invitation_link:
             return jsonify({"success": False, "message": "User or invitation link not found"}), 404
 
-        encoded_msg = generate_msg(user)
+        encoded_msg = generate_msg(user_exist)
         whatsapp_link = f"https://wa.me/?text={encoded_msg}"
 
         return jsonify({
@@ -66,24 +66,25 @@ def send_twitter_invite():
         access_token = data.get("mode")
         session_id = data.get("log_alt")
 
-        user = User.objects(user_id=user_id).first()
+        user_exist = User.objects(user_id=user_id).first()
 
-        if not user:
-            return jsonify({"message": "User not found", "success": False}), 400
 
+        if not user_exist:
+            return jsonify({"success": False, "message": "User does not exist"})
         if not access_token or not session_id:
             return jsonify({"message": "Missing token or session", "success": False}), 400
+        if user_exist.access_token != access_token:
+            return ({"success": False,
+                     "message": "Invalid access token"}), 401
 
-        # Validate token and session first
-        is_valid, user, error_msg, status_code = validate_session_token(user_id, access_token, session_id)
+        if user_exist.session_id != session_id:
+            return ({"success": False,
+                     "message": "Session mismatch or invalid session"}), 403
 
-        if not is_valid:
-            return jsonify({"success": False, "message": error_msg}), status_code
-
-        if not user or not user.invitation_link:
+        if not user_exist or not user_exist.invitation_link:
             return jsonify({"success": False, "message": "User or invitation link not found"}), 404
 
-        encoded_msg = generate_msg(user)
+        encoded_msg = generate_msg(user_exist)
         twitter_link = f"https://twitter.com/intent/tweet?text={encoded_msg}"
 
         return jsonify({
@@ -103,25 +104,25 @@ def send_telegram_invite():
         access_token = data.get("mode")
         session_id = data.get("log_alt")
 
-        user = User.objects(user_id=user_id).first()
+        user_exist = User.objects(user_id=user_id).first()
 
-        if not user:
-            return jsonify({"message": "User not found", "success": False}), 400
-
+        if not user_exist:
+            return jsonify({"success": False, "message": "User does not exist"})
         if not access_token or not session_id:
             return jsonify({"message": "Missing token or session", "success": False}), 400
+        if user_exist.access_token != access_token:
+            return ({"success": False,
+                     "message": "Invalid access token"}), 401
 
-        # Validate token and session first
-        is_valid, user, error_msg, status_code = validate_session_token(user_id, access_token, session_id)
+        if user_exist.session_id != session_id:
+            return ({"success": False,
+                     "message": "Session mismatch or invalid session"}), 403
 
-        if not is_valid:
-            return jsonify({"success": False, "message": error_msg}), status_code
-
-        if not user or not user.invitation_link:
+        if not user_exist or not user_exist.invitation_link:
             return jsonify({"success": False, "message": "User or invitation link not found"}), 404
 
-        encoded_msg = generate_msg(user)
-        telegram_link = f"https://t.me/share/url?url={quote_plus(user.invitation_link)}&text={encoded_msg}"
+        encoded_msg = generate_msg(user_exist)
+        telegram_link = f"https://t.me/share/url?url={quote_plus(user_exist.invitation_link)}&text={encoded_msg}"
 
         return jsonify({
             "success": True,
@@ -139,24 +140,26 @@ def send_facebook_invite():
         access_token = data.get("mode")
         session_id = data.get("log_alt")
 
-        user = User.objects(user_id=user_id).first()
+        user_exist = User.objects(user_id=user_id).first()
 
-        if not user:
-            return jsonify({"message": "User not found", "success": False}), 400
-
+        if not user_exist:
+            return jsonify({"success": False, "message": "User does not exist"})
         if not access_token or not session_id:
             return jsonify({"message": "Missing token or session", "success": False}), 400
+        if user_exist.access_token != access_token:
+            return ({"success": False,
+                     "message": "Invalid access token"}), 401
 
-        # Validate token and session first
-        is_valid, user, error_msg, status_code = validate_session_token(user_id, access_token, session_id)
+        if user_exist.session_id != session_id:
+            return ({"success": False,
+                     "message": "Session mismatch or invalid session"}), 403
 
-        if not is_valid:
-            return jsonify({"success": False, "message": error_msg}), status_code
-
-        if not user or not user.invitation_link:
+        if not user_exist or not user_exist.invitation_link:
             return jsonify({"success": False, "message": "User or invitation link not found"}), 404
 
-        facebook_link = f"https://www.facebook.com/sharer/sharer.php?u={quote_plus(user.invitation_link)}"
+        encoded_msg = generate_msg(user_exist)
+
+        facebook_link = f"https://www.facebook.com/sharer/sharer.php?u={quote_plus(user_exist.invitation_link)}"
 
         return jsonify({
             "success": True,

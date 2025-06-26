@@ -14,29 +14,36 @@ def update_profile():
         access_token = data.get("mode")
         session_id = data.get("log_alt")
 
-        if not user_id or not access_token or not session_id:
-            return jsonify({"success": False, "message": "Missing user_id, token, or session"}), 400
+        user_exist = User.objects(user_id= user_id).first()
 
-        # Validate access token and session
-        is_valid, user, error_msg, status_code = validate_session_token(user_id, access_token, session_id)
-        if not is_valid:
-            return jsonify({"success": False, "message": error_msg}), status_code
+        if not user_exist:
+            return jsonify({"success": False, "message": "User does not exist"})
+        if not access_token or not session_id:
+            return jsonify({"message": "Missing token or session", "success": False}), 400
+        if user_exist.access_token != access_token:
+            return ({"success": False,
+                     "message": "Invalid access token"}), 401
+
+        if user_exist.session_id != session_id:
+            return ({"success": False,
+                     "message": "Session mismatch or invalid session"}), 403
+
 
         update_fields = {}
 
         if "username" in data:
-            update_fields["set__username"] = data["username"].strip()
+            update_fields["username"] = data["username"]
         if "email" in data:
-            update_fields["set__email"] = data["email"].strip()
+            update_fields["email"] = data["email"]
         if "mobile_number" in data:
-            update_fields["set__mobile_number"] = data["mobile_number"].strip()
+            update_fields["mobile_number"] = data["mobile_number"]
         if "profile_picture" in data:
-            update_fields["set__profile_picture"] = data["profile_picture"].strip()
+            update_fields["profile_picture"] = data["profile_picture"]
 
         if not update_fields:
             return jsonify({"success": False, "message": "No fields to update"}), 400
 
-        user.update(**update_fields)
+        user_exist.update(**update_fields)
 
         return jsonify({
             "success": True,

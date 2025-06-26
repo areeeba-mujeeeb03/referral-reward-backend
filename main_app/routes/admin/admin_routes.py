@@ -3,12 +3,10 @@ from main_app.controllers.admin.admin_auth_controller import admin_register
 from main_app.controllers.admin.admin_auth_controller import handle_admin_login
 from main_app.controllers.admin.forgotpassword_controllers import forgot_otp_email, verify_otp, reset_password
 from main_app.controllers.admin.profile_controllers import edit_profile_data
-<<<<<<< HEAD
 from main_app.controllers.admin.referral import generate_invite_link_with_expiry
 
-=======
 from main_app.controllers.admin.product_controllers import add_product
->>>>>>> 16e33ae1762c16826d81f55eaaffff57d8b569c0
+
 
 admin_bp = Blueprint("admin_routes", __name__)
 
@@ -16,7 +14,7 @@ admin_bp = Blueprint("admin_routes", __name__)
 # Admin Register
 
 @admin_bp.route("/admin/register", methods=["POST"])
-def register_Admin():
+def register_admin():
     """
     Handle admin register using email and password
     Accepts: POST request with email and password
@@ -46,12 +44,8 @@ def login_email():
 
 # ==============
 
-
-<<<<<<< HEAD
-@admin_bp.route("/login/forgot_password", methods = ["POST"])
-=======
 @admin_bp.route("/admin/login/forgot_password", methods = ["POST"])
->>>>>>> 16e33ae1762c16826d81f55eaaffff57d8b569c0
+
 def user_forgot_password():
     """
     Handle forgot password request - send reset link to email
@@ -78,9 +72,6 @@ def user_reset_password():
     """
     return reset_password()
 
-<<<<<<< HEAD
-=======
-
 
 @admin_bp.route("/admin/add_product", methods = ["POST"])
 def admin_add_product():
@@ -94,16 +85,6 @@ def admin_add_product():
 
 
 
-
-
-
-
-
-
-
-
-
->>>>>>> 16e33ae1762c16826d81f55eaaffff57d8b569c0
 @admin_bp.route("/edit/<admin_uid>", methods = ["POST"])
 def edit_profile(admin_uid):
     """

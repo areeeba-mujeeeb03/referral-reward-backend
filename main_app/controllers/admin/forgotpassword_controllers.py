@@ -23,7 +23,7 @@ def forgot_otp_email():
         if not user:
             return jsonify({"error": get_error("user_not_found")}), 400
         
-        # GEnerate OTP
+        # Generate OTP
         otp =   generate_otp()
         expiry_time = get_expiry_time()
         user.otp = otp

@@ -70,25 +70,71 @@ def process_referral_code_and_reward(referral_code, new_user_id):
     except Exception as e:
         logger.error(f"Failed to initialize user records.: {str(e)}")
 
+def process_tag_id_and_reward(tag_id, new_user_id):
+    """
+    Process referral code and update referrer's rewards and statistics
+
+    Referral Process:
+    1. Find user who owns the referral code
+    2. Update referrer's referral statistics
+    3. Add reward points to referrer's account
+    4. Record referral transaction with pending status
+
+    Args:
+        tag_id : attached in API
+    """
+    try:
+        valid_user = User.objects(tag_id = tag_id).first()
+        if valid_user:
+            referrer = Referral.objects(user_id = valid_user.user_id).first()
+            referrer.update(
+                push__all_referrals={
+                    "user_id": new_user_id,
+                    "referral_status": "Pending",
+                    "date" : datetime.datetime.now(),
+                    "earned_meteors" : PENDING_REFERRAL_REWARD_POINTS
+
+                },
+                inc__total_referrals = 1,
+                inc__pending_referrals=1,
+
+            )
+            reward_record = Reward.objects(user_id=valid_user.user_id).first()
+            if reward_record:
+                # Add reward points
+                reward_record.total_meteors += PENDING_REFERRAL_REWARD_POINTS
+                reward_record.reward_history.append({
+                    "earned_by_action": "referral",
+                    "earned_meteors": PENDING_REFERRAL_REWARD_POINTS,
+                    "referred_to" : new_user_id,
+                    "referral_status": "pending",
+                    "referred_on": datetime.datetime.now(),
+                    "transaction_type": "credit"
+                })
+
+                reward_record.save()
+
+    except Exception as e:
+        logger.error(f"Failed to initialize user records.: {str(e)}")
 
 
 def update_referral_status_and_reward(referrer_id, user_id):
     """
-    Update referrer's referral statistics and tracking records
+    Update referrer's referral statistics and tracking records.
 
     Args:
         referrer_id (str): ID of the user who referred
         user_id (str): ID of the newly registered user
     """
-
+    # Load the referrer’s referral document
     referral_record = Referral.objects(user_id=referrer_id).first()
-
     if not referral_record:
+        logger.warning(f"No referral record found for referrer: {referrer_id}")
         return
 
-    updated_referrals = []
-    already_completed = False
+    # Find and update the matching referral entry
     referral_found = False
+    already_completed = False
 
     for referral in referral_record.all_referrals:
         if referral.get("user_id") == user_id:
@@ -97,48 +143,54 @@ def update_referral_status_and_reward(referrer_id, user_id):
                 already_completed = True
             else:
                 referral["referral_status"] = "Completed"
-                referral["earned_meteors"] = SUCCESS_REFERRAL_REWARD_POINTS
-        updated_referrals.append(referral)
+                referral["earned_meteors"] = referral.get("earned_meteors", 0) + SUCCESS_REFERRAL_REWARD_POINTS
+            break
 
     if not referral_found:
-        logger.warning(f"No matching referral record found for user_id: {user_id} in referrer: {referrer_id}")
+        logger.warning(f"No matching referral entry for user_id: {user_id} under referrer: {referrer_id}")
         return
 
     if already_completed:
-        logger.info(f"Referral already completed for {user_id}")
+        logger.info(f"Referral already marked completed for user {user_id}")
         return
 
-    referral_record.all_referrals = updated_referrals
-
-    # Update stats
+    referral_record.all_referrals = referral_record.all_referrals
+    # Update
     referral_record.referral_earning += SUCCESS_REFERRAL_REWARD_POINTS
     referral_record.pending_referrals = max(0, referral_record.pending_referrals - 1)
     referral_record.save()
-
     logger.info(f"Referral stats updated for referrer: {referrer_id}")
 
-
+    # Now update the referrer’s reward
     reward_record = Reward.objects(user_id=referrer_id).first()
-    if reward_record:
-        already_rewarded = any(
-            entry.get("earned_by_action") == "referral" and
-            entry.get("referral_status") == "Completed" and
-            entry.get("referred_user_id") == user_id
-            for entry in reward_record.reward_history
-        )
+    if not reward_record:
+        logger.warning(f"No reward record found for user: {referrer_id}")
+        return
 
-        if not already_rewarded:
-            reward_record.total_meteors += SUCCESS_REFERRAL_REWARD_POINTS
-            reward_record.reward_history.append({
-                "earned_by_action": "referral",
-                "earned_meteors": SUCCESS_REFERRAL_REWARD_POINTS,
-                "referral_status": "Completed",
-                "referred_user_id": user_id,
-                "referred_on": datetime.datetime.utcnow(),
-                "transaction_type": "credit"
-            })
-            reward_record.save()
-            logger.info(f"Reward added for referrer: {referrer_id}")
+    # No double-crediting
+    already_rewarded = any(
+        entry.get("earned_by_action") == "referral" and
+        entry.get("referral_status") == "Completed" and
+        entry.get("referred_user_id") == user_id
+        for entry in reward_record.reward_history
+    )
+
+    if already_rewarded:
+        logger.info(f"Reward already credited for referral of user {user_id}")
+        return
+
+    # Append a new reward entry
+    reward_record.total_meteors += SUCCESS_REFERRAL_REWARD_POINTS
+    reward_record.reward_history.append({
+        "earned_by_action": "referral",
+        "earned_meteors": SUCCESS_REFERRAL_REWARD_POINTS,
+        "referral_status": "Completed",
+        "referred_user_id": user_id,
+        "referred_on": datetime.datetime.utcnow(),
+        "transaction_type": "credit"
+    })
+    reward_record.save()
+    logger.info(f"Reward added for referrer: {referrer_id}")
 
 
 

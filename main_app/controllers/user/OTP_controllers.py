@@ -32,7 +32,7 @@ OTP_RATE_LIMIT_MINUTES = 1  \
 
 # Development mode flag - set to False in production
 DEVELOPMENT_MODE = os.getenv('FLASK_ENV') == 'development'
-DEV_OTP = 123456  # Fixed OTP for development/testing
+# DEV_OTP = 123456  # Fixed OTP for development/testing
 
 # Initialize Twilio client with error handling
 try:
@@ -91,7 +91,7 @@ def generate_and_send_otp():
                 "message": "Invalid request data"
             }), 400
         
-        mobile_number = data.get("mobile_number", "").strip()
+        mobile_number = data["mobile_number"].strip()
         
         # Step 2: Validate mobile number format
         if not mobile_number:
@@ -117,35 +117,39 @@ def generate_and_send_otp():
                 "success": False, 
                 "message": "User not registered with this mobile number"
             }), 404
-        
+
         # Step 4: Check rate limiting
         rate_limit_check = _check_otp_rate_limit(user)
         if rate_limit_check:
             return rate_limit_check
-        
+            # Rate limiting
+
+        if not DEVELOPMENT_MODE:
+            rate_limit_response = _check_otp_rate_limit(user)
+            if rate_limit_response:
+                return rate_limit_response
+
         # Step 5: Generate OTP
         otp = _generate_otp()
         otp_expiry = datetime.datetime.now() + datetime.timedelta(minutes=OTP_EXPIRY_MINUTES)
-        
+
         logger.info(f"Generated OTP for user: {user.user_id}")
-        
+
         # Step 6: Store OTP in database
         user.update(
             otp=otp,
             otp_expires_at=otp_expiry,
-            otp_attempts=0,  # Reset attempt counter
-            otp_requested_at=datetime.datetime.now()
         )
         
         # Step 7: Send OTP via SMS (skip in development mode)
         if DEVELOPMENT_MODE:
-            logger.info(f"Development mode: Using fixed OTP {DEV_OTP}")
+            logger.info(f"Development mode: Using fixed OTP {otp}")
             # In development, use fixed OTP for testing
-            user.update(otp=DEV_OTP)
+            user.update(otp=otp)
             return jsonify({
                 "success": True,
                 "message": "OTP sent successfully (Development Mode)",
-                "dev_otp": DEV_OTP,  # Only for development
+                "dev_otp": otp,  # Only for development
                 "expires_in_minutes": OTP_EXPIRY_MINUTES
             }), 200
         else:
@@ -173,7 +177,6 @@ def generate_and_send_otp():
             "success": False,
             "message": "Internal server error occurred"
         }), 500
-
 
 
 def _generate_otp():
@@ -382,9 +385,9 @@ def verify_user_otp():
             }), 400
         
         # Step 7: Check attempt limits
-        attempt_check = _check_otp_attempts(user)
-        if attempt_check:
-            return attempt_check
+        # attempt_check = _check_otp_attempts(user)
+        # if attempt_check:
+        #     return attempt_check
         
         # Step 8: Verify OTP
         if otp_input != user.otp:
@@ -408,20 +411,17 @@ def verify_user_otp():
                     "message": "Maximum OTP attempts exceeded. Please request a new OTP."
                 }), 429
 
-        referee = User.objects(mobile_number = mobile_number).first()
-        referrer = referee.referred_by
-        if referrer:
-            referee_id = referee.user_id
-            referrer_id = User.objects(user_id = referrer).first()
-            update_referral_status_and_reward(referrer_id, referee_id)
+        # referee = User.objects(mobile_number = mobile_number).first()
+        # referrer = referee.referred_by
+        # if referrer:
+        #     referee_id = referee.user_id
+        #     referrer_id = User.objects(user_id = referrer).first()
+        #     update_referral_status_and_reward(referrer_id, referee_id)
 
         # Step 9: OTP is valid - clear it from database
         user.update(
             unset__otp=1,
-            unset__otp_expires_at=1,
-            unset__otp_attempts=1,
-            unset__otp_requested_at=1,
-            last_otp_verified_at=datetime.datetime.now()  # Track successful verification
+            unset__otp_expires_at=1  # Track successful verification
         )
         
         # Step 10: Return success response
@@ -441,26 +441,26 @@ def verify_user_otp():
         }), 500
 
 
-def _check_otp_attempts(user):
-    """
-    Check if user has exceeded maximum OTP verification attempts
-    
-    Args:
-        user (User): User object to check
-        
-    Returns:
-        Flask Response or None: Error response if limit exceeded, None if allowed
-    """
-    current_attempts = getattr(user, 'otp_attempts', 0)
-    if current_attempts >= MAX_OTP_ATTEMPTS:
-        logger.warning(f"Max OTP attempts exceeded for user: {user.user_id}")
-        # Clear OTP to force new request
-        user.update(unset__otp=1, unset__otp_expires_at=1, unset__otp_attempts=1)
-        return jsonify({
-            "success": False,
-            "message": "Maximum OTP attempts exceeded. Please request a new OTP."
-        }), 429
-    
+# def _check_otp_attempts(user):
+#     """
+#     Check if user has exceeded maximum OTP verification attempts
+#
+#     Args:
+#         user (User): User object to check
+#
+#     Returns:
+#         Flask Response or None: Error response if limit exceeded, None if allowed
+#     """
+#     current_attempts = getattr(user, 'otp_attempts', 0)
+#     if current_attempts >= MAX_OTP_ATTEMPTS:
+#         logger.warning(f"Max OTP attempts exceeded for user: {user.user_id}")
+#         # Clear OTP to force new request
+#         user.update(unset__otp=1, unset__otp_expires_at=1, unset__otp_attempts=1)
+#         return jsonify({
+#             "success": False,
+#             "message": "Maximum OTP attempts exceeded. Please request a new OTP."
+#         }), 429
+#
     return None
 
 

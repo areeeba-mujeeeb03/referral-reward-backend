@@ -1,7 +1,6 @@
 from itertools import product
-
 from flask import Blueprint
-from main_app.controllers.user.auth_controllers import handle_registration
+from main_app.controllers.user.auth_controllers import handle_registration, handle_registration_with_tag_id
 from main_app.controllers.user.OTP_controllers import generate_and_send_otp, verify_user_otp
 from main_app.controllers.user.login_controllers import handle_email_login, logout_user, product_purchase
 from main_app.controllers.user.forgotpassword_controllers import reset_password, forgot_password
@@ -29,7 +28,14 @@ def register():
     """
     return handle_registration()
 
-
+@user_bp.route("/wealth-elite/share-link/register/<tag_id>", methods = ["POST"])
+def referral_register(tag_id):
+    """
+    Handle user registration with email and password
+    Accepts: POST request with user registration data
+    Returns: Registration response from controller
+    """
+    return handle_registration_with_tag_id(tag_id)
 # =============
 
 # Purchase product
@@ -209,27 +215,6 @@ def update_user_profile():
     return update_profile()
 
 
-
-@user_bp.route("/referral/update", methods=["POST"])
-def update_referral():
-    """
-    Update referral information for a user
-    Accepts: POST request with referral data
-    Returns: Confirmation of referral update
-    """
-    # Logic to update referral information goes here
-    return update_referral()
-
-
-# @user_bp.route("/wealth-elite/share-link/<tag_id>", methods=['POST'])
-# def generate_invite_link(tag_id):
-#     """
-#     generates invitation link
-#     Accepts: POST request
-#     Returns: Confirmation of registration
-#     """
-#     return generate_invite_link_with_expiry(tag_id)
-
 @user_bp.route("/wealth-elite/referral-program/invite_link/<encoded_gen_str>/<tag_id>/<encoded_exp_str>", methods=["POST"])
 def visit_invitation_link(encoded_gen_str, tag_id, encoded_exp_str):
     """
@@ -244,6 +229,7 @@ def visit_invitation_link(encoded_gen_str, tag_id, encoded_exp_str):
 # Invitation Links
 
 # ====================
+
 
 @user_bp.route("/send-whatsapp-invite", methods=["POST"])
 def send_link_on_whatsapp():
