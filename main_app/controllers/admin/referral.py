@@ -52,7 +52,7 @@ def generate_invite_link_with_expiry(tag_id):
     base_url = "http://127.0.0.1:5000/wealth-elite/referral-program/invite_link"
     invitation_link = f"{base_url}/{encoded_gen_str}/{tag_id}/{encoded_exp_str}"
 
-    Link.append(
+    Link.update(
         set__invitation_link=invitation_link,
         set__start_time=gen_str,
         set__expiry_time=exp_str,
