@@ -2,7 +2,7 @@ from mongoengine import StringField, Document, DateTimeField ,FloatField
 import datetime
 
 class AddProduct(Document):
-    # id = StringField()
+    uid = StringField(required=True, unique=True)
     product_name = StringField(required=True)
     original_amt = FloatField(required=True)
     discounted_amt = FloatField(required=True)
