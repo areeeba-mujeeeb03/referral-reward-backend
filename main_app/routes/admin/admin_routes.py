@@ -3,10 +3,8 @@ from main_app.controllers.admin.admin_auth_controller import admin_register
 from main_app.controllers.admin.admin_auth_controller import handle_admin_login
 from main_app.controllers.admin.forgotpassword_controllers import forgot_otp_email, verify_otp, reset_password
 from main_app.controllers.admin.profile_controllers import edit_profile_data
-from main_app.controllers.admin.referral import generate_invite_link_with_expiry
-
-from main_app.controllers.admin.product_controllers import add_product
-
+from main_app.controllers.admin.product_controllers import add_product, create_offer, update_product
+from main_app.controllers.admin.prize_controller import add_exciting_prizes
 
 admin_bp = Blueprint("admin_routes", __name__)
 
@@ -44,8 +42,8 @@ def login_email():
 
 # ==============
 
-@admin_bp.route("/admin/login/forgot_password", methods = ["POST"])
 
+@admin_bp.route("/admin/login/forgot_password", methods = ["POST"])
 def user_forgot_password():
     """
     Handle forgot password request - send reset link to email
@@ -72,6 +70,9 @@ def user_reset_password():
     """
     return reset_password()
 
+# ============================================================================
+
+# Add Products
 
 @admin_bp.route("/admin/add_product", methods = ["POST"])
 def admin_add_product():
@@ -81,6 +82,59 @@ def admin_add_product():
     Returns: Password reset confirmation response
     """
     return add_product()
+
+# Update Product
+
+@admin_bp.route("/admin/update_offer/<string:uid>", methods = ["PUT"])
+def update_add_product(uid):
+    """
+    Updates an existing product in the database.
+    Expects: JSON body with updated product details.
+    Returns: Success message or error response.
+    """
+    return update_product(uid)
+
+# -------------------------------------------------------------------------------------------------
+
+# Add Offers
+
+@admin_bp.route("/admin/add_offer", methods = ["POST"])
+def admin_add_offer():
+    """
+    Creates a new offer entry.
+    Expects: JSON body with offer details including start and expiry dates.
+    Returns: Success message or error response.
+    """
+    return create_offer()
+
+# ------------------------------------------------------------------------------------------------
+
+# Exciting Prizes
+
+@admin_bp.route("/admin/prizes", methods = ["POST"])
+def admin_exciting_offer():
+    """
+    Adds exciting prizes.
+    Expects: form-data body with prize details such as title, image, terms and conditions
+    Returns: Success message or error response.
+    """
+    return add_exciting_prizes()
+
+# --------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

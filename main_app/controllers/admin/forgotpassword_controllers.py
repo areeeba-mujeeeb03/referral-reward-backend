@@ -9,6 +9,8 @@ from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
+# ------ Forgot Password
+
 def forgot_otp_email():
     try:
         data = request.get_json()
@@ -50,6 +52,8 @@ def forgot_otp_email():
 
 # ----------------------------------------------------------------------------------------------------
 
+# ------- Verify OTP
+
 def verify_otp():
     data = request.get_json()
     email = data.get("email", "").strip().lower()
@@ -65,6 +69,8 @@ def verify_otp():
     return jsonify({"error": "Code verified", "success": "True"}), 200
 
 # -----------------------------------------------------------------------------------------------------
+
+# -----------Reset Password
 
 def reset_password():
  try:
