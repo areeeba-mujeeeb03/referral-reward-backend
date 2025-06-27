@@ -4,20 +4,18 @@ from main_app.controllers.user.auth_controllers import handle_registration, hand
 from main_app.controllers.user.OTP_controllers import generate_and_send_otp, verify_user_otp
 from main_app.controllers.user.login_controllers import handle_email_login, logout_user, product_purchase
 from main_app.controllers.user.forgotpassword_controllers import reset_password, forgot_password
-from main_app.controllers.user.langingpage_controllers import my_rewards, my_referrals, my_profile, home_page
+from main_app.controllers.user.landingpage_controllers import my_rewards, my_referrals, my_profile, home_page
 from main_app.controllers.user.referral_controllers import handle_invitation_visit
 from main_app.controllers.user.invite import send_whatsapp_invite, send_telegram_invite, send_twitter_invite, send_facebook_invite
 from main_app.controllers.user.user_profile_controllers import update_profile
 
 user_bp = Blueprint("user_routes", __name__)
 
-
 # ============
 
 # User Registration
 
 # ============
-
 
 @user_bp.route("/register", methods = ["POST"])
 def register():
@@ -28,7 +26,7 @@ def register():
     """
     return handle_registration()
 
-@user_bp.route("/wealth-elite/share-link/register/<tag_id>", methods = ["POST"])
+@user_bp.route("/share-link/register/<tag_id>", methods = ["POST"])
 def referral_register(tag_id):
     """
     Handle user registration with email and password
@@ -75,7 +73,7 @@ def login_email():
 # =============
 
 
-@user_bp.route("/login/mobile_send_otp", methods = ["POST"])
+@user_bp.route("/login/mobile-send-otp", methods = ["POST"])
 def login_send_otp():
     """
     Send OTP to user's mobile number for login
@@ -84,7 +82,7 @@ def login_send_otp():
     """
     return generate_and_send_otp()
 
-@user_bp.route("/login/mobile_verify_otp", methods = ["POST"])
+@user_bp.route("/login/mobile-verify-otp", methods = ["POST"])
 def login_verify_otp():
     """
     Verify OTP entered by user for mobile login
@@ -101,7 +99,7 @@ def login_verify_otp():
 # ==============
 
 
-@user_bp.route("/login/forgot_password", methods = ["POST"])
+@user_bp.route("/login/forgot-password", methods = ["POST"])
 def user_forgot_password():
     """
     Handle forgot password request - send reset link to email
@@ -266,3 +264,21 @@ def send_link_on_facebook():
     Redirects : on facebook with invite-link NO pre-typed message
     """
     return send_facebook_invite()
+
+@user_bp.route("/help-request", methods=["POST"])
+def help_request():
+    """
+    handles sending invitation link on facebook
+    Accepts: POST request
+    Redirects : on facebook with invite-link NO pre-typed message
+    """
+    return send_facebook_invite()
+
+@user_bp.route("/redeem-voucher", methods=["POST"])
+def redeem_voucher():
+    """
+    handles sending invitation link on facebook
+    Accepts: POST request
+    Redirects : on facebook with invite-link NO pre-typed message
+    """
+    return

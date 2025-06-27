@@ -1,9 +1,10 @@
 import datetime
 import logging
+import requests
 from main_app.models.user.reward import Reward
 from main_app.models.user.referral import Referral
 from main_app.models.user.user import User
-from flask import jsonify
+from flask import jsonify, request
 from main_app.utils.user.helpers import verify_tag_id
 
 # Configure logging for better debugging and monitoring
@@ -12,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 # Referral reward points configuration
 PENDING_REFERRAL_REWARD_POINTS = 400
-SUCCESS_REFERRAL_REWARD_POINTS = 500
+SUCCESS_REFERRAL_REWARD_POINTS = 600
 SESSION_EXPIRY_MINUTES = 30
 
 
@@ -50,6 +51,7 @@ def process_referral_code_and_reward(referral_code, new_user_id):
                 },
                 inc__total_referrals = 1,
                 inc__pending_referrals=1,
+                inc__referral_earning = PENDING_REFERRAL_REWARD_POINTS
 
             )
             reward_record = Reward.objects(user_id=referrer_id).first()
@@ -84,10 +86,32 @@ def process_tag_id_and_reward(tag_id, new_user_id):
         tag_id : attached in API
     """
     try:
+        referral_found = False
+        already_completed = False
         valid_user = User.objects(tag_id = tag_id).first()
         if valid_user:
             referrer = Referral.objects(user_id = valid_user.user_id).first()
+            for referral in referrer.all_referrals:
+                if referral.get("user_id") == valid_user.user_id:
+                    referral_found = False
+                    if referral.get("referral_status") == "Completed":
+                        already_completed = True
+                    else:
+                        referral["referral_status"] = "Completed"
+                        referral["earned_meteors"] = referral.get("earned_meteors", 0) + SUCCESS_REFERRAL_REWARD_POINTS
+                    break
+
+            if not referral_found:
+                logger.warning(f"No matching referral entry for user_id: {valid_user.user_id} under referrer: {referrer_id}")
+                return
+
+            if already_completed:
+                logger.info(f"Referral already marked completed for user {valid_user.user_id}")
+                return
+            referrer.referral_earning += PENDING_REFERRAL_REWARD_POINTS
+            referrer.save()
             referrer.update(
+
                 push__all_referrals={
                     "user_id": new_user_id,
                     "referral_status": "Pending",
@@ -101,7 +125,6 @@ def process_tag_id_and_reward(tag_id, new_user_id):
             )
             reward_record = Reward.objects(user_id=valid_user.user_id).first()
             if reward_record:
-                # Add reward points
                 reward_record.total_meteors += PENDING_REFERRAL_REWARD_POINTS
                 reward_record.reward_history.append({
                     "earned_by_action": "referral",
@@ -202,6 +225,9 @@ def initialize_user_records(user_id):
         user_id (str): ID of the newly registered user
     """
     try:
+        user = Reward.objects(user_id = user_id).first()
+        if user :
+            return "The rewards for this user is already initialized"
         user_reward = Reward(
             user_id=user_id,
             total_meteors=0,
@@ -248,7 +274,6 @@ def encode_timestamp(number):
         number //= base
     return encoded_string
 
-
 ##-------------------------------------Decryption of timestamp-----------------------------------------------##
 def decode_timestamp(encoded_string):
     alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -259,13 +284,15 @@ def decode_timestamp(encoded_string):
     return number
 
 ##---------------------------GENERATION OF INVITATION LINK------------------------------------------##
-def generate_invite_link_with_expiry(tag_id):
+def gen_user_invite_link():
     """Args:
         tag_id (str): ID of the user referring
     """
+    data = request.get_json()
+
     user = User.objects(tag_id=tag_id).first()
     if not user:
-        return jsonify({"message": "Invalid tag ID"}), 404
+        return jsonify({"message": ""}), 404
 
     existing = User.objects(tag_id=tag_id).first()
     if existing:

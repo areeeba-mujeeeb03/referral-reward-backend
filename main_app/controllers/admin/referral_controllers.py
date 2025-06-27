@@ -1,6 +1,7 @@
 import datetime
-from flask import jsonify
+from flask import jsonify, request
 from main_app.models.admin.links import Link
+
 # ==================
 
 # Special invitation link with expiry
@@ -25,7 +26,6 @@ def encode_timestamp(number):
         number //= base
     return encoded_string
 
-
 ##-------------------------------------Decryption of timestamp-----------------------------------------------##
 def decode_timestamp(encoded_string):
     alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -41,8 +41,11 @@ def generate_invite_link_with_expiry(tag_id):
         tag_id (str): ID of the user referring
     """
     now = datetime.datetime.utcnow()
-    gen_str = int(now.strftime("%Y%m%d%H%M%S"))
-    expiry_time = now + datetime.timedelta(hours=5)
+    data = request.json()
+    start_date = data.get()
+    expiry_date = data.get()
+    gen_str = int(start_date.strftime("%Y%m%d%H%M%S"))
+    expiry_time = expiry_date + datetime.timedelta(hours=5)
     exp_str = int(expiry_time.strftime("%Y%m%d%H%M%S"))
 
 
@@ -50,16 +53,13 @@ def generate_invite_link_with_expiry(tag_id):
     encoded_exp_str = encode_timestamp(exp_str)
 
     base_url = "http://127.0.0.1:5000/wealth-elite/referral-program/invite_link"
-    invitation_link = f"{base_url}/{encoded_gen_str}/{tag_id}/{encoded_exp_str}"
+    invitation_link = f"{base_url}/{encoded_gen_str}/{encoded_exp_str}"
 
     Link.update(
         set__invitation_link=invitation_link,
-        set__start_time=gen_str,
-        set__expiry_time=exp_str,
+        set__start_date=gen_str,
+        set__expiry_date=exp_str,
         created_at = datetime.datetime.now()
     )
 
-    return jsonify("Discover Wealth Elite — a platform I personally use and trust.\n"
-                   "Join via my invitation to access exclusive rewards and product offers.\n"
-                   f"Start here: {invitation_link}")
-
+    return invitation_link
