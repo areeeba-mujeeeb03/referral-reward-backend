@@ -352,7 +352,6 @@ import datetime
 import datetime
 
 def validate_session_token(user, access_token, session_id):
-    print("start")
     """
     Validate if access token is valid, not expired, and tied to the correct session.
 

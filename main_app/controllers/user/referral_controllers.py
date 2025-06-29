@@ -289,14 +289,16 @@ def gen_user_invite_link():
         tag_id (str): ID of the user referring
     """
     data = request.get_json()
+    user_id = data.get("user_id")
 
-    user = User.objects(tag_id=tag_id).first()
+    user = User.objects(user_id=user_id).first()
+    tag_id = user.tag_id
+
     if not user:
         return jsonify({"message": ""}), 404
 
-    existing = User.objects(tag_id=tag_id).first()
-    if existing:
-        return jsonify({"message": "Link already exists", "link": existing.invitation_link}), 200
+    # if existing:
+    #     return jsonify({"message": "Link already exists", "link": existing.invitation_link}), 200
 
     now = datetime.datetime.utcnow()
     gen_str = int(now.strftime("%Y%m%d%H%M%S"))

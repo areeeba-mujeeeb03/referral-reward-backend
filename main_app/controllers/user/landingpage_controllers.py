@@ -25,15 +25,8 @@ def home_page():
         user = User.objects(user_id = user_id).first()
         if not user:
             return jsonify({"success" : False, "message" : "User does not exist"})
-        print(user)
-        # try:
-        #     validate(user_id, access_token, session_id)
-        # except Exception as e:
-        #     print("FAIL" ,e)
-        # # Validate token and session
-        # print("run1")
+
         validate_session_token(user, access_token, session_id)
-        print("run2")
 
         reward = Reward.objects(user_id = user_id).first()
 
@@ -62,23 +55,15 @@ def my_rewards():
         access_token = data.get("mode")
         session_id = data.get("log_alt")
 
-        user_exist = User.objects(user_id=user_id).first()
+        user = User.objects(user_id = user_id).first()
+        if not user:
+            return jsonify({"success" : False, "message" : "User does not exist"})
 
-        if not user_exist:
-            return jsonify({"success": False, "message": "User does not exist"})
-        if not access_token or not session_id:
-            return jsonify({"message": "Missing token or session", "success": False}), 400
-        if user_exist.access_token != access_token:
-            return ({"success": False,
-                     "message": "Invalid access token"}), 401
-
-        if user_exist.session_id != session_id:
-            return ({"success": False,
-                     "message": "Session mismatch or invalid session"}), 403
+        validate_session_token(user, access_token, session_id)
         user_reward = Reward.objects(user_id = user_id).first()
-        if user_exist :
+        if user :
             info = {
-                "invitation_link": user_exist.invitation_link,
+                "invitation_link": user.invitation_link,
                 "total_stars": user_reward.total_stars,
                 "total_meteors": user_reward.total_meteors,
                 "galaxy_name": user_reward.galaxy_name,
@@ -109,23 +94,14 @@ def my_referrals():
         access_token = data.get("mode")
         session_id = data.get("log_alt")
 
-        user_exist = User.objects(user_id=user_id).first()
+        user = User.objects(user_id = user_id).first()
+        if not user:
+            return jsonify({"success" : False, "message" : "User does not exist"})
 
-        if not user_exist:
-            return jsonify({"success": False, "message": "User does not exist"})
-        if not access_token or not session_id:
-            return jsonify({"message": "Missing token or session", "success": False}), 400
-        if user_exist.access_token != access_token:
-            return ({"success": False,
-                     "message": "Invalid access token"}), 401
+        validate_session_token(user, access_token, session_id)
+        referral = Referral.objects(user_id = user.user_id).first()
 
-        if user_exist.session_id != session_id:
-            return ({"success": False,
-                     "message": "Session mismatch or invalid session"}), 403
-        validate_session_token(user_id, access_token, session_id)
-        referral = Referral.objects(user_id = user_exist.user_id).first()
-
-        if user_exist:
+        if user:
             info = {"total_referrals" : referral.total_referrals,
                     "referral_earning": referral.referral_earning,
                     "pending_referrals": referral.pending_referrals,
@@ -152,26 +128,17 @@ def my_profile():
         access_token = data.get("mode")
         session_id = data.get("log_alt")
 
-        user_exist = User.objects(user_id=user_id).first()
+        user = User.objects(user_id = user_id).first()
+        if not user:
+            return jsonify({"success" : False, "message" : "User does not exist"})
 
-        if not user_exist:
-            return jsonify({"success": False, "message": "User does not exist"})
-        if not access_token or not session_id:
-            return jsonify({"message": "Missing token or session", "success": False}), 400
-        if user_exist.access_token != access_token:
-            return ({"success": False,
-                     "message": "Invalid access token"}), 401
-
-        if user_exist.session_id != session_id:
-            return ({"success": False,
-                     "message": "Session mismatch or invalid session"}), 403
-        if user_exist:
-            info = {"username" : user_exist.username,
-                    "email" : user_exist.email,
-                    "password" : user_exist.password,
-                    "mobile_number" : user_exist.mobile_number
+        validate_session_token(user, access_token, session_id)
+        if user:
+            info = {"username" : user.username,
+                    "email" : user.email,
+                    "password" : user.password,
+                    "mobile_number" : user.mobile_number
                     }
-            print(info)
             fields_to_encode = ["username",
                                 "email",
                                 "password"
@@ -183,24 +150,3 @@ def my_profile():
     except Exception as e:
         logger.error(f"Server Error: {str(e)}")
         return jsonify({"error": get_error("server_error")}), 500
-
-
-def validate(user_id, access_token, session_id):
-    print("working")
-    user = User.objects(user_id = user_id).first()
-    if not user:
-        return jsonify({"success" : False, "message" : "User does not exist"})
-    if not access_token or not session_id:
-        return jsonify({"message": "Missing token or session", "success": False}), 400
-    if user.access_token != access_token:
-        return ({"success" :False,
-                 "message" : "Invalid access token"}), 401
-
-    if user.session_id != session_id:
-        return ({"success" : False,
-                 "message" : "Session mismatch or invalid session"}), 403
-
-    if hasattr(user, 'expiry_time') and user.expiry_time:
-        if datetime.datetime.now() > user.expiry_time:
-            return ({"success"  : False,
-                     "message" : "Access token has expired"}), 401

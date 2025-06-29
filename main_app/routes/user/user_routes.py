@@ -7,7 +7,7 @@ from main_app.controllers.user.forgotpassword_controllers import reset_password,
 from main_app.controllers.user.landingpage_controllers import my_rewards, my_referrals, my_profile, home_page
 from main_app.controllers.user.referral_controllers import handle_invitation_visit
 from main_app.controllers.user.invite import send_whatsapp_invite, send_telegram_invite, send_twitter_invite, send_facebook_invite
-from main_app.controllers.user.user_profile_controllers import update_profile
+from main_app.controllers.user.user_profile_controllers import update_profile, help_faq, submit_msg
 
 user_bp = Blueprint("user_routes", __name__)
 
@@ -55,7 +55,7 @@ def purchase():
 # =============
 
 
-@user_bp.route("/login/email_login", methods = ["POST"])
+@user_bp.route("/login/email-login", methods = ["POST"])
 def login_email():
     """
     Handle user login using email and password
@@ -272,7 +272,7 @@ def help_request():
     Accepts: POST request
     Redirects : on facebook with invite-link NO pre-typed message
     """
-    return send_facebook_invite()
+    return help_faq()
 
 @user_bp.route("/redeem-voucher", methods=["POST"])
 def redeem_voucher():
@@ -282,3 +282,12 @@ def redeem_voucher():
     Redirects : on facebook with invite-link NO pre-typed message
     """
     return
+
+@user_bp.route('/contact', methods=['POST'])
+def submit():
+    """
+    handles sending help message on email
+    Accepts: POST request
+    sends : email to admin
+    """
+    return submit_msg()

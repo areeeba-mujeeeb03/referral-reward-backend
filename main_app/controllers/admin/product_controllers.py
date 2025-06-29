@@ -19,7 +19,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 def parse_date_flexible(date_str):
     for fmt in ("%d/%m/%Y", "%d-%m-%Y"):
         try:
-            return datetime.datetime.strptime(date_str.strip(), fmt)
+            return datetime.datetime.strptime((str(date_str)), fmt)
         except ValueError:
             continue
     return None
