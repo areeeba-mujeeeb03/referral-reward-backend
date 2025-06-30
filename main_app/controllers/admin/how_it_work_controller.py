@@ -1,10 +1,10 @@
 from flask import request , jsonify
-from main_app.models.admin.how_it_work_model import HowItWork 
-from main_app.models.admin.advertisment_card_model import AdvertismentCard
-import logging
-from main_app.models.admin.admin_model import Admin
 import os
+import logging
 from werkzeug.utils import secure_filename
+from main_app.models.admin.how_it_work_model import HowItWork 
+from main_app.models.admin.advertisment_card_model import AdvertisementCard
+from main_app.models.admin.admin_model import Admin
 
 
 logger = logging.getLogger(__name__)
@@ -63,14 +63,16 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 def advertisement_card():
     try:
       logger = logging.getLogger(__name__)
+      
       data = request.form
       title = data.get("title")
       description = data.get("description")
       button_txt = data.get("button_txt")
       admin_uid = data.get("admin_uid")
+    #   image_url = data.get("image_url")
       
       if not all([title, description, button_txt, admin_uid]):
-         return jsonify({"error": "All fields are required."})
+         return jsonify({"error": "All fields are required."}), 400
       
         # Check user found or not 
       if not Admin.objects(admin_uid=admin_uid).first():
@@ -88,17 +90,23 @@ def advertisement_card():
       image_url = f"/{image_path}"    
       
        # Check if document exists
-      existing = AdvertismentCard.objects(admin_uid=admin_uid).first()
+      existing = AdvertisementCard.objects(admin_uid=admin_uid).first()
       if existing:
             existing.update(
-                title=data['title'],
-                description=data['dedescriptionsc1'],
-                button_txt=data['button_txt'],
-                image_url=data["image_url"]
+                title=title,
+                description=description,
+                button_txt=button_txt,
+                image_url=image_url
             )
             msg = "Updated advertisment card successfully"
       else:
-            AdvertismentCard(**data).save()
+            AdvertisementCard( 
+                title=title,
+                description=description,
+                button_txt=button_txt,
+                admin_uid=admin_uid,
+                image_url=image_url  
+            ).save()
             msg = "Added advertisment card successfully"
       
 

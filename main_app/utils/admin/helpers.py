@@ -1,7 +1,7 @@
 import random
 import datetime 
 from main_app.models.admin.add_product_model import AddProduct
-from main_app.models.admin.reward_products_model import Offer
+from main_app.models.admin.product_offer_model import Offer
 
 def generate_otp(length=6):
     return ''.join(random.choices("0123456789", k=length))
