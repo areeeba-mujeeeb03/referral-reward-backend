@@ -5,7 +5,7 @@ import os, datetime
 import logging
 from main_app.models.admin.add_product_model import Product
 from main_app.utils.admin.helpers import generate_product_uid, generate_offer_uid
-from main_app.models.admin.reward_products_model import Offer
+# from main_app.models.admin.product_offer_model import Offer
 
 # Configure logging for better debugging and monitoring
 logging.basicConfig(level=logging.INFO)
@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 UPLOAD_FOLDER = "uploads/products"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
+# ===================================================
 
 # function for date DD/MM/YYYY
 def parse_date_flexible(date_str):
@@ -23,6 +24,8 @@ def parse_date_flexible(date_str):
         except ValueError:
             continue
     return None
+
+# =====================================================
 
 def add_product():
     try:
@@ -37,6 +40,7 @@ def add_product():
          status = data.get("status", "Live")
          visibility_till = data.get("visibility_till")
          image = request.files.get("image")
+         apply_offer = data.get("apply_offer", "").lower() == "true"
 
          if not all([product_name, original_amt, discounted_amt, short_desc]):
              return jsonify({"error": "Missing required fields"}), 400
@@ -63,9 +67,41 @@ def add_product():
             filename = secure_filename(image.filename)
             image_path = os.path.join(UPLOAD_FOLDER, filename)
             image.save(image_path)
-            image_url = f"/{image_path}"
-            print("a")
+            image_url = f"/{image_path}"            
             
+
+         offer_data = {}
+         if apply_offer:
+            offer_name = data.get("offer_name")
+            one_liner = data.get("one_liner")
+            button_txt = data.get("button_txt")
+            off_percent = data.get("off_percent")
+            start_date = data.get("start_date")
+            expiry_date = data.get("expiry_date")
+
+            if not all([offer_name, one_liner, button_txt, off_percent, start_date, expiry_date]):
+                return jsonify({"error": "Missing offer fields"}), 400
+
+            try:
+                off_percent = float(off_percent)
+            except ValueError:
+                return jsonify({"error": "off_percent must be numeric"}), 400
+
+            start_date_parsed = parse_date_flexible(start_date)
+            expiry_date_parsed = parse_date_flexible(expiry_date)
+
+            if not start_date_parsed or not expiry_date_parsed:
+                return jsonify({"error": "Invalid offer date format"}), 400
+
+            offer_data = {
+                "offer_name": offer_name,
+                "one_liner": one_liner,
+                "button_txt": button_txt,
+                "off_percent": off_percent,
+                "start_date": start_date_parsed,
+                "expiry_date": expiry_date_parsed
+            }
+
          # Save product
          product = Product(
             uid = generate_product_uid(),
@@ -73,10 +109,12 @@ def add_product():
             original_amt = original_amt,
             discounted_amt = discounted_amt,
             short_desc=short_desc,
-            image_url = image,
+            image_url = image_url,
             reward_type = reward_type,
             status = status,
-            visibility_till = visibility_date
+            visibility_till = visibility_date,
+            apply_offer=apply_offer,
+            **offer_data
         )
          product.save()
 
@@ -144,57 +182,124 @@ def update_product(uid):
 
 # --------------------------------------------------------------------------------------------------
 
-# Add Offer 
+# # Add Offer
 
-UPLOAD_FOLDER = "uploads/offers"
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+# UPLOAD_FOLDER = "uploads/offers"
+# os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-def create_offer():
- try:
-     logger.info("Add Offer API called")
-     data = request.form
-     offer_name = data.get("offer_name").strip()
-     one_liner = data.get("one_liner").strip()
-     button_txt = data.get("button_txt").strip()
-     off_percent = int(data.get("off_percent", "0"))
-     start_date = parse_date_flexible(data.get("start_date", ""))
-     expiry_date = parse_date_flexible(data.get("expiry_date", ""))
-     
-     if not all([offer_name, one_liner, button_txt, off_percent, start_date, expiry_date]):
-         return jsonify({"error": "All fields are required"}), 400
+# def create_offer():
+#  try:
+#      logger.info("Add Offer API called")
+#      data = request.form
+#      offer_name = data.get("offer_name").strip()
+#      one_liner = data.get("one_liner").strip()
+#      button_txt = data.get("button_txt").strip()
+#      off_percent = int(data.get("off_percent", "0"))
+#      start_date = parse_date_flexible(data.get("start_date", ""))
+#      expiry_date = parse_date_flexible(data.get("expiry_date", ""))
 
-     if not start_date or not expiry_date:
-            return jsonify({"error": "Invalid date format (DD/MM/YYYY/ DD-MM-YYYY)"}), 400
+#      if not all([offer_name, one_liner, button_txt, off_percent, start_date, expiry_date]):
+#          return jsonify({"error": "All fields are required"}), 400
 
-     file = request.files.get("image")
-     if not file:
-        return jsonify({"error": "No image uploaded"}), 400
-         
-     filename = secure_filename(file.filename)
-     image_path = os.path.join(UPLOAD_FOLDER, filename)
-     file.save(image_path)
-     image_url = f"/{image_path}" 
-     
-     offer = Offer(
-        offer_uid = generate_offer_uid(),
-        offer_name = offer_name,
-        one_liner = one_liner,
-        image_url = image_url,
-        button_txt = button_txt,
-        off_percent = off_percent,
-        start_date = start_date,
-        expiry_date = expiry_date
-      )
-     
-     offer.save()
+#      if not start_date or not expiry_date:
+#             return jsonify({"error": "Invalid date format (DD/MM/YYYY/ DD-MM-YYYY)"}), 400
 
-     logger.info(f"Offer saved with ID: {offer.offer_uid}")
-     return jsonify({"message": "Offer add successfully", "offer_id": str(offer.offer_uid)}), 200
+#      file = request.files.get("image")
+#      if not file:
+#         return jsonify({"error": "No image uploaded"}), 400
 
- except Exception as e:
-          logger.error(f"Offer addition failed: {str(e)}")
-          return jsonify({"error": "Internal server error"}), 500
- 
+#      filename = secure_filename(file.filename)
+#      image_path = os.path.join(UPLOAD_FOLDER, filename)
+#      file.save(image_path)
+#      image_url = f"/{image_path}"
+
+#      offer = Offer(
+#         offer_uid = generate_offer_uid(),
+#         offer_name = offer_name,
+#         one_liner = one_liner,
+#         image_url = image_url,
+#         button_txt = button_txt,
+#         off_percent = off_percent,
+#         start_date = start_date,
+#         expiry_date = expiry_date
+#       )
+
+#      offer.save()
+
+#      logger.info(f"Offer saved with ID: {offer.offer_uid}")
+#      return jsonify({"message": "Offer add successfully", "offer_id": str(offer.offer_uid)}), 200
+
+#  except Exception as e:
+#           logger.error(f"Offer addition failed: {str(e)}")
+#           return jsonify({"error": "Internal server error"}), 500
+
+
+# ---------------------------------------------------------------------------------------------
+
+# Update Offers
+def update_offer():
+    try:
+        logger = logging.getLogger(__name__)
+        data = request.form
+
+        uid = data.get("uid")
+        apply_offer = data.get("apply_offer", "").lower() == "true"
+
+        if not uid:
+            return jsonify({"error": "Product uid not found"}), 400
+
+        product = Product.objects(uid=uid).first()
+        if not product:
+            return jsonify({"error" : "Product not found"}), 400
+
+        if apply_offer:
+            offer_name = data.get("offer_name")
+            one_liner = data.get("one_liner")
+            button_txt = data.get("button_txt")
+            off_percent = data.get("off_percent")
+            start_date = data.get("start_date")
+            expiry_date = data.get("expiry_date")
+
+            if not all ([ offer_name, one_liner, button_txt, off_percent, start_date, expiry_date]):
+                return jsonify({"error": "All offer fields are required."}), 400
+
+            try:
+                off_percent = float(off_percent)
+            except ValueError:
+                return jsonify({"error": "Offer percent must be number"}), 400
+
+            start = parse_date_flexible(start_date)
+            expiry = parse_date_flexible(expiry_date)
+
+            if not start or not expiry:
+                return jsonify({"error": "Invalid date format"}), 400
+
+            product.update(
+                apply_offer=True,
+                offer_name=offer_name,
+                one_liner=one_liner,
+                button_txt=button_txt,
+                off_percent=off_percent,
+                start_date=start,
+                expiry_date=expiry
+            )
+      #   else:
+      #       product.update(
+      #           apply_offer=False,
+      #           offer_name=None,
+      #           one_liner=None,
+      #           button_txt=None,
+      #           off_percent=None,
+      #           start_date=None,
+      #           expiry_date=None
+      #       )
+
+            return jsonify({"message": "Offer updated successfully"}), 200
+
+    except Exception as e:
+        logger.error(f"offer updated failed: {str(e)}")
+        return jsonify({"error": "Internal server error"}), 500
+
 
 
 

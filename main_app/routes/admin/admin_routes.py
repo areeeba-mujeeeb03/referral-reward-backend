@@ -3,14 +3,18 @@ from main_app.controllers.admin.admin_auth_controller import admin_register
 from main_app.controllers.admin.admin_auth_controller import handle_admin_login
 from main_app.controllers.admin.forgotpassword_controllers import forgot_otp_email, verify_otp, reset_password
 from main_app.controllers.admin.help_request_controllers import list_faqs, add_faq, update_faq, delete_faq,list_contact_messages
+from main_app.controllers.admin.help_request_controllers import list_faqs, add_faq, update_faq, delete_faq, \
+    list_contact_messages
 from main_app.controllers.admin.profile_controllers import edit_profile_data
-from main_app.controllers.admin.product_controllers import add_product, create_offer, update_product
+from main_app.controllers.admin.product_controllers import add_product, update_product, update_offer
 from main_app.controllers.admin.prize_controller import add_exciting_prizes
+from main_app.controllers.admin.referral_controllers import generate_invite_link_with_expiry
 from main_app.controllers.admin.how_it_work_controller import add_how_it_work, advertisement_card
 from main_app.controllers.admin.referral_controllers import generate_invite_link_with_expiry
 
 admin_bp = Blueprint("admin_routes", __name__)
 
+#--------------------------------------------------------------------------------
 
 # Admin Register
 
@@ -55,6 +59,8 @@ def user_forgot_password():
     """
     return forgot_otp_email()
 
+# Verify OTP (card)
+
 @admin_bp.route("/admin/forgot/verify_otp", methods = ["POST"])
 def forget_otp_verify():
      """
@@ -63,6 +69,8 @@ def forget_otp_verify():
     Returns: Password reset confirmation response
      """
      return verify_otp()
+
+# Reset Password
 
 @admin_bp.route("/admin/login/reset_password", methods = ["POST"])
 def user_reset_password():
@@ -101,15 +109,24 @@ def update_add_product(uid):
 
 # Add Offers
 
-@admin_bp.route("/admin/add_offer", methods = ["POST"])
-def admin_add_offer():
-    """
-    Creates a new offer entry.
-    Expects: JSON body with offer details including start and expiry dates.
-    Returns: Success message or error response.
-    """
-    return create_offer()
+# @admin_bp.route("/admin/add_offer", methods = ["POST"])
+# def admin_add_offer():
+#     """
+#     Creates a new offer entry.
+#     Expects: JSON body with offer details including start and expiry dates.
+#     Returns: Success message or error response.
+#     """
+#     return create_offer()
 
+# Update Offers
+@admin_bp.route("/admin/update_offer", methods = ["PUT"])
+def admin_update_offer():
+    """
+    Update offers
+    Experts: form-data with offer details including start ans expiry dates.
+    Return: Success message or error reponse.
+    """
+    return update_offer()
 # ------------------------------------------------------------------------------------------------
 
 # Exciting Prizes
@@ -125,11 +142,12 @@ def admin_exciting_offer():
 
 # --------------------------------------------------------------------------------------------------
 
+# How It Work
 
 @admin_bp.route("/admin/how_it_work", methods = ["POST"])
 def admin_how_it_work():
     """
-
+    
     """
     return  add_how_it_work()
 
@@ -137,10 +155,12 @@ def admin_how_it_work():
 
 # -----------------------------------------------------------------------------
 
+# Advertisement Card
+
 @admin_bp.route("/admin/advertisement_card", methods = ["POST"])
 def admim_advertisement_card():
     """
-
+    
     """
     return advertisement_card()
 
