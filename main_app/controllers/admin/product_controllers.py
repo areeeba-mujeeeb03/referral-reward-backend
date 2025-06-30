@@ -3,7 +3,7 @@ from flask import request, jsonify
 from werkzeug.utils import secure_filename
 import os, datetime
 import logging
-from main_app.models.admin.add_product_model import AddProduct
+from main_app.models.admin.add_product_model import Product
 from main_app.utils.admin.helpers import generate_product_uid, generate_offer_uid
 from main_app.models.admin.reward_products_model import Offer
 
@@ -36,6 +36,7 @@ def add_product():
          reward_type = data.get("reward_type", "")
          status = data.get("status", "Live")
          visibility_till = data.get("visibility_till")
+         image = request.files.get("image")
 
          if not all([product_name, original_amt, discounted_amt, short_desc]):
              return jsonify({"error": "Missing required fields"}), 400
@@ -62,16 +63,17 @@ def add_product():
             filename = secure_filename(image.filename)
             image_path = os.path.join(UPLOAD_FOLDER, filename)
             image.save(image_path)
-            image_url = f"/{image_path}"            
+            image_url = f"/{image_path}"
+            print("a")
             
          # Save product
-         product = AddProduct(
-            uid = generate_product_uid(), 
+         product = Product(
+            uid = generate_product_uid(),
             product_name = product_name,
             original_amt = original_amt,
             discounted_amt = discounted_amt,
             short_desc=short_desc,
-            image_url = image_url,
+            image_url = image,
             reward_type = reward_type,
             status = status,
             visibility_till = visibility_date
@@ -95,7 +97,7 @@ def update_product(uid):
      logger.info(f"Update Product API called for UID: {uid}")
      data = request.form
 
-     product = AddProduct.objects(uid=uid).first()
+     product = Product.objects(uid=uid).first()
      if not product:
         return jsonify({"error": "Product not found"}), 400
      if data.get("product_name"):

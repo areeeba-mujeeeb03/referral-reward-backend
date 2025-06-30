@@ -1,14 +1,12 @@
-from flask import Flask, Blueprint
+from flask import Blueprint
 from main_app.controllers.admin.admin_auth_controller import admin_register
 from main_app.controllers.admin.admin_auth_controller import handle_admin_login
 from main_app.controllers.admin.forgotpassword_controllers import forgot_otp_email, verify_otp, reset_password
-from main_app.controllers.admin.help_request_controllers import list_faqs, add_faq, update_faq, delete_faq, \
-    list_contact_messages
+from main_app.controllers.admin.help_request_controllers import list_faqs, add_faq, update_faq, delete_faq,list_contact_messages
 from main_app.controllers.admin.profile_controllers import edit_profile_data
 from main_app.controllers.admin.product_controllers import add_product, create_offer, update_product
 from main_app.controllers.admin.prize_controller import add_exciting_prizes
 from main_app.controllers.admin.how_it_work_controller import add_how_it_work, advertisement_card
-
 from main_app.controllers.admin.referral_controllers import generate_invite_link_with_expiry
 
 admin_bp = Blueprint("admin_routes", __name__)
@@ -212,6 +210,12 @@ def remove_faq(faq_id):
 @admin_bp.route('/admin/messages', methods=['GET'])
 def view_msgs():
     return list_contact_messages()
+
+# ==============
+
+# Generate invitation link with expiry
+
+# ==============
 
 @admin_bp.route('/generate-link', methods = ['POST'])
 def generate_link():

@@ -1,15 +1,9 @@
-import datetime
-from itertools import product
-from flask import request, jsonify
-
 from main_app.models.user.reward import Reward
-from main_app.models.user.user import User
-from main_app.controllers.user.auth_controllers import validate_session_token
 from main_app.models.admin.help_model import FAQ, Contact
 from flask import request, jsonify
 from main_app.models.user.user import User
 from main_app.controllers.user.auth_controllers import validate_session_token
-from main_app.routes.user.user_routes import rewards
+from main_app.models.admin.add_product_model import Product
 
 
 def update_profile():
@@ -65,16 +59,16 @@ def redeem():
         user_id = data.get("user_id")
         access_token = data.get("mode")
         session_id = data.get("log_alt")
-        product_name = data.get("product_name")
-        offer_name = data.get("offer")
+        product_id = data.get("product_id")
 
         user = User.objects(user_id = user_id).first()
+
         if not user:
             return jsonify({"success" : False, "message" : "User does not exist"})
 
         validate_session_token(user, access_token, session_id)
 
-        reward = Reward.objects()
+        reward = Product.objects()
 
         return jsonify({
             "success": True,
@@ -109,6 +103,15 @@ def submit_msg():
     name = data.get('name')
     email = data.get('email')
     message = data.get('message')
+    user_id = data.get("user_id")
+    access_token = data.get("mode")
+    session_id = data.get("log_alt")
+
+    user = User.objects(user_id=user_id).first()
+    if not user:
+        return jsonify({"success": False, "message": "User does not exist"})
+
+    validate_session_token(user, access_token, session_id)
 
     if not name or not email or not message:
         return jsonify({"error": "All fields are required"}), 400
