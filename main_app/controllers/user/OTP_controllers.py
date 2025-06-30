@@ -5,7 +5,6 @@ import os
 from twilio.rest import Client
 from twilio.base.exceptions import TwilioException
 from flask import request, jsonify
-
 from main_app.controllers.user.referral_controllers import update_referral_status_and_reward
 from main_app.models.user.user import User
 
@@ -19,10 +18,12 @@ from main_app.models.user.user import User
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+twilio_client = None
+
 # Twilio Configuration - Should be moved to environment variables for security
-TWILIO_PHONE_NUMBER = os.getenv('TWILIO_PHONE_NUMBER', '+13253356908')
-TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID', 'AC6d5d2ae07a30dfe9f2a2d2d2339ec05c')
-TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN', 'ba25186ce60d719aaaf91acd54d9c6e3')
+TWILIO_PHONE_NUMBER = os.getenv('TWILIO_PHONE_NUMBER', '+1 267 813 2952')
+TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID', 'AC3e746c870fe2af96690590d562902ff9')
+TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN', 'd23506b5e9a7ffb48ca7ef32139e4ccd')
 
 # OTP Configuration Constants
 OTP_LENGTH = 6
@@ -141,7 +142,7 @@ def generate_and_send_otp():
             otp_expires_at=otp_expiry,
         )
         
-        # Step 7: Send OTP via SMS (skip in development mode)
+        # Step 7: Send OTP via SMS
         if DEVELOPMENT_MODE:
             logger.info(f"Development mode: Using fixed OTP {otp}")
             # In development, use fixed OTP for testing
@@ -254,6 +255,7 @@ def _send_otp_sms(mobile_number, otp):
     Returns:
         bool: True if SMS sent successfully, False otherwise
     """
+
     if not twilio_client:
         logger.error("Twilio client not initialized")
         return False
@@ -264,10 +266,11 @@ def _send_otp_sms(mobile_number, otp):
         message = twilio_client.messages.create(
             body=message_body,
             from_=TWILIO_PHONE_NUMBER,
-            to=mobile_number
+            to="+91" + mobile_number
         )
         
         logger.info(f"SMS sent successfully. Message SID: {message.sid}")
+        print("a")
         return True
         
     except TwilioException as e:
@@ -394,7 +397,7 @@ def verify_user_otp():
             logger.warning(f"Invalid OTP attempt for user: {user.user_id}")
             # Increment attempt counter
             current_attempts = getattr(user, 'otp_attempts', 0) + 1
-            user.update(otp_attempts=current_attempts)
+            # user.update(otp_attempts=current_attempts)
             
             remaining_attempts = MAX_OTP_ATTEMPTS - current_attempts
             if remaining_attempts > 0:

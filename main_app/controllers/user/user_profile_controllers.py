@@ -1,11 +1,16 @@
 import datetime
+from itertools import product
 from flask import request, jsonify
-from main_app.models.user.user import User
-from main_app.controllers.user.auth_controllers import validate_session_token
 
+from main_app.models.user.reward import Reward
+from main_app.models.user.user import User
+from main_app.controllers.user.auth_controllers import validate_session_token
+from main_app.models.admin.help_model import FAQ, Contact
 from flask import request, jsonify
 from main_app.models.user.user import User
 from main_app.controllers.user.auth_controllers import validate_session_token
+from main_app.routes.user.user_routes import rewards
+
 
 def update_profile():
     try:
@@ -53,3 +58,62 @@ def update_profile():
 
     except Exception as e:
         return jsonify({"success": False, "message": "Server error", "error": str(e)}), 500
+
+def redeem():
+    try:
+        data = request.get_json()
+        user_id = data.get("user_id")
+        access_token = data.get("mode")
+        session_id = data.get("log_alt")
+        product_name = data.get("product_name")
+        offer_name = data.get("offer")
+
+        user = User.objects(user_id = user_id).first()
+        if not user:
+            return jsonify({"success" : False, "message" : "User does not exist"})
+
+        validate_session_token(user, access_token, session_id)
+
+        reward = Reward.objects()
+
+        return jsonify({
+            "success": True,
+            "message": "Voucher Redeemed successfully!"}), 200
+
+    except Exception as e:
+        return jsonify({"success": False, "message": "Server error", "error": str(e)}), 500
+
+
+def help_faq():
+    try:
+        data = request.get_json()
+        user_id = data.get("user_id")
+        access_token = data.get("mode")
+        session_id = data.get("log_alt")
+        faqs = FAQ.objects()
+
+        user = User.objects(user_id = user_id).first()
+        if not user:
+            return jsonify({"success" : False, "message" : "User does not exist"})
+
+        validate_session_token(user, access_token, session_id)
+
+        return jsonify([{"question": faq.question, "answer": faq.answer}for faq in faqs])
+
+    except Exception as e:
+        return jsonify({"success": False, "message": "Server error", "error": str(e)}), 500
+
+
+def submit_msg():
+    data = request.get_json()
+    name = data.get('name')
+    email = data.get('email')
+    message = data.get('message')
+
+    if not name or not email or not message:
+        return jsonify({"error": "All fields are required"}), 400
+
+    contact = Contact(name=name, email=email, message=message)
+    contact.save()
+
+    return jsonify({"message": "Your query has been received!"}), 201

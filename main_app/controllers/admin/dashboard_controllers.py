@@ -4,7 +4,7 @@ from main_app.utils.user.string_encoding import generate_encoded_string
 def encode_data():
     try:
         data = {
-             "total_participants": "1024",
+            "total_participants": "1024",
             "referral_leads": "1024",
             "successful_referrals": "1024",
             "total_referrals": "1024"

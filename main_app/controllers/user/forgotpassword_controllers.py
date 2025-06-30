@@ -9,6 +9,27 @@ from flask import request,jsonify
 
 
 def forgot_password():
+    """
+    Forgot password by user to send resent link on their email
+
+    Process Flow:
+    1. Validate request data and required fields
+    2. Find user by email
+    3. Check if email exists
+    4. saves token in db
+    5. Return verification result
+
+    Expected JSON Request Body:
+    {
+        "email": "string (required)"
+    }
+
+    Returns:
+        Flask Response: JSON response with verification status
+        - Success (200): Password reset link sent to your email
+        - Error (400): Failed to send email
+        - Error (404): User not found
+    """
     data = request.json
     email = data.get("email")
     password_reset_token = str(uuid.uuid4())
@@ -46,6 +67,30 @@ def forgot_password():
         return ({"error": f"Failed to send email: {str(e)}"}), 404
 
 def reset_password(token):
+    """
+    Forgot password by user to send resent link on their email
+
+    Process Flow:
+    1. Validate if the token in link matches the one stored in db
+    2. Find user by email
+    3. Check if token is same
+    4. unset token, expiry in db and sets the date of last password updated on
+    5. Return verification result
+
+    Expected JSON Request Body:
+    {
+        "email": "string (required)",
+        "new_password" : string(required)
+    }
+
+    Returns:
+        Flask Response: JSON response with verification status
+        - Success (200): Password updated successfully!
+        - Error (404): Invalid reset link
+        - Error (404) : Reset token not found
+        - Error (400) : "Unauthorized
+        - Error (404): User not found
+    """
     data = request.json
     email = data.get("email")
     new_password = data.get("new_password")

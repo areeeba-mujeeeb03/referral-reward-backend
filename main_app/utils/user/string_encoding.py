@@ -1,4 +1,21 @@
+from typing import final
+
 import bcrypt
+
+def encode_str(str):
+    if not isinstance(str):
+        raise TypeError("Input must be a string.")
+
+    alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    base = len(alphabet)
+
+    number = 2
+    encoded_string = ""
+    while number > 0:
+        remainder = number % base
+        encoded_string = alphabet[remainder] + encoded_string
+        number //= base
+    return encoded_string
 
 def generate_encoded_string(info: dict, fields_to_encode: list):
     # Step 1: Extract values
@@ -17,12 +34,14 @@ def generate_encoded_string(info: dict, fields_to_encode: list):
     final_string = encrypted_string[::-1]
 
     # Step 6: Map each encoded field to R1, R2
-    result_parts = {}
-    for i, field in enumerate(fields_to_encode):
-        result_parts[f"R{i + 1}"] = info.get(field, "")
+    length = len(final_string)
+    part_size = (length) // 4
 
-    return {
-        "original_string": original_string,
-        "final_string": final_string,
-        "parts": result_parts
+    result = {
+        "date": final_string[0:part_size],
+        "age": final_string[part_size:part_size * 2],
+        "gender": final_string[part_size * 2:part_size * 3],
+        "arn_id": final_string[part_size * 3:]
     }
+    print(encrypted_string)
+    return result
