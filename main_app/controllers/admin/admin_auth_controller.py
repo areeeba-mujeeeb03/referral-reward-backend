@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 def is_valid_email(email):
-    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{3,}$'
+    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{3}$'
     return re.match(pattern, email) is not None
 
 #------- Register 
@@ -41,10 +41,10 @@ def admin_register():
       if not re.match(r'^\d{10}$',data["mobile_number"]):
             return jsonify({"error": "Mobile must be 10 digits"}), 400
 
-    # 
-    #   password_validation = _validate_password_strength(data["password"])
-    #   if password_validation:
-    #         return password_validation
+    # Password validation
+      password_validation = _validate_password_strength(data["password"])
+      if password_validation:
+            return password_validation
 
     # Check username exists or not   
       if Admin.objects(username=data["username"]).first():
@@ -76,35 +76,35 @@ def admin_register():
 # Password Strength Validation Utility
 
 # # ==================
-# def _validate_password_strength(password):
-#     """
-#     Validate password meets minimum security requirements
+def _validate_password_strength(password):
+    """
+    Validate password meets minimum security requirements
     
-#     Password Requirements:
-#     - Minimum 8 characters length
-#     - At least one uppercase letter
-#     - At least one lowercase letter  
-#     - At least one numeric digit
+    Password Requirements:
+    - Minimum 8 characters length
+    - At least one uppercase letter
+    - At least one lowercase letter  
+    - At least one numeric digit
     
-#     Args:
-#         password (str): Password to validate
+    Args:
+        password (str): Password to validate
         
-#     Returns:
-#         Flask Response or None: Error response if weak, None if strong
-#     """
-#     if len(password) < 8:
-#         return jsonify({"error": "Password must be at least 8 characters long"}), 400
+    Returns:
+        Flask Response or None: Error response if weak, None if strong
+    """
+    if len(password) < 8:
+        return jsonify({"error": "Password must be at least 8 characters long"}), 400
     
-#     if not any(c.isupper() for c in password):
-#         return jsonify({"error": "Password must contain at least one uppercase letter"}), 400
+    if not any(c.isupper() for c in password):
+        return jsonify({"error": "Password must contain at least one uppercase letter"}), 400
     
-#     if not any(c.islower() for c in password):
-#         return jsonify({"error": "Password must contain at least one lowercase letter"}), 400
+    if not any(c.islower() for c in password):
+        return jsonify({"error": "Password must contain at least one lowercase letter"}), 400
     
-#     if not any(c.isdigit() for c in password):
-#         return jsonify({"error": "Password must contain at least one number"}), 400
+    if not any(c.isdigit() for c in password):
+        return jsonify({"error": "Password must contain at least one number"}), 400
     
-#     return None
+    return None
 
 
 
