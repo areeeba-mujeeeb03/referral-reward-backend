@@ -2,9 +2,12 @@ from flask import Flask, Blueprint
 from main_app.controllers.admin.admin_auth_controller import admin_register
 from main_app.controllers.admin.admin_auth_controller import handle_admin_login
 from main_app.controllers.admin.forgotpassword_controllers import forgot_otp_email, verify_otp, reset_password
+from main_app.controllers.admin.help_request_controllers import list_faqs, add_faq, update_faq, delete_faq, \
+    list_contact_messages
 from main_app.controllers.admin.profile_controllers import edit_profile_data
 from main_app.controllers.admin.product_controllers import add_product, create_offer, update_product
 from main_app.controllers.admin.prize_controller import add_exciting_prizes
+from main_app.controllers.admin.referral_controllers import generate_invite_link_with_expiry
 from main_app.controllers.admin.how_it_work_controller import add_how_it_work, advertisement_card
 
 
@@ -14,7 +17,7 @@ admin_bp = Blueprint("admin_routes", __name__)
 # Admin Register
 
 @admin_bp.route("/admin/register", methods=["POST"])
-def register_Admin():
+def register_admin():
     """
     Handle admin register using email and password
     Accepts: POST request with email and password
@@ -163,4 +166,58 @@ def edit_profile(admin_uid):
     Handle profile data updates like username, email
 
     """
-    return edit_profile_data(admin_uid)
+    return edit_profile_data()
+
+# ==============
+
+# View all FAQs
+
+# ==============
+
+@admin_bp.route('/admin/faqs', methods=['GET'])
+def all_faqs():
+    return list_faqs()
+
+# ==============
+
+# Add new FAQ
+
+# ==============
+
+@admin_bp.route('/admin/add-faqs', methods=['POST'])
+def add_new_faq():
+    return add_faq()
+
+# ==============
+
+# Update existing FAQ
+
+# ==============
+
+@admin_bp.route('/admin/update-faqs/<faq_id>', methods=['PUT'])
+def update_faqs(faq_id):
+    return update_faq(faq_id)
+
+# ==============
+
+# Delete Existing FAQ
+
+# ==============
+
+@admin_bp.route('/admin/delete-faqs/<faq_id>', methods=['DELETE'])
+def remove_faq(faq_id):
+    return delete_faq(faq_id)
+
+# ==============
+
+# View messages sent by users
+
+# ==============
+
+@admin_bp.route('/admin/messages', methods=['GET'])
+def view_msgs():
+    return list_contact_messages()
+
+@admin_bp.route('/generate-link', methods = ['POST'])
+def generate_link():
+    return generate_invite_link_with_expiry()

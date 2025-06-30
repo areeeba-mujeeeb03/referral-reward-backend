@@ -14,7 +14,7 @@ app.config["SECRET_KEY"] = "areeba-mujeeb-is-Smart"
 
 # Connect to MongoDB using mongoengine
 #user's DB
-connect(db="LoyaltyProgram-user", alias="user-db", host="localhost", port=27017)
+connect(db="LoyaltyProgram-user", alias="default", host="localhost", port=27017)
 #admin's DB
 connect(db="LoyaltyProgram-admin", alias="admin-db", host="localhost", port=27017)
 

@@ -3,7 +3,8 @@ import logging
 import re
 from flask import request, jsonify, session
 from main_app.models.user.user import User
-from main_app.controllers.user.referral_controllers import (process_referral_code_and_reward, initialize_user_records)
+from main_app.controllers.user.referral_controllers import (process_referral_code_and_reward, initialize_user_records,
+                                                            process_tag_id_and_reward)
 from main_app.utils.user.helpers import hash_password
 from main_app.utils.user.error_handling import get_error
 
@@ -74,7 +75,7 @@ def handle_registration():
             return email_validation
             
 
-        if not re.match(r'^\d{10}$',data["mobile_number"]):
+        if not re.match(r'^\d{10}$',str(data["mobile_number"])):
             return jsonify({"error": "Mobile must be 10 digits"}), 400
 
         if data["password"] != data["confirm_password"]:
@@ -93,7 +94,7 @@ def handle_registration():
         # Step 5: Create new user with secure password
         hashed_password = hash_password(data["password"])
         logger.info(f"Creating new user account for: {data['username']}")
-        
+
         user = User(
             username=data["username"],
             email=data["email"],
@@ -102,22 +103,32 @@ def handle_registration():
             created_at=datetime.datetime.now(),  # Track account creation time
             is_active=True  # Set account as active by default
         )
-        user.save()
-        logger.info(f"User account created successfully with ID: {user.user_id}")
-        
         # Step 6: Process referral code if provided
         try:
             referral_code = data.get("referral_code")
-            referrer_id = User.objects(invitation_code = referral_code).first()
             if referral_code:
-                logger.info(f"Processing referral code: {referral_code}")
-                user.update(
-                    set__referred_by = referrer_id.user_id
-                )
-                process_referral_code_and_reward(referral_code, user.user_id)
+
+                referrer = User.objects(invitation_code = referral_code).first()
+                if not referrer:
+                    logger.info("No such code exists.")
+                    return jsonify({"success" : False, "error" : "Invalid referral code."})
+                if referrer.user_id == user.user_id:
+                    return jsonify({"success" : False, "error" : "You can not refer yourself"})
+                if referral_code:
+                    logger.info(f"Processing referral code: {referral_code}")
+                    user.save()
+                    user.update(
+                        set__referred_by = referrer.user_id
+                    )
+                    process_referral_code_and_reward(referral_code, user.user_id)
+
+
         except Exception as e:
             return jsonify({"error" : get_error("failed_to_update")})
-        
+        print(user)
+        user.save()
+        logger.info(f"User account created successfully with ID: {user.user_id}")
+
         # Step 7: Initialize user's reward and referral tracking records
         initialize_user_records(user.user_id)
         
@@ -126,12 +137,82 @@ def handle_registration():
         return jsonify({
             "message": "User registered successfully",
             "user_id": user.user_id,
-            "tag_id": user.tag_id,
-            "username": user.username,
-            "email": user.email,
             "registration_date": user.created_at.isoformat() if hasattr(user, 'created_at') else None
         }), 200
         
+    except Exception as e:
+        logger.error(f"Registration failed with error: {str(e)}")
+        return jsonify({"error": get_error("registration_failed")}), 500
+
+def handle_registration_with_tag_id(tag_id):
+    try:
+        data = request.get_json()
+        required_fields = ["username", "email", "mobile_number", "password", "confirm_password"]
+        validation_result = _validate_required_fields(data, required_fields)
+        if validation_result:
+            return validation_result
+        # Step 3: Additional field-specific validation
+        email_validation = _validate_email_format(data["email"])
+        if email_validation:
+            return email_validation
+
+        if not re.match(r'^\d{10}$', str(data["mobile_number"])):
+            return jsonify({"error": "Mobile must be 10 digits"}), 400
+
+        if data["password"] != data["confirm_password"]:
+            return jsonify({"error": "Password and Confirm Password do not match"}), 400
+
+        password_validation = _validate_password_strength(data["password"])
+        if password_validation:
+            return password_validation
+
+        # Step 4: Check for existing user conflicts
+        conflict_check = _check_user_conflicts(data["username"], data["email"])
+        if conflict_check:
+            return conflict_check
+
+        # Step 5: Create new user with secure password
+        hashed_password = hash_password(data["password"])
+        logger.info(f"Creating new user account for: {data['username']}")
+
+        user = User(
+            username=data["username"],
+            email=data["email"],
+            mobile_number=data["mobile_number"],
+            password=hashed_password,
+            created_at=datetime.datetime.now(),  # Track account creation time
+            is_active=True  # Set account as active by default
+        )
+
+        try:
+            referral_code = data.get("referral_code")
+
+            if referral_code:
+                referrer = User.objects(invitation_code=referral_code).first()
+                if not referrer:
+                    logger.info("No such code exists.")
+                    return jsonify({"success" : False, "error" : "Invalid referral code."})
+                if referrer.user_id == user.user_id:
+                    return jsonify({"success" : False, "error" : "You can not refer yourself"}),400
+            else:
+                print("ref")
+                referrer  = User.objects(tag_id = tag_id).first()
+                logger.info(f"Processing referrer: {tag_id}")
+                user.save()
+                user.update(
+                    set__referred_by=referrer.user_id
+                )
+                process_tag_id_and_reward(referrer.tag_id, user.user_id)
+            user.save()
+            initialize_user_records(user.user_id)
+        except Exception as e:
+            return jsonify({"error" : get_error("failed_to_update")}),400
+        logger.info(f"User registration completed successfully for: {user.user_id}")
+        return jsonify({
+            "message": "User registered successfully",
+            "user_id": user.user_id,
+            "registration_date": user.created_at.isoformat() if hasattr(user, 'created_at') else None
+        }), 200
     except Exception as e:
         logger.error(f"Registration failed with error: {str(e)}")
         return jsonify({"error": get_error("registration_failed")}), 500
@@ -265,30 +346,37 @@ def _check_user_conflicts(username, email):
 # ==================
 
 
-def validate_session_token(access_token):
+import datetime
+
+
+import datetime
+
+def validate_session_token(user, access_token, session_id):
     """
-    Validate if access token is still valid and not expired
-    
-    Args:
-        access_token (str): Access token to validate
-        
+    Validate if access token is valid, not expired, and tied to the correct session.
+
     Returns:
-        tuple: (is_valid: bool, user: User or None, error_message: str or None)
+        tuple: (is_valid: bool, user: User or None, error_message: str or None, status_code: int)
     """
     try:
-        if not access_token:
-            return False, None, "Access token is required"
-        
-        user = User.objects(access_token=access_token).first()
-        if not user:
-            return False, None, "Invalid access token"
-        
+        if not access_token or not session_id:
+            return jsonify({"message": "Missing token or session", "success": False}), 400
+        if user.access_token != access_token:
+            return ({"success" :False,
+                     "message" : "Invalid access token"}), 401
+
+        if user.session_id != session_id:
+            return ({"success" : False,
+                     "message" : "Session mismatch or invalid session"}), 403
+
         if hasattr(user, 'expiry_time') and user.expiry_time:
             if datetime.datetime.now() > user.expiry_time:
-                return False, None, "Access token has expired"
-        
-        return True, user, None
-        
+                return ({"success"  : False,
+                         "message" : "Access token has expired"}), 401
+        print("function run 3")
     except Exception as e:
         logger.error(f"Token validation error: {str(e)}")
-        return False, None, "Token validation failed"
+        return jsonify({"success" : False,
+                        "message" : "Token validation failed"}), 500
+    print("end")
+

@@ -5,7 +5,6 @@ import os
 from twilio.rest import Client
 from twilio.base.exceptions import TwilioException
 from flask import request, jsonify
-
 from main_app.controllers.user.referral_controllers import update_referral_status_and_reward
 from main_app.models.user.user import User
 
@@ -19,10 +18,12 @@ from main_app.models.user.user import User
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+twilio_client = None
+
 # Twilio Configuration - Should be moved to environment variables for security
-TWILIO_PHONE_NUMBER = os.getenv('TWILIO_PHONE_NUMBER', '+13253356908')
-TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID', 'AC6d5d2ae07a30dfe9f2a2d2d2339ec05c')
-TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN', 'ba25186ce60d719aaaf91acd54d9c6e3')
+TWILIO_PHONE_NUMBER = os.getenv('TWILIO_PHONE_NUMBER', '+1 267 813 2952')
+TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID', 'AC3e746c870fe2af96690590d562902ff9')
+TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN', 'd23506b5e9a7ffb48ca7ef32139e4ccd')
 
 # OTP Configuration Constants
 OTP_LENGTH = 6
@@ -32,7 +33,7 @@ OTP_RATE_LIMIT_MINUTES = 1  \
 
 # Development mode flag - set to False in production
 DEVELOPMENT_MODE = os.getenv('FLASK_ENV') == 'development'
-DEV_OTP = 123456  # Fixed OTP for development/testing
+# DEV_OTP = 123456  # Fixed OTP for development/testing
 
 # Initialize Twilio client with error handling
 try:
@@ -91,7 +92,7 @@ def generate_and_send_otp():
                 "message": "Invalid request data"
             }), 400
         
-        mobile_number = data.get("mobile_number", "").strip()
+        mobile_number = data["mobile_number"].strip()
         
         # Step 2: Validate mobile number format
         if not mobile_number:
@@ -117,35 +118,39 @@ def generate_and_send_otp():
                 "success": False, 
                 "message": "User not registered with this mobile number"
             }), 404
-        
+
         # Step 4: Check rate limiting
         rate_limit_check = _check_otp_rate_limit(user)
         if rate_limit_check:
             return rate_limit_check
-        
+            # Rate limiting
+
+        if not DEVELOPMENT_MODE:
+            rate_limit_response = _check_otp_rate_limit(user)
+            if rate_limit_response:
+                return rate_limit_response
+
         # Step 5: Generate OTP
         otp = _generate_otp()
         otp_expiry = datetime.datetime.now() + datetime.timedelta(minutes=OTP_EXPIRY_MINUTES)
-        
+
         logger.info(f"Generated OTP for user: {user.user_id}")
-        
+
         # Step 6: Store OTP in database
         user.update(
             otp=otp,
             otp_expires_at=otp_expiry,
-            otp_attempts=0,  # Reset attempt counter
-            otp_requested_at=datetime.datetime.now()
         )
         
-        # Step 7: Send OTP via SMS (skip in development mode)
+        # Step 7: Send OTP via SMS
         if DEVELOPMENT_MODE:
-            logger.info(f"Development mode: Using fixed OTP {DEV_OTP}")
+            logger.info(f"Development mode: Using fixed OTP {otp}")
             # In development, use fixed OTP for testing
-            user.update(otp=DEV_OTP)
+            user.update(otp=otp)
             return jsonify({
                 "success": True,
                 "message": "OTP sent successfully (Development Mode)",
-                "dev_otp": DEV_OTP,  # Only for development
+                "dev_otp": otp,  # Only for development
                 "expires_in_minutes": OTP_EXPIRY_MINUTES
             }), 200
         else:
@@ -173,7 +178,6 @@ def generate_and_send_otp():
             "success": False,
             "message": "Internal server error occurred"
         }), 500
-
 
 
 def _generate_otp():
@@ -251,6 +255,7 @@ def _send_otp_sms(mobile_number, otp):
     Returns:
         bool: True if SMS sent successfully, False otherwise
     """
+
     if not twilio_client:
         logger.error("Twilio client not initialized")
         return False
@@ -261,10 +266,11 @@ def _send_otp_sms(mobile_number, otp):
         message = twilio_client.messages.create(
             body=message_body,
             from_=TWILIO_PHONE_NUMBER,
-            to=mobile_number
+            to="+91" + mobile_number
         )
         
         logger.info(f"SMS sent successfully. Message SID: {message.sid}")
+        print("a")
         return True
         
     except TwilioException as e:
@@ -320,7 +326,7 @@ def verify_user_otp():
         
         mobile_number = data.get("mobile_number", "").strip()
         otp_input = data.get("otp_input")
-        
+
         # Step 2: Validate required fields
         if not mobile_number or otp_input is None:
             logger.warning("OTP verification with missing required fields")
@@ -351,6 +357,10 @@ def verify_user_otp():
                 "success": False,
                 "message": "User not found"
             }), 404
+        is_member = user.is_member
+
+        if not is_member == True:
+            return "Need to purchase before logging in!"
         
         # Step 5: Check if OTP exists
         if not hasattr(user, 'otp') or user.otp is None:
@@ -378,16 +388,16 @@ def verify_user_otp():
             }), 400
         
         # Step 7: Check attempt limits
-        attempt_check = _check_otp_attempts(user)
-        if attempt_check:
-            return attempt_check
+        # attempt_check = _check_otp_attempts(user)
+        # if attempt_check:
+        #     return attempt_check
         
         # Step 8: Verify OTP
         if otp_input != user.otp:
             logger.warning(f"Invalid OTP attempt for user: {user.user_id}")
             # Increment attempt counter
             current_attempts = getattr(user, 'otp_attempts', 0) + 1
-            user.update(otp_attempts=current_attempts)
+            # user.update(otp_attempts=current_attempts)
             
             remaining_attempts = MAX_OTP_ATTEMPTS - current_attempts
             if remaining_attempts > 0:
@@ -404,20 +414,17 @@ def verify_user_otp():
                     "message": "Maximum OTP attempts exceeded. Please request a new OTP."
                 }), 429
 
-        referee = User.objects(mobile_number = mobile_number).first()
-        referrer = referee.referred_by
-        if referrer:
-            referee_id = referee.user_id
-            referrer_id = User.objects(user_id = referrer).first()
-            update_referral_status_and_reward(referrer_id, referee_id)
+        # referee = User.objects(mobile_number = mobile_number).first()
+        # referrer = referee.referred_by
+        # if referrer:
+        #     referee_id = referee.user_id
+        #     referrer_id = User.objects(user_id = referrer).first()
+        #     update_referral_status_and_reward(referrer_id, referee_id)
 
         # Step 9: OTP is valid - clear it from database
         user.update(
             unset__otp=1,
-            unset__otp_expires_at=1,
-            unset__otp_attempts=1,
-            unset__otp_requested_at=1,
-            last_otp_verified_at=datetime.datetime.now()  # Track successful verification
+            unset__otp_expires_at=1  # Track successful verification
         )
         
         # Step 10: Return success response
@@ -437,26 +444,26 @@ def verify_user_otp():
         }), 500
 
 
-def _check_otp_attempts(user):
-    """
-    Check if user has exceeded maximum OTP verification attempts
-    
-    Args:
-        user (User): User object to check
-        
-    Returns:
-        Flask Response or None: Error response if limit exceeded, None if allowed
-    """
-    current_attempts = getattr(user, 'otp_attempts', 0)
-    if current_attempts >= MAX_OTP_ATTEMPTS:
-        logger.warning(f"Max OTP attempts exceeded for user: {user.user_id}")
-        # Clear OTP to force new request
-        user.update(unset__otp=1, unset__otp_expires_at=1, unset__otp_attempts=1)
-        return jsonify({
-            "success": False,
-            "message": "Maximum OTP attempts exceeded. Please request a new OTP."
-        }), 429
-    
+# def _check_otp_attempts(user):
+#     """
+#     Check if user has exceeded maximum OTP verification attempts
+#
+#     Args:
+#         user (User): User object to check
+#
+#     Returns:
+#         Flask Response or None: Error response if limit exceeded, None if allowed
+#     """
+#     current_attempts = getattr(user, 'otp_attempts', 0)
+#     if current_attempts >= MAX_OTP_ATTEMPTS:
+#         logger.warning(f"Max OTP attempts exceeded for user: {user.user_id}")
+#         # Clear OTP to force new request
+#         user.update(unset__otp=1, unset__otp_expires_at=1, unset__otp_attempts=1)
+#         return jsonify({
+#             "success": False,
+#             "message": "Maximum OTP attempts exceeded. Please request a new OTP."
+#         }), 429
+#
     return None
 
 
@@ -466,7 +473,7 @@ def _check_otp_attempts(user):
 
 # ==============
 
-def cleanup_expired_otps():
+def cleanup_expired_otp():
     """
     Utility function to clean up expired OTPs from database
     This should be run periodically as a background job

@@ -9,20 +9,50 @@ from flask import request,jsonify
 
 
 def forgot_password():
+    """
+    Forgot password by user to send resent link on their email
+
+    Process Flow:
+    1. Validate request data and required fields
+    2. Find user by email
+    3. Check if email exists
+    4. saves token in db
+    5. Return verification result
+
+    Expected JSON Request Body:
+    {
+        "email": "string (required)"
+    }
+
+    Returns:
+        Flask Response: JSON response with verification status
+        - Success (200): Password reset link sent to your email
+        - Error (400): Failed to send email
+        - Error (404): User not found
+    """
     data = request.json
     email = data.get("email")
     password_reset_token = str(uuid.uuid4())
     expiry = datetime.datetime.now() + datetime.timedelta(minutes=30)
     user = User.objects(email = email).first()
-    link = Link(
-        user_id = user.user_id,
-        token = password_reset_token,
-        expiry = expiry,
-        sent_at = datetime.datetime.now()
-    ).save()
-    reset_link = f"http://127.0.0.1:5000/login/reset-password/{password_reset_token}"
+    link = Link.objects(user_id = user.user_id).first()
+    if not link:
+        Link(
+            user_id = user.user_id,
+            token = password_reset_token,
+            expiry = expiry,
+            sent_at = datetime.datetime.now()
+        ).save()
+    else:
+        link.update(
+            set__token = password_reset_token,
+            set__expiry = expiry
+        ),
+
+    reset_link = f"http://127.0.0.1:4000/login/reset-password/{password_reset_token}"
     email_body = (f"To change your password click on the link below/n"
                   f"{reset_link}")
+    print(password_reset_token)
     try:
         msg = MIMEText(email_body)
         msg["Subject"] = "Password Reset"
@@ -37,23 +67,49 @@ def forgot_password():
         return ({"error": f"Failed to send email: {str(e)}"}), 404
 
 def reset_password(token):
+    """
+    Forgot password by user to send resent link on their email
+
+    Process Flow:
+    1. Validate if the token in link matches the one stored in db
+    2. Find user by email
+    3. Check if token is same
+    4. unset token, expiry in db and sets the date of last password updated on
+    5. Return verification result
+
+    Expected JSON Request Body:
+    {
+        "email": "string (required)",
+        "new_password" : string(required)
+    }
+
+    Returns:
+        Flask Response: JSON response with verification status
+        - Success (200): Password updated successfully!
+        - Error (404): Invalid reset link
+        - Error (404) : Reset token not found
+        - Error (400) : "Unauthorized
+        - Error (404): User not found
+    """
     data = request.json
     email = data.get("email")
     new_password = data.get("new_password")
 
     user = User.objects(email = email).first()
-    link = Link.objects(user_id = user.user_id).first()
     if not user:
         return jsonify({"message": "Invalid reset link"}), 404
 
-    tokens = link.token
-    expiry = link.expiry
+    print(token)
+    link = Link.objects(user_id = user.user_id).first()
+    if not link:
+        return jsonify({"message": "Reset token not found"}), 404
 
-    if token !=  tokens:
-        return jsonify({"error": "Unauthorized"}), 404
-    if not expiry or datetime.datetime.now() > expiry:
+    if token !=  link.token:
+        return jsonify({"success" : False, "error": "Unauthorized"}), 404
+
+    if datetime.datetime.now() > link.expiry:
         return jsonify({"message": "Reset link expired"}), 404
 
     user.update(set__password = new_password)
-    link.update(unset__token =  True, unset__expiry = True, set__changed_on = datetime.datetime.now())
+    link.update(unset__token =  True, unset__expiry = True, unset__sent_at = True,set__changed_on = datetime.datetime.now())
     return jsonify({"message": "Password updated successfully!"}), 201
