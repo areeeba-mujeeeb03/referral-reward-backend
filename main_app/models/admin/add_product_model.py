@@ -1,4 +1,4 @@
-from mongoengine import StringField, Document, DateTimeField ,FloatField
+from mongoengine import StringField, Document, DateTimeField ,FloatField, BooleanField
 import datetime
 
 class AddProduct(Document):
@@ -11,6 +11,7 @@ class AddProduct(Document):
     reward_type = StringField()
     status = StringField(default="Live")  # Options: Live, Paused
     visibility_till = DateTimeField()
+    apply_offer = BooleanField()
     created_at = DateTimeField(default=datetime.datetime.now)
 
 

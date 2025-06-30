@@ -5,6 +5,8 @@ from main_app.controllers.admin.forgotpassword_controllers import forgot_otp_ema
 from main_app.controllers.admin.profile_controllers import edit_profile_data
 from main_app.controllers.admin.product_controllers import add_product, create_offer, update_product
 from main_app.controllers.admin.prize_controller import add_exciting_prizes
+from main_app.controllers.admin.how_it_work_controller import add_how_it_work, advertisement_card
+
 
 admin_bp = Blueprint("admin_routes", __name__)
 
@@ -27,7 +29,7 @@ def register_Admin():
 # ============
 
 
-@admin_bp.route("/login", methods=["POST"])
+@admin_bp.route("/admin/login", methods=["POST"])
 def login_email():
     """
     Handle admin login using email and password
@@ -123,7 +125,23 @@ def admin_exciting_offer():
 # --------------------------------------------------------------------------------------------------
 
 
+@admin_bp.route("/admin/how_it_work", methods = ["POST"])
+def admin_how_it_work():
+    """
+    
+    """
+    return  add_how_it_work()
 
+
+
+# -----------------------------------------------------------------------------
+
+@admin_bp.route("/admin/advertisement_card", methods = ["POST"])
+def admim_advertisement_card():
+    """
+    
+    """
+    return advertisement_card()
 
 
 

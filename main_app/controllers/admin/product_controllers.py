@@ -2,8 +2,8 @@
 from flask import request, jsonify
 from werkzeug.utils import secure_filename
 import os, datetime
-from main_app.models.admin.add_product_model import AddProduct
 import logging
+from main_app.models.admin.add_product_model import AddProduct
 from main_app.utils.admin.helpers import generate_product_uid, generate_offer_uid
 from main_app.models.admin.reward_products_model import Offer
 
@@ -23,9 +23,6 @@ def parse_date_flexible(date_str):
         except ValueError:
             continue
     return None
-
-
-# --------------- Add Product 
 
 def add_product():
     try:
@@ -66,7 +63,7 @@ def add_product():
             image_path = os.path.join(UPLOAD_FOLDER, filename)
             image.save(image_path)
             image_url = f"/{image_path}"            
-         
+            
          # Save product
          product = AddProduct(
             uid = generate_product_uid(), 
@@ -81,8 +78,8 @@ def add_product():
         )
          product.save()
 
-         logger.info(f"Product saved with ID: {product.id}")
-         return jsonify({"message": "Product added", "id": str(product.id), "image_url": image_url}), 200
+         logger.info(f"Product saved with ID: {product.uid}")
+         return jsonify({"message": "Product added", "uid": str(product.uid)}), 200
 
     except Exception as e:
         logger.error(f"Product addition failed: {str(e)}")
@@ -135,11 +132,11 @@ def update_product(uid):
      product.save()
      print("product", product)
 
-     logger.info(f"Product updated: {product.id}")
-     return jsonify({"message": "Product updated", "id": str(product.id)}), 200
+     logger.info(f"Product updated: {product.uid}")
+     return jsonify({"message": "Product updated", "uid": str(product.uid)}), 200
 
   except Exception as e:
-     logger.info(f"Product update failed : {str(e)}")
+     logger.error(f"Product update failed : {str(e)}")
      return jsonify({"errro": "Internal server error"}), 500
 
 
@@ -175,7 +172,7 @@ def create_offer():
      image_path = os.path.join(UPLOAD_FOLDER, filename)
      file.save(image_path)
      image_url = f"/{image_path}" 
-
+     
      offer = Offer(
         offer_uid = generate_offer_uid(),
         offer_name = offer_name,
@@ -186,10 +183,11 @@ def create_offer():
         start_date = start_date,
         expiry_date = expiry_date
       )
+     
      offer.save()
 
-     logger.info(f"Offer saved with ID: {offer.id}")
-     return jsonify({"message": "Offer add successfully", "offer_id": str(offer.id)}), 200
+     logger.info(f"Offer saved with ID: {offer.offer_uid}")
+     return jsonify({"message": "Offer add successfully", "offer_id": str(offer.offer_uid)}), 200
 
  except Exception as e:
           logger.error(f"Offer addition failed: {str(e)}")

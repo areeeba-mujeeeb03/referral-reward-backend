@@ -16,7 +16,7 @@ def forgot_otp_email():
         data = request.get_json()
         email = data.get("email", "").strip().lower()
        
-        # email validation 
+        # Email validation 
         if not email:
             return jsonify({"error": "Email is required"}),400
         
@@ -25,7 +25,7 @@ def forgot_otp_email():
         if not user:
             return jsonify({"error": get_error("user_not_found")}), 400
         
-        # GEnerate OTP
+        # Generate OTP
         otp =   generate_otp()
         expiry_time = get_expiry_time()
         user.otp = otp
@@ -67,6 +67,7 @@ def verify_otp():
         return jsonify({"error": "Code expired"}), 400
     
     return jsonify({"error": "Code verified", "success": "True"}), 200
+
 
 # -----------------------------------------------------------------------------------------------------
 
