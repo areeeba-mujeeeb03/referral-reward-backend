@@ -148,20 +148,12 @@ def admim_advertisement_card():
 
 
 
+# -------------------------------------------------------------------
 
 
 
-
-
-
-
-
-
-
-
-
-@admin_bp.route("/edit/<admin_uid>", methods = ["POST"])
-def edit_profile(admin_uid):
+@admin_bp.route("/admin/edit-profile", methods = ["POST"])
+def edit_profile():
     """
     Handle profile data updates like username, email
 
