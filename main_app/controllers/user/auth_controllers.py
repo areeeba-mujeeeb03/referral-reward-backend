@@ -194,6 +194,7 @@ def handle_registration_with_tag_id(tag_id):
                     return jsonify({"success" : False, "error" : "You can not refer yourself"}),400
             else:
                 referrer  = User.objects(tag_id = tag_id).first()
+                print(referrer.tag_id)
                 if not referrer:
                     return jsonify({"message" : "Invalid link"})
                 print(referrer)
@@ -365,6 +366,7 @@ def validate_session_token(user, access_token, session_id):
     try:
         if not access_token or not session_id:
             return jsonify({"message": "Missing token or session", "success": False}), 400
+
         if user.access_token != access_token:
             return ({"success" :False,
                      "message" : "Invalid access token"}), 401

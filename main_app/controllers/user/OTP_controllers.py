@@ -5,8 +5,11 @@ import os
 from twilio.rest import Client
 from twilio.base.exceptions import TwilioException
 from flask import request, jsonify
+
+from main_app.controllers.user.login_controllers import SESSION_EXPIRY_MINUTES
 from main_app.controllers.user.referral_controllers import update_referral_status_and_reward
 from main_app.models.user.user import User
+from main_app.utils.user.helpers import generate_access_token, create_user_session
 
 # =============
 
@@ -23,7 +26,7 @@ twilio_client = None
 # Twilio Configuration - Should be moved to environment variables for security
 TWILIO_PHONE_NUMBER = os.getenv('TWILIO_PHONE_NUMBER', '+1 267 813 2952')
 TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID', 'AC3e746c870fe2af96690590d562902ff9')
-TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN', 'd23506b5e9a7ffb48ca7ef32139e4ccd')
+TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN', '71abde4db0ffb029e4f776693956f182')
 
 # OTP Configuration Constants
 OTP_LENGTH = 6
@@ -266,7 +269,7 @@ def _send_otp_sms(mobile_number, otp):
         message = twilio_client.messages.create(
             body=message_body,
             from_=TWILIO_PHONE_NUMBER,
-            to="+91" + mobile_number
+            to=f"+91{mobile_number}"
         )
         
         logger.info(f"SMS sent successfully. Message SID: {message.sid}")
@@ -421,19 +424,32 @@ def verify_user_otp():
         #     referrer_id = User.objects(user_id = referrer).first()
         #     update_referral_status_and_reward(referrer_id, referee_id)
 
+        access_token = generate_access_token(user.user_id)
+        session_id = create_user_session(user.user_id)
+        expiry_time = datetime.datetime.now() + datetime.timedelta(minutes=SESSION_EXPIRY_MINUTES)
+
+        user.access_token = access_token
+        user.session_id = session_id
+        user.expiry_time = expiry_time
+        user.save()
         # Step 9: OTP is valid - clear it from database
         user.update(
             unset__otp=1,
-            unset__otp_expires_at=1  # Track successful verification
+            unset__otp_expires_at=1,
+            set__access_token = user.access_token,
+            set__session_id = user.session_id,
+            set__expiry_time = user.expiry_time
         )
-        
+
         # Step 10: Return success response
         logger.info(f"OTP verified successfully for user: {user.user_id}")
         return jsonify({
             "success": True,
             "message": "OTP verified successfully",
             "user_id": user.user_id,
-            "verified_at": datetime.datetime.now().isoformat()
+            "verified_at": datetime.datetime.now().isoformat(),
+            "mode" : user.access_token,
+            "log_alt" : user.session_id
         }), 200
         
     except Exception as e:

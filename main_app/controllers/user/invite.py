@@ -17,9 +17,11 @@ logger = logging.getLogger(__name__)
 from urllib.parse import quote_plus
 def generate_msg(user):
     msg = (f"Hey! I’m using Wealth Elite and thought you’d love it too! "
-            f"Join using my invite and enjoy exclusive offers on their products. "
-            f"Use my invitation link: {user.invitation_link}. Or you can use my invitation code: {user.invitation_code}")
+            f"Join using my invite and enjoy exclusive offers on their products. \n\n"
+            f"Use my invitation link : {user.invitation_link}.\n"
+           f" Or you can use my invitation code: {user.invitation_code}")
     encoded_msg = quote_plus(msg)
+
     return encoded_msg
 
 def send_whatsapp_invite():

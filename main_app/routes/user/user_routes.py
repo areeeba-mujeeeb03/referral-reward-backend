@@ -26,7 +26,7 @@ def register():
     """
     return handle_registration()
 
-@user_bp.route("/share-link/register/<tag_id>", methods = ["POST"])
+@user_bp.route("/wealth-elite/invite-link/<tag_id>", methods = ["POST"])
 def referral_register(tag_id):
     """
     Handle user registration with email and password

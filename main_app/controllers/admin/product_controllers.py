@@ -99,7 +99,8 @@ def add_product():
                 "button_txt": button_txt,
                 "off_percent": off_percent,
                 "start_date": start_date_parsed,
-                "expiry_date": expiry_date_parsed
+                "expiry_date": expiry_date_parsed,
+                "image_url" : image
             }
 
          # Save product
