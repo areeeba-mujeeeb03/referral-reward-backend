@@ -8,4 +8,4 @@ class Referral(Document):
     pending_referrals = IntField(default=0)
     all_referrals = ListField(DictField())
 
-    meta = {'collection': 'referrals'}
+    meta = {"db" : "user-db", 'collection': 'referrals'}

@@ -1,8 +1,13 @@
-from flask import Flask, Blueprint
-from main_app.controllers.user.auth_controllers import handle_registration, handle_email_login
+from itertools import product
+from flask import Blueprint
+from main_app.controllers.user.auth_controllers import handle_registration, handle_registration_with_tag_id
+from main_app.controllers.user.OTP_controllers import generate_and_send_otp, verify_user_otp
+from main_app.controllers.user.login_controllers import handle_email_login, logout_user, product_purchase
 from main_app.controllers.user.forgotpassword_controllers import reset_password, forgot_password
-from main_app.utils.user.otp import generate_and_send_otp, verify_user_otp
-from main_app.controllers.user.langingpage_controllers import home_page, my_rewards, my_referrals, my_profile, home_page
+from main_app.controllers.user.langingpage_controllers import my_rewards, my_referrals, my_profile, home_page
+from main_app.controllers.user.referral_controllers import handle_invitation_visit
+from main_app.controllers.user.invite import send_whatsapp_invite, send_telegram_invite, send_twitter_invite, send_facebook_invite
+from main_app.controllers.user.user_profile_controllers import update_profile
 
 user_bp = Blueprint("user_routes", __name__)
 
@@ -23,7 +28,27 @@ def register():
     """
     return handle_registration()
 
+@user_bp.route("/wealth-elite/share-link/register/<tag_id>", methods = ["POST"])
+def referral_register(tag_id):
+    """
+    Handle user registration with email and password
+    Accepts: POST request with user registration data
+    Returns: Registration response from controller
+    """
+    return handle_registration_with_tag_id(tag_id)
+# =============
 
+# Purchase product
+
+# =============
+@user_bp.route("/purchase", methods=["POST"])
+def purchase():
+    """
+    handles the visit on wealth elite product purchase
+    Accepts: POST request
+    Returns: Confirmation of purchase
+    """
+    return product_purchase()
 
 # =============
  
@@ -85,7 +110,7 @@ def user_forgot_password():
     """
     return forgot_password()
 
-@user_bp.route("/login/reset_password/<token>", methods = ["POST"])
+@user_bp.route("/login/reset-password/<token>", methods = ["POST"])
 def user_reset_password(token):
     """
     Handle password reset using token from email
@@ -95,6 +120,21 @@ def user_reset_password(token):
     """
     return reset_password(token)
 
+# ====================
+
+# Logout
+
+# ====================
+
+@user_bp.route("/logout", methods=["POST"])
+def logout():
+    """
+    unsets access token, session_id and expiry_time
+    Accepts: POST request with user_id
+    Returns: Confirmation of logout
+    """
+    # Logic to update referral information goes here
+    return logout_user()
 
 # ==================== 
 
@@ -102,17 +142,15 @@ def user_reset_password(token):
 
 # ====================
 
-
-@user_bp.route("/home/<user_id>", methods = ["GET"])
-def home(user_id):
+@user_bp.route("/home", methods = ["POST"])
+def home():
     """
     Display user's home/dashboard page
-    Accepts: GET request
+    Accepts: POST request
     Args: user_id (str) - Unique identifier for user
     Returns: User's home page data
     """
-    return home_page(user_id)
-
+    return home_page()
 
 # ====================
 
@@ -121,15 +159,15 @@ def home(user_id):
 # ====================
 
 
-@user_bp.route("/my-referrals/<user_id>", methods = ["GET"])
-def referrals(user_id):
+@user_bp.route("/my-referrals", methods = ["POST"])
+def referrals():
     """
     Display user's referral information and statistics
-    Accepts: GET request
+    Accepts: POST request
     Args: user_id (str) - Unique identifier for user
     Returns: User's referral data and history
     """
-    return my_referrals(user_id)
+    return my_referrals()
 
 # ====================
 
@@ -138,15 +176,15 @@ def referrals(user_id):
 # ====================
 
 
-@user_bp.route("/my-rewards/<user_id>", methods = ["GET"])
-def rewards(user_id):
+@user_bp.route("/my-rewards", methods = ["POST"])
+def rewards():
     """
     Display user's earned rewards and points
-    Accepts: GET request
+    Accepts: POST request
     Args: user_id (str) - Unique identifier for user
     Returns: User's rewards and points data
     """
-    return my_rewards(user_id)
+    return my_rewards()
 
 
 # ====================
@@ -156,22 +194,75 @@ def rewards(user_id):
 # ====================
 
 
-@user_bp.route("/profile/<user_id>", methods = ["GET"])
-def profile(user_id):
+@user_bp.route("/profile", methods = ["POST"])
+def profile():
     """
     Display and manage user profile information
-    Accepts: GET request
-    Args: user_id (str) - Unique identifier for user
+    Accepts: POST request
+     (str) - Unique identifier for user
     Returns: User's profile data for viewing/editing
     """
-    return my_profile(user_id)
+    return my_profile()
 
-@user_bp.route("/referral/update", methods=["POST"])
-def update_referral():
+@user_bp.route("/update-profile", methods = ["POST"])
+def update_user_profile():
     """
-    Update referral information for a user
-    Accepts: POST request with referral data
-    Returns: Confirmation of referral update
+    User's profile data for viewing/editing
+    Accepts: POST request
+     (str) - Unique identifier for user
+    Returns: Updated user info
     """
-    # Logic to update referral information goes here
-    return update_referral()
+    return update_profile()
+
+
+@user_bp.route("/wealth-elite/referral-program/invite_link/<encoded_gen_str>/<tag_id>/<encoded_exp_str>", methods=["POST"])
+def visit_invitation_link(encoded_gen_str, tag_id, encoded_exp_str):
+    """
+    handles the visit on invitation link
+    Accepts: POST request
+    Returns: Confirmation of registration
+    """
+    return handle_invitation_visit(encoded_gen_str, tag_id, encoded_exp_str)
+
+# ====================
+
+# Invitation Links
+
+# ====================
+
+
+@user_bp.route("/send-whatsapp-invite", methods=["POST"])
+def send_link_on_whatsapp():
+    """
+    handles sending invitation link on Whatsapp
+    Accepts: POST request
+    Redirects : on WhatsApp with pre-typed message
+    """
+    return send_whatsapp_invite()
+
+@user_bp.route("/send-twitter-invite", methods=["POST"])
+def send_link_on_twitter():
+    """
+    handles sending invitation link on Twitter
+    Accepts: POST request
+    Redirects : on Twitter with pre-typed message
+    """
+    return send_twitter_invite()
+
+@user_bp.route("/send-telegram-invite", methods=["POST"])
+def send_link_on_telegram():
+    """
+    handles sending invitation link on telegram
+    Accepts: POST request
+    Redirects : on Telegram with pre-typed message
+    """
+    return send_telegram_invite()
+
+@user_bp.route("/send-facebook-invite", methods=["POST"])
+def send_link_on_facebook():
+    """
+    handles sending invitation link on facebook
+    Accepts: POST request
+    Redirects : on facebook with invite-link NO pre-typed message
+    """
+    return send_facebook_invite()

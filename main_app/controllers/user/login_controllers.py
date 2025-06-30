@@ -1,0 +1,183 @@
+import logging
+from flask import jsonify, request
+from main_app.utils.user.helpers import (
+    check_password,
+    generate_access_token,
+    create_user_session
+)
+from main_app.controllers.user.referral_controllers import update_referral_status_and_reward
+from main_app.utils.user.error_handling import get_error
+import datetime
+from main_app.models.user.user import User
+
+
+# Referral reward points configuration
+REFERRAL_REWARD_POINTS = 400
+SESSION_EXPIRY_MINUTES = 30
+
+# Configure logging for better debugging and monitoring
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
+
+def product_purchase():
+    data = request.get_json()
+    user_id = data.get("user_id")
+
+    user = User.objects(user_id = user_id).first()
+    if not user :
+        return jsonify({"message": "User not Found", "success" : False}), 404
+
+    user.update(
+        set__is_member = True
+    )
+    return jsonify({"message" : "Purchase Done", "success" : True}), 200
+# ==================
+
+# User Authentication Controllers
+
+# ==================
+def handle_email_login():
+    """
+    Handle user authentication using email and password credentials
+
+    Authentication Process:
+    1. Validate request data and required fields
+    2. Find user account by email address
+    3. Verify password against stored hash
+    4. Generate access token and session
+    5. Update user's session information
+    6. Return authentication tokens
+
+    Expected JSON Request Body:
+    {
+        "email": "string (required)",
+        "password": "string (required)"
+    }
+
+    Returns:
+        Flask Response: JSON response with authentication status
+        - Success (200): Access token, session ID, and user info
+        - Error (400): Invalid credentials or missing data
+        - Error (404): User account not found
+        - Error (500): Server-side authentication errors
+    """
+
+    try:
+        logger.info("Starting email login authentication")
+
+        # Step 1: Extract and validate request data
+        data = request.get_json()
+        if not data:
+            logger.warning("Login attempt with empty request body")
+            return jsonify({"error": get_error("invalid_data")}), 400
+
+        email = data.get("email", "").strip().lower()
+        password = data.get("password", "")
+
+        # Step 2: Validate required fields
+        missing_fields = [field for field in ["email", "password"] if not data.get(field)]
+        if missing_fields:
+            logger.warning(f"Missing fields during login: {missing_fields}")
+            return jsonify({
+                "error": "Email and password are required",
+                "missing_fields": missing_fields
+            }), 400
+
+        # Step 3: Find user by email
+        user = User.objects(email=email).first()
+
+        if not user:
+            logger.warning(f"Login attempt with unknown email: {email}")
+            return jsonify({"error": get_error("user_not_found")}), 404
+
+        is_member = user.is_member
+
+        if not is_member == True:
+            return "Need to purchase before logging in!"
+
+        # Step 4: Check if account is active
+        if hasattr(user, "is_active") and not user.is_active:
+            logger.warning(f"Inactive account login attempt: {email}")
+            return jsonify({"error": "Account is deactivated"}), 403
+
+        if not user.password.startswith("$2"):
+            logger.warning("Invalid or corrupt password hash")
+            return jsonify({"success": False, "message": "Something went wrong. Please reset your password."}), 400
+        # Step 5: Verify password
+        if not check_password(password, user.password):
+            logger.warning(f"Incorrect password attempt for: {email}")
+            return jsonify({"error": get_error("incorrect_password")}), 400
+
+        # Step 6: Generate tokens
+        access_token = generate_access_token(user.user_id)
+        session_id = create_user_session(user.user_id)
+        expiry_time = datetime.datetime.now() + datetime.timedelta(minutes=SESSION_EXPIRY_MINUTES)
+
+        # Step 7: Update referral status (if referred)
+        referred_by = getattr(user, "referred_by", None)
+        if referred_by:
+            update_referral_status_and_reward(referred_by, user.user_id)
+
+        # Step 8: Update user session info in DB
+        user.access_token = access_token
+        user.session_id = session_id
+        user.expiry_time = expiry_time
+        user.joining_status = "Completed"
+        user.last_login = datetime.datetime.now()
+        user.login_count = (user.login_count or 0) + 1  # safe increment
+
+        user.save()
+        # Step 9: Return success
+        logger.info(f"Successful login for user: {user.user_id}")
+        return jsonify({
+            "message": "Logged in successfully",
+            "mode": access_token,
+            "log_alt": session_id,
+            "user_id": user.user_id,
+            "username": user.username,
+            "email": user.email,
+            "expires_at": expiry_time.isoformat(),
+            "expires_in_seconds": SESSION_EXPIRY_MINUTES * 60
+        }), 200
+
+    except Exception as e:
+        logger.error(f"Login failed for email with error: {str(e)}")
+        return jsonify({"error": get_error("login_failed")}), 500
+
+
+# ==================
+
+# User Logout Controller
+
+# ==================
+
+def logout_user():
+    """
+    Handle user logout by invalidating tokens and session
+
+    Args:
+        user_id (str): ID of user to logout
+
+    Returns:
+        bool: True if logout successful, False otherwise
+    """
+    try:
+        data = request.json
+        user_id = data.get("user_id")
+        user = User.objects(user_id=user_id).first()
+        if user:
+            user.update(
+                access_token=None,
+                session_id=None,
+                expiry_time=None,
+                last_logout=datetime.datetime.now()
+            )
+            logger.info(f"User logged out successfully: {user_id}")
+            return True
+        return False
+
+    except Exception as e:
+        logger.error(f"Logout failed for user {user_id}: {str(e)}")
+        return False
