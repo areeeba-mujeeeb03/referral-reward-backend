@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 def forgot_otp_email():
     try:
         data = request.get_json()
-        email = data.get("email", "").strip().lower()
+        email = data.get("email", "").strip()
        
         # Email validation 
         if not email:
@@ -56,7 +56,7 @@ def forgot_otp_email():
 def verify_otp():
   try:
     data = request.get_json()
-    email = data.get("email", "").strip().lower()
+    email = data.get("email", "").strip()
     otp = data.get("otp", "").strip()
 
     user = Admin.objects(email = email).first()
@@ -81,7 +81,7 @@ def verify_otp():
 def reset_password():
  try:
      data = request.get_json()
-     email = data.get("email", "").strip().lower()
+     email = data.get("email", "").strip()
      new_password = data.get("new_password", "")
      confirm_password = data.get("confirm_password", "")
 
@@ -110,6 +110,7 @@ def reset_password():
  except Exception as e:
          logger.error(f"Password reset failed:{str(e)}")
          return jsonify({"errro": "Internal server error"}), 500
+
 
 
 

@@ -39,7 +39,6 @@ def add_product():
          reward_type = data.get("reward_type", "")
          status = data.get("status", "Live")
          visibility_till = data.get("visibility_till")
-        #  image = request.files.get("image")
          apply_offer = data.get("apply_offer", "").lower() == "true"
 
          if not all([product_name, original_amt, discounted_amt, short_desc]):
@@ -257,6 +256,9 @@ def update_offer():
 
         uid = data.get("uid")
 
+        if not data and not request.files:
+            return jsonify({"error": "No fields provided for update"}), 400
+
         if not uid:
             return jsonify({"error": "Product uid not found"}), 400
 
@@ -267,8 +269,12 @@ def update_offer():
         apply_offer = data.get("apply_offer", "").lower() == "true"
         product.apply_offer = apply_offer
 
-           # Partial field updates
-        if apply_offer:   
+        # Validation for field updates
+        if apply_offer: 
+            offer_fields = ["offer_name", "one_liner", "button_txt", "off_percent", "start_date", "expiry_date", "offer_type"]
+            if not any(field in data for field in offer_fields):
+              return jsonify({"error": "No offer fields provided for update"}), 400
+
             if "apply_offer" in data:
                 product.apply_offer = data.get("apply_offer", "").lower() == "true"
 
@@ -301,15 +307,13 @@ def update_offer():
 
             if "offer_type" in data:
                 product.offer_name = data.get("offer_name")
-
-
                  
             product.save()
             return jsonify({"success": "true" , "message": "Offer updated successfully"}), 200
     
         else:
-            product.save()
-            return jsonify({"message": "Offer not updated because apply_offer is false"})
+            # product.save()
+            return jsonify({"error": "Offer not updated because apply_offer is false"}), 400
 
     except Exception as e:
         logger.error(f"offer updated failed: {str(e)}")

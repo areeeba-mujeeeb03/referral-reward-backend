@@ -20,6 +20,9 @@ def add_how_it_work():
         title3 = data.get("title3")
         desc3 = data.get("desc3")
         admin_uid = data.get("admin_uid")
+        
+        if not data:
+            return jsonify({"error": "No fields provided"}), 400
 
         # Validaiton
         if not all([admin_uid, title1, desc1, title2, desc2, title3, desc3 ]):
