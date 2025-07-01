@@ -26,7 +26,23 @@ def home_page():
         if not user:
             return jsonify({"success" : False, "message" : "User does not exist"})
 
-        validate_session_token(user, access_token, session_id)
+        if not access_token or not session_id:
+            return jsonify({"message": "Missing token or session", "success": False}), 400
+
+        if user.access_token != access_token:
+            return ({"success": False,
+                     "message": "Invalid access token"}), 401
+
+        if user.session_id != session_id:
+            return ({"success": False,
+                     "message": "Session mismatch or invalid session"}), 403
+
+        if hasattr(user, 'expiry_time') and user.expiry_time:
+            if datetime.datetime.now() > user.expiry_time:
+                return ({"success": False,
+                         "message": "Access token has expired"}), 401
+
+        # validate_session_token(user, access_token, session_id)
 
         reward = Reward.objects(user_id = user_id).first()
 
@@ -59,7 +75,23 @@ def my_rewards():
         if not user:
             return jsonify({"success" : False, "message" : "User does not exist"})
 
-        validate_session_token(user, access_token, session_id)
+        if not access_token or not session_id:
+            return jsonify({"message": "Missing token or session", "success": False}), 400
+
+        if user.access_token != access_token:
+            return ({"success": False,
+                     "message": "Invalid access token"}), 401
+
+        if user.session_id != session_id:
+            return ({"success": False,
+                     "message": "Session mismatch or invalid session"}), 403
+
+        if hasattr(user, 'expiry_time') and user.expiry_time:
+            if datetime.datetime.now() > user.expiry_time:
+                return ({"success": False,
+                         "message": "Access token has expired"}), 401
+
+        # validate_session_token(user, access_token, session_id)
         user_reward = Reward.objects(user_id = user_id).first()
         if user :
             info = {
@@ -98,7 +130,23 @@ def my_referrals():
         if not user:
             return jsonify({"success" : False, "message" : "User does not exist"})
 
-        validate_session_token(user, access_token, session_id)
+        if not access_token or not session_id:
+            return jsonify({"message": "Missing token or session", "success": False}), 400
+
+        if user.access_token != access_token:
+            return ({"success": False,
+                     "message": "Invalid access token"}), 401
+
+        if user.session_id != session_id:
+            return ({"success": False,
+                     "message": "Session mismatch or invalid session"}), 403
+
+        if hasattr(user, 'expiry_time') and user.expiry_time:
+            if datetime.datetime.now() > user.expiry_time:
+                return ({"success": False,
+                         "message": "Access token has expired"}), 401
+
+        # validate_session_token(user, access_token, session_id)
         referral = Referral.objects(user_id = user.user_id).first()
 
         if user:
@@ -132,7 +180,23 @@ def my_profile():
         if not user:
             return jsonify({"success" : False, "message" : "User does not exist"})
 
-        validate_session_token(user, access_token, session_id)
+        if not access_token or not session_id:
+            return jsonify({"message": "Missing token or session", "success": False}), 400
+
+        if user.access_token != access_token:
+            return ({"success": False,
+                     "message": "Invalid access token"}), 401
+
+        if user.session_id != session_id:
+            return ({"success": False,
+                     "message": "Session mismatch or invalid session"}), 403
+
+        if hasattr(user, 'expiry_time') and user.expiry_time:
+            if datetime.datetime.now() > user.expiry_time:
+                return ({"success": False,
+                         "message": "Access token has expired"}), 401
+
+        # validate_session_token(user, access_token, session_id)
         if user:
             info = {"username" : user.username,
                     "email" : user.email,

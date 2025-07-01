@@ -38,6 +38,7 @@ def generate_encoded_string(info: dict, fields_to_encode: list):
     part_size = (length) // 4
 
     result = {
+        "string" : final_string,
         "date": final_string[0:part_size],
         "age": final_string[part_size:part_size * 2],
         "gender": final_string[part_size * 2:part_size * 3],

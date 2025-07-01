@@ -97,7 +97,7 @@ def reset_password(token):
 
     user = User.objects(email = email).first()
     if not user:
-        return jsonify({"message": "Invalid reset link"}), 404
+        return jsonify({"message": "User Not Found"}), 404
 
     print(token)
     link = Link.objects(user_id = user.user_id).first()

@@ -33,7 +33,7 @@ class User(Document):
         if not self.tag_id:
             self.tag_id = generate_tag_id(self.username, self.mobile_number)
         if not self.invitation_link:
-            self.invitation_link = generate_invite_link(self.user_id)
+            self.invitation_link = generate_invite_link(self.tag_id)
         if not self.invitation_code:
             self.invitation_code = f"WECODE{User.objects.count() + 1}"
         return super(User, self).save(*args, **kwargs)

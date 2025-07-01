@@ -32,7 +32,7 @@ def check_password(input_password, stored_hashed_password):
 
 ##---------------------------------GENERATION OF INVITATION LINK---------------------------------------##
 def generate_invite_link(hashed_tag_id):
-    return f"http://127.0.0.1:4000/wealth-elite/invite_link/{hashed_tag_id}"
+    return f"https://wealth-elite/invite-link/{hashed_tag_id}"
 
 ##---------------------------CREATE SESSION AND TOKEN FOR USER WITH EXPIRY----------------------------------##
 

@@ -87,7 +87,7 @@ def handle_registration():
             return password_validation
         
         # Step 4: Check for existing user conflicts
-        conflict_check = _check_user_conflicts(data["username"], data["email"])
+        conflict_check = _check_user_conflicts(data["username"], data["email"], data['mobile_number'])
         if conflict_check:
             return conflict_check
         
@@ -107,7 +107,6 @@ def handle_registration():
         try:
             referral_code = data.get("referral_code")
             if referral_code:
-
                 referrer = User.objects(invitation_code = referral_code).first()
                 if not referrer:
                     logger.info("No such code exists.")
@@ -167,7 +166,7 @@ def handle_registration_with_tag_id(tag_id):
             return password_validation
 
         # Step 4: Check for existing user conflicts
-        conflict_check = _check_user_conflicts(data["username"], data["email"])
+        conflict_check = _check_user_conflicts(data["username"], data["email"], data['mobile_number'])
         if conflict_check:
             return conflict_check
 
@@ -186,7 +185,6 @@ def handle_registration_with_tag_id(tag_id):
 
         try:
             referral_code = data.get("referral_code")
-
             if referral_code:
                 referrer = User.objects(invitation_code=referral_code).first()
                 if not referrer:
@@ -195,15 +193,18 @@ def handle_registration_with_tag_id(tag_id):
                 if referrer.user_id == user.user_id:
                     return jsonify({"success" : False, "error" : "You can not refer yourself"}),400
             else:
-                print("ref")
                 referrer  = User.objects(tag_id = tag_id).first()
+                print(referrer.tag_id)
+                if not referrer:
+                    return jsonify({"message" : "Invalid link"})
+                print(referrer)
                 logger.info(f"Processing referrer: {tag_id}")
                 user.save()
                 user.update(
                     set__referred_by=referrer.user_id
                 )
                 process_tag_id_and_reward(referrer.tag_id, user.user_id)
-            user.save()
+            # user.save()
             initialize_user_records(user.user_id)
         except Exception as e:
             return jsonify({"error" : get_error("failed_to_update")}),400
@@ -313,7 +314,7 @@ def _validate_password_strength(password):
 
 # =================
 
-def _check_user_conflicts(username, email):
+def _check_user_conflicts(username, email, mobile_number):
     """
     Check if username or email already exists in the database
     
@@ -335,7 +336,11 @@ def _check_user_conflicts(username, email):
     if existing_email:
         logger.warning(f"Registration attempt with existing email: {email}")
         return jsonify({"error": get_error("email_exists")}), 400
-    
+
+    existing_mobile_num = User.objects(mobile_number=mobile_number).first()
+    if existing_mobile_num:
+        logger.warning(f"Registration attempt with existing mobile number: {mobile_number}")
+        return jsonify({"error": "Mobile number already exists"}), 400
     return None
 
 
@@ -361,6 +366,7 @@ def validate_session_token(user, access_token, session_id):
     try:
         if not access_token or not session_id:
             return jsonify({"message": "Missing token or session", "success": False}), 400
+
         if user.access_token != access_token:
             return ({"success" :False,
                      "message" : "Invalid access token"}), 401

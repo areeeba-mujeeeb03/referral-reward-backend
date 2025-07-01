@@ -1,6 +1,6 @@
 import random
 import datetime 
-from main_app.models.admin.add_product_model import AddProduct
+from main_app.models.admin.add_product_model import Product
 from main_app.models.admin.product_offer_model import Offer
 
 def generate_otp(length=6):
@@ -16,7 +16,7 @@ def get_expiry_time(minutes=5):
 #  Example PROD_01, PROD_02, ....
 
 def generate_product_uid():
-    count = AddProduct.objects.count() + 1
+    count = Product.objects.count() + 1
     return f"PROD_{str(count).zfill(2)}"  
 
 # --------------------------------------------------------------------------------------------

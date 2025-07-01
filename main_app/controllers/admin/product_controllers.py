@@ -3,7 +3,7 @@ from flask import request, jsonify
 from werkzeug.utils import secure_filename
 import os, datetime
 import logging
-from main_app.models.admin.add_product_model import AddProduct
+from main_app.models.admin.add_product_model import Product
 from main_app.utils.admin.helpers import generate_product_uid, generate_offer_uid
 # from main_app.models.admin.product_offer_model import Offer
 
@@ -39,6 +39,7 @@ def add_product():
          reward_type = data.get("reward_type", "")
          status = data.get("status", "Live")
          visibility_till = data.get("visibility_till")
+         image = request.files.get("image")
          apply_offer = data.get("apply_offer", "").lower() == "true"
 
          if not all([product_name, original_amt, discounted_amt, short_desc]):
@@ -98,12 +99,13 @@ def add_product():
                 "button_txt": button_txt,
                 "off_percent": off_percent,
                 "start_date": start_date_parsed,
-                "expiry_date": expiry_date_parsed
+                "expiry_date": expiry_date_parsed,
+                "image_url" : image
             }
 
          # Save product
-         product = AddProduct(
-            uid = generate_product_uid(), 
+         product = Product(
+            uid = generate_product_uid(),
             product_name = product_name,
             original_amt = original_amt,
             discounted_amt = discounted_amt,
@@ -113,7 +115,7 @@ def add_product():
             status = status,
             visibility_till = visibility_date,
             apply_offer=apply_offer,
-            **offer_data 
+            **offer_data
         )
          product.save()
 
@@ -134,7 +136,7 @@ def update_product(uid):
      logger.info(f"Update Product API called for UID: {uid}")
      data = request.form
 
-     product = AddProduct.objects(uid=uid).first()
+     product = Product.objects(uid=uid).first()
      if not product:
         return jsonify({"error": "Product not found"}), 400
      if data.get("product_name"):
@@ -181,7 +183,7 @@ def update_product(uid):
 
 # --------------------------------------------------------------------------------------------------
 
-# # Add Offer 
+# # Add Offer
 
 # UPLOAD_FOLDER = "uploads/offers"
 # os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -196,7 +198,7 @@ def update_product(uid):
 #      off_percent = int(data.get("off_percent", "0"))
 #      start_date = parse_date_flexible(data.get("start_date", ""))
 #      expiry_date = parse_date_flexible(data.get("expiry_date", ""))
-     
+
 #      if not all([offer_name, one_liner, button_txt, off_percent, start_date, expiry_date]):
 #          return jsonify({"error": "All fields are required"}), 400
 
@@ -206,12 +208,12 @@ def update_product(uid):
 #      file = request.files.get("image")
 #      if not file:
 #         return jsonify({"error": "No image uploaded"}), 400
-         
+
 #      filename = secure_filename(file.filename)
 #      image_path = os.path.join(UPLOAD_FOLDER, filename)
 #      file.save(image_path)
-#      image_url = f"/{image_path}" 
-     
+#      image_url = f"/{image_path}"
+
 #      offer = Offer(
 #         offer_uid = generate_offer_uid(),
 #         offer_name = offer_name,
@@ -222,7 +224,7 @@ def update_product(uid):
 #         start_date = start_date,
 #         expiry_date = expiry_date
 #       )
-     
+
 #      offer.save()
 
 #      logger.info(f"Offer saved with ID: {offer.offer_uid}")
@@ -231,11 +233,11 @@ def update_product(uid):
 #  except Exception as e:
 #           logger.error(f"Offer addition failed: {str(e)}")
 #           return jsonify({"error": "Internal server error"}), 500
- 
+
 
 # ---------------------------------------------------------------------------------------------
 
-# Update Offers 
+# Update Offers
 def update_offer():
     try:
         logger = logging.getLogger(__name__)
@@ -245,8 +247,8 @@ def update_offer():
 
         if not uid:
             return jsonify({"error": "Product uid not found"}), 400
-        
-        product = AddProduct.objects(uid=uid).first()
+
+        product = Product.objects(uid=uid).first()
         if not product:
             return jsonify({"error" : "Product not found"}), 400
         
@@ -295,9 +297,6 @@ def update_offer():
     except Exception as e:
         logger.error(f"offer updated failed: {str(e)}")
         return jsonify({"error": "Internal server error"}), 500
-    
-
-        
 
 
 

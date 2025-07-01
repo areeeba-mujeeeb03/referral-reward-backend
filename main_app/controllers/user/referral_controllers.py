@@ -1,11 +1,10 @@
 import datetime
 import logging
-import requests
+from main_app.models.admin.links import Link
 from main_app.models.user.reward import Reward
 from main_app.models.user.referral import Referral
 from main_app.models.user.user import User
 from flask import jsonify, request
-from main_app.utils.user.helpers import verify_tag_id
 
 # Configure logging for better debugging and monitoring
 logging.basicConfig(level=logging.INFO)
@@ -89,53 +88,54 @@ def process_tag_id_and_reward(tag_id, new_user_id):
         referral_found = False
         already_completed = False
         valid_user = User.objects(tag_id = tag_id).first()
-        if valid_user:
-            referrer = Referral.objects(user_id = valid_user.user_id).first()
-            for referral in referrer.all_referrals:
-                if referral.get("user_id") == valid_user.user_id:
-                    referral_found = False
-                    if referral.get("referral_status") == "Completed":
-                        already_completed = True
-                    else:
-                        referral["referral_status"] = "Completed"
-                        referral["earned_meteors"] = referral.get("earned_meteors", 0) + SUCCESS_REFERRAL_REWARD_POINTS
-                    break
+        print(valid_user)
+        # if valid_user:
+        referrer = Referral.objects(user_id = valid_user.user_id).first()
+        #     print(referrer.all_referrals)
+        #     for referral in referrer.all_referrals:
+        #         if referral.get("user_id") == valid_user.user_id:
+        #             referral_found = False
+        #             if referral.get("referral_status") == "Completed":
+        #                 already_completed = True
+        #             else:
+        #                 referral["referral_status"] = "Completed"
+        #                 referral["earned_meteors"] = referral.get("earned_meteors", 0) + SUCCESS_REFERRAL_REWARD_POINTS
+        #             break
+        #
+        #     if not referral_found:
+        #         logger.warning(f"No matching referral entry for user_id: {valid_user.user_id} under referrer: {referrer.user_id}")
+        #         return
+        #
+        #     if already_completed:
+        #         logger.info(f"Referral already marked completed for user {valid_user.user_id}")
+        #         return
+        #     referrer.referral_earning += PENDING_REFERRAL_REWARD_POINTS
+        referrer.save()
 
-            if not referral_found:
-                logger.warning(f"No matching referral entry for user_id: {valid_user.user_id} under referrer: {referrer_id}")
-                return
+        referrer.update(
+            push__all_referrals={
+                "user_id": new_user_id,
+                "referral_status": "Pending",
+                "date" : datetime.datetime.now(),
+                "earned_meteors" : PENDING_REFERRAL_REWARD_POINTS
+            },
+            inc__total_referrals = 1,
+            inc__pending_referrals=1,
 
-            if already_completed:
-                logger.info(f"Referral already marked completed for user {valid_user.user_id}")
-                return
-            referrer.referral_earning += PENDING_REFERRAL_REWARD_POINTS
-            referrer.save()
-            referrer.update(
+        )
+        reward_record = Reward.objects(user_id=valid_user.user_id).first()
+        if reward_record:
+            reward_record.total_meteors += PENDING_REFERRAL_REWARD_POINTS
+            reward_record.reward_history.append({
+                "earned_by_action": "referral",
+                "earned_meteors": PENDING_REFERRAL_REWARD_POINTS,
+                "referred_to" : new_user_id,
+                "referral_status": "pending",
+                "referred_on": datetime.datetime.now(),
+                "transaction_type": "credit"
+            })
 
-                push__all_referrals={
-                    "user_id": new_user_id,
-                    "referral_status": "Pending",
-                    "date" : datetime.datetime.now(),
-                    "earned_meteors" : PENDING_REFERRAL_REWARD_POINTS
-
-                },
-                inc__total_referrals = 1,
-                inc__pending_referrals=1,
-
-            )
-            reward_record = Reward.objects(user_id=valid_user.user_id).first()
-            if reward_record:
-                reward_record.total_meteors += PENDING_REFERRAL_REWARD_POINTS
-                reward_record.reward_history.append({
-                    "earned_by_action": "referral",
-                    "earned_meteors": PENDING_REFERRAL_REWARD_POINTS,
-                    "referred_to" : new_user_id,
-                    "referral_status": "pending",
-                    "referred_on": datetime.datetime.now(),
-                    "transaction_type": "credit"
-                })
-
-                reward_record.save()
+            reward_record.save()
 
     except Exception as e:
         logger.error(f"Failed to initialize user records.: {str(e)}")
@@ -284,45 +284,35 @@ def decode_timestamp(encoded_string):
     return number
 
 ##---------------------------GENERATION OF INVITATION LINK------------------------------------------##
-def gen_user_invite_link():
+def change_invite_link():
     """Args:
         tag_id (str): ID of the user referring
     """
     data = request.get_json()
     user_id = data.get("user_id")
+    link = data.get("link")
 
     user = User.objects(user_id=user_id).first()
-    tag_id = user.tag_id
-
     if not user:
         return jsonify({"message": ""}), 404
 
-    # if existing:
-    #     return jsonify({"message": "Link already exists", "link": existing.invitation_link}), 200
+    tag_id = user.tag_id
 
-    now = datetime.datetime.utcnow()
-    gen_str = int(now.strftime("%Y%m%d%H%M%S"))
-    expiry_time = now + datetime.timedelta(hours=5)
-    exp_str = int(expiry_time.strftime("%Y%m%d%H%M%S"))
+    default_invitation_link = user.invitation_link
 
-    encoded_gen_str = encode_timestamp(gen_str)
-    encoded_exp_str = encode_timestamp(exp_str)
+    link = Link.objects(invitation_link = link).first()
+    user_link = link.invitation_link +f"/{tag_id}"
 
-    base_url = "http://127.0.0.1:4000/wealth-elite/referral-program/invite_link"
-    invitation_link = f"{base_url}/{encoded_gen_str}/{tag_id}/{encoded_exp_str}"
-
-    user(
-        tag_id=tag_id,
-        invitation_link=invitation_link,
-        generation_time=gen_str,
-        link_expiry_time=exp_str,
-        created_at=now
-    ).save()
-
-    return jsonify({
-        "message": "Hi, I use the Wealth Elite software."
-                "Join Wealth Elite by accepting my invitation and get offers on their products"
-                f"Use my invitation link : {invitation_link}"})
+    user.update(
+        set__invitation_link=user_link,
+    )
+    expiry = link.expiry_date
+    base_url = "http://127.0.0.1:4000/wealth-elite/invite_link"
+    if expiry < datetime.datetime.now():
+        user.update(
+            set__invitation_link =f"{base_url}+/{tag_id}"
+        )
+    return jsonify({"success" : True, "message" : "Invitation Link generated"})
 
 
 # ==================
@@ -330,6 +320,7 @@ def gen_user_invite_link():
 # Handles rewards for special offer
 
 # ==================
+
 def reward_referrer_by_tag(tag_id: str):
     user = User.objects(tag_id=tag_id).first()
     if not user:

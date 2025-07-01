@@ -5,7 +5,7 @@ from main_app.controllers.user.OTP_controllers import generate_and_send_otp, ver
 from main_app.controllers.user.login_controllers import handle_email_login, logout_user, product_purchase
 from main_app.controllers.user.forgotpassword_controllers import reset_password, forgot_password
 from main_app.controllers.user.landingpage_controllers import my_rewards, my_referrals, my_profile, home_page
-from main_app.controllers.user.referral_controllers import handle_invitation_visit
+from main_app.controllers.user.referral_controllers import handle_invitation_visit, change_invite_link
 from main_app.controllers.user.invite import send_whatsapp_invite, send_telegram_invite, send_twitter_invite, send_facebook_invite
 from main_app.controllers.user.user_profile_controllers import update_profile, help_faq, submit_msg
 
@@ -26,7 +26,7 @@ def register():
     """
     return handle_registration()
 
-@user_bp.route("/share-link/register/<tag_id>", methods = ["POST"])
+@user_bp.route("/wealth-elite/invite-link/<tag_id>", methods = ["POST"])
 def referral_register(tag_id):
     """
     Handle user registration with email and password
@@ -291,3 +291,13 @@ def submit():
     sends : email to admin
     """
     return submit_msg()
+
+
+@user_bp.route('/invite-link', methods=['POST'])
+def invite_link():
+    """
+    handles setting default invitation link as special offer link generated from admin side
+    Accepts: POST request
+    Returns and Saves :
+    """
+    return change_invite_link()
