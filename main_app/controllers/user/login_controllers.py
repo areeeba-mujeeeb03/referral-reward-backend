@@ -1,10 +1,7 @@
 import logging
 from flask import jsonify, request
-from main_app.utils.user.helpers import (
-    check_password,
-    generate_access_token,
-    create_user_session
-)
+from main_app.models.admin.error_model import Errors
+from main_app.utils.user.helpers import (check_password,generate_access_token,create_user_session)
 from main_app.controllers.user.referral_controllers import update_referral_status_and_reward
 from main_app.utils.user.error_handling import get_error
 import datetime
@@ -63,30 +60,31 @@ def handle_email_login():
         - Error (404): User account not found
         - Error (500): Server-side authentication errors
     """
+    data = request.get_json()
+    logger.info("Starting email login authentication")
 
+    # Step 1: Extract and validate request data
+
+    if not data:
+        logger.warning("Login attempt with empty request body")
+        return jsonify({"error": get_error("invalid_data")}), 400
+
+    email = data.get("email")
+    password = data.get("password")
+
+    # Step 2: Validate required fields
+    missing_fields = [field for field in ["email", "password"] if not data.get(field)]
+    if missing_fields:
+        logger.warning(f"Missing fields during login: {missing_fields}")
+        return jsonify({
+            "error": "Email and password are required",
+            "missing_fields": missing_fields
+        }), 400
+
+    # Step 3: Find user by email
+    user = User.objects(email=email).first()
     try:
-        logger.info("Starting email login authentication")
 
-        # Step 1: Extract and validate request data
-        data = request.get_json()
-        if not data:
-            logger.warning("Login attempt with empty request body")
-            return jsonify({"error": get_error("invalid_data")}), 400
-
-        email = data.get("email")
-        password = data.get("password")
-
-        # Step 2: Validate required fields
-        missing_fields = [field for field in ["email", "password"] if not data.get(field)]
-        if missing_fields:
-            logger.warning(f"Missing fields during login: {missing_fields}")
-            return jsonify({
-                "error": "Email and password are required",
-                "missing_fields": missing_fields
-            }), 400
-
-        # Step 3: Find user by email
-        user = User.objects(email=email).first()
 
         if not user:
             logger.warning(f"Login attempt with unknown email: {email}")
@@ -137,17 +135,13 @@ def handle_email_login():
             "message": "Logged in successfully",
             "mode": access_token,
             "log_alt": session_id,
-            "user_id": user.user_id,
-            "username": user.username,
-            "email": user.email,
-            "expires_at": expiry_time.isoformat(),
-            "expires_in_seconds": SESSION_EXPIRY_MINUTES * 60
+            "user_id": user.user_id
         }), 200
 
     except Exception as e:
         logger.error(f"Login failed for email with error: {str(e)}")
+        Errors(username = user.username, email = user.email, error_type = get_error("login_failed"), error_source = "Login form")
         return jsonify({"error": get_error("login_failed")}), 500
-
 
 # ==================
 

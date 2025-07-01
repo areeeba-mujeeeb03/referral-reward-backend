@@ -17,6 +17,7 @@ except FileNotFoundError:
         "mobile_number_exists" : "Mobile Number already exists",
         "user_not_found": "User not found",
         "incorrect_password": "Incorrect password",
+        "Invalid code":"This Referral Code is Invalid",
         "invalid_data": "Invalid or missing data",
         "registration_failed": "Registration failed",
         "login_failed": "Login failed",

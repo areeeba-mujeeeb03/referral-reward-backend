@@ -90,15 +90,24 @@ def help_faq():
         user_id = data.get("user_id")
         access_token = data.get("mode")
         session_id = data.get("log_alt")
+
+        user_exist = User.objects(user_id=user_id).first()
+
+        if not user_exist:
+            return jsonify({"success": False, "message": "User does not exist"})
+        if not access_token or not session_id:
+            return jsonify({"message": "Missing token or session", "success": False}), 400
+        if user_exist.access_token != access_token:
+            return ({"success": False,
+                     "message": "Invalid access token"}), 401
+
+        if user_exist.session_id != session_id:
+            return ({"success": False,
+                     "message": "Session mismatch or invalid session"}), 403
+
         faqs = FAQ.objects()
 
-        user = User.objects(user_id = user_id).first()
-        if not user:
-            return jsonify({"success" : False, "message" : "User does not exist"})
-
-        validate_session_token(user, access_token, session_id)
-
-        return jsonify([{"question": faq.question, "answer": faq.answer}for faq in faqs])
+        return jsonify([{"a": faq.question, "b": faq.answer}for faq in faqs])
 
     except Exception as e:
         return jsonify({"success": False, "message": "Server error", "error": str(e)}), 500
@@ -106,23 +115,40 @@ def help_faq():
 
 def submit_msg():
     data = request.get_json()
-    name = data.get('name')
+    username = data.get('username')
     email = data.get('email')
     message = data.get('message')
     user_id = data.get("user_id")
     access_token = data.get("mode")
     session_id = data.get("log_alt")
 
-    user = User.objects(user_id=user_id).first()
-    if not user:
-        return jsonify({"success": False, "message": "User does not exist"})
+    user_exist = User.objects(user_id=user_id).first()
 
-    validate_session_token(user, access_token, session_id)
 
-    if not name or not email or not message:
+    if not username or not email or not message:
         return jsonify({"error": "All fields are required"}), 400
 
-    contact = Contact(name=name, email=email, message=message)
+    if not user_exist:
+        return jsonify({"success": False, "message": "User does not exist"})
+    if not access_token or not session_id:
+        return jsonify({"message": "Missing token or session", "success": False}), 400
+    if user_exist.access_token != access_token:
+        return ({"success": False,
+                 "message": "Invalid access token"}), 401
+
+    if user_exist.session_id != session_id:
+        return ({"success": False,
+                 "message": "Session mismatch or invalid session"}), 403
+
+    if user_exist.username != username :
+        return jsonify({"message" : "You are not registered with this username"})
+
+    if user_exist.email != email:
+        return jsonify({"message" : "You are not registered with this email"})
+
+
+    contact = Contact(user_id = user_id, username=username, email=email, message=message)
+
     contact.save()
 
-    return jsonify({"message": "Your query has been received!"}), 201
+    return jsonify({"message": "Your query has been sent!"}), 201

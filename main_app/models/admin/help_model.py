@@ -15,7 +15,8 @@ class FAQ(Document):
         return super(FAQ, self).save(*args, **kwargs)
 
 class Contact(Document):
-    name = StringField(required=True)
+    user_id = StringField(required= True)
+    username = StringField(required=True)
     email = EmailField(required=True)
     message = StringField(required=True)
     date = DateTimeField(default=datetime.datetime.now())

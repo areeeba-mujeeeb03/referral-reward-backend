@@ -6,6 +6,8 @@ from twilio.base.values import unset
 from main_app.models.user.user import User
 from main_app.models.user.links import Link
 from flask import request,jsonify
+from main_app.controllers.user.auth_controllers import _validate_password_strength
+from main_app.utils.user.helpers import hash_password
 
 
 def forgot_password():
@@ -34,7 +36,11 @@ def forgot_password():
     email = data.get("email")
     password_reset_token = str(uuid.uuid4())
     expiry = datetime.datetime.now() + datetime.timedelta(minutes=30)
-    user = User.objects(email = email).first()
+    user = User.objects(email = data['email']).first()
+
+    if not user:
+        return jsonify({"success": False, "message": "User does not exist"})
+
     link = Link.objects(user_id = user.user_id).first()
     if not link:
         Link(
@@ -52,7 +58,6 @@ def forgot_password():
     reset_link = f"http://127.0.0.1:4000/login/reset-password/{password_reset_token}"
     email_body = (f"To change your password click on the link below/n"
                   f"{reset_link}")
-    print(password_reset_token)
     try:
         msg = MIMEText(email_body)
         msg["Subject"] = "Password Reset"
@@ -94,10 +99,20 @@ def reset_password(token):
     data = request.json
     email = data.get("email")
     new_password = data.get("new_password")
+    confirm_password = data.get("confirm_password")
 
     user = User.objects(email = email).first()
     if not user:
         return jsonify({"message": "User Not Found"}), 404
+
+    password_validation = _validate_password_strength(new_password)
+    if password_validation:
+        return password_validation
+
+
+
+    if new_password != confirm_password:
+        return jsonify({"error": "Password do not match"}), 400
 
     print(token)
     link = Link.objects(user_id = user.user_id).first()
@@ -109,7 +124,11 @@ def reset_password(token):
 
     if datetime.datetime.now() > link.expiry:
         return jsonify({"message": "Reset link expired"}), 404
+    hashed_password = hash_password(data["new_password"])
 
-    user.update(set__password = new_password)
+    user.update(set__password = hashed_password)
     link.update(unset__token =  True, unset__expiry = True, unset__sent_at = True,set__changed_on = datetime.datetime.now())
     return jsonify({"message": "Password updated successfully!"}), 201
+
+
+

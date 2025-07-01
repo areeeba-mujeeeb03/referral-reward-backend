@@ -5,7 +5,7 @@ import os
 from twilio.rest import Client
 from twilio.base.exceptions import TwilioException
 from flask import request, jsonify
-
+from dotenv import load_dotenv
 from main_app.controllers.user.login_controllers import SESSION_EXPIRY_MINUTES
 from main_app.controllers.user.referral_controllers import update_referral_status_and_reward
 from main_app.models.user.user import User
@@ -22,17 +22,18 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 twilio_client = None
+load_dotenv()
 
 # Twilio Configuration - Should be moved to environment variables for security
-TWILIO_PHONE_NUMBER = os.getenv('TWILIO_PHONE_NUMBER', '+1 267 813 2952')
-TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID', 'AC3e746c870fe2af96690590d562902ff9')
-TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN', '71abde4db0ffb029e4f776693956f182')
+TWILIO_PHONE_NUMBER = os.getenv('TWILIO_PHONE_NUMBER')
+TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
+TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN')
 
 # OTP Configuration Constants
 OTP_LENGTH = 6
 OTP_EXPIRY_MINUTES = 5
 MAX_OTP_ATTEMPTS = 3
-OTP_RATE_LIMIT_MINUTES = 1  \
+OTP_RATE_LIMIT_MINUTES = 1
 
 # Development mode flag - set to False in production
 DEVELOPMENT_MODE = os.getenv('FLASK_ENV') == 'development'
@@ -43,6 +44,7 @@ try:
     twilio_client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
     # Test authentication on startup
     twilio_client.api.accounts(TWILIO_ACCOUNT_SID).fetch()
+    print("done")
     logger.info("Twilio authentication successful")
 except TwilioException as e:
     logger.error(f"Twilio authentication failed: {e}")
@@ -269,11 +271,10 @@ def _send_otp_sms(mobile_number, otp):
         message = twilio_client.messages.create(
             body=message_body,
             from_=TWILIO_PHONE_NUMBER,
-            to=f"+91{mobile_number}"
+            to=f"+91 {mobile_number}"
         )
         
         logger.info(f"SMS sent successfully. Message SID: {message.sid}")
-        print("a")
         return True
         
     except TwilioException as e:
@@ -447,7 +448,6 @@ def verify_user_otp():
             "success": True,
             "message": "OTP verified successfully",
             "user_id": user.user_id,
-            "verified_at": datetime.datetime.now().isoformat(),
             "mode" : user.access_token,
             "log_alt" : user.session_id
         }), 200

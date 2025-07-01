@@ -1,7 +1,7 @@
 from mongoengine import DateTimeField, StringField, IntField,Document
 
 class Link(Document):
-    user_id = StringField()
+    user_id = StringField(required=True, unique=True)
     token = StringField()
     expiry = DateTimeField()
     sent_at  = DateTimeField()

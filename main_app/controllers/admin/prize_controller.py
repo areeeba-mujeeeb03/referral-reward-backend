@@ -39,7 +39,7 @@ def add_exciting_prizes():
             terms_conditions = terms_conditions
         )
         prize.save()
-        
+        print("prize", prize)
         logger.info(f"Prizes save with ID: {str(prize.id)}")
         return jsonify({"message": "Prize add successfully", }), 200
 

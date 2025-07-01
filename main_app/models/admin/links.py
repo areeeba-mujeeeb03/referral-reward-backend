@@ -10,3 +10,12 @@ class Link(Document):
     referee_reward = IntField()
 
     meta = {"db_alias" : "admin-db", "collection" : "links"}
+
+
+class LinkSharing(Document):
+    facebook_sent = IntField()
+    whatsapp_sent = IntField()
+    telegram_sent = IntField()
+    twitter_sent = IntField()
+
+    meta = {"db_alias": "admin-db", "collection": "SharingApps"}

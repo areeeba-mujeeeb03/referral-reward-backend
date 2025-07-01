@@ -6,6 +6,7 @@ from main_app.utils.user.error_handling import get_error
 from main_app.utils.admin.mail import send_otp_email
 import bcrypt
 from datetime import datetime
+from main_app.controllers.admin.admin_auth_controller import _validate_password_strength
 
 logger = logging.getLogger(__name__)
 
@@ -86,8 +87,11 @@ def reset_password():
      user = Admin.objects(email = email).first()
      if not user:
         return jsonify({"error": "user_not_found"}), 400
-    
-    
+
+     password_validation = _validate_password_strength(new_password)
+     if password_validation:
+         return password_validation
+
      salt = bcrypt.gensalt(rounds=12)
      hashed = bcrypt.hashpw(new_password.encode(), salt)
 

@@ -1,6 +1,6 @@
 from itertools import product
 from flask import Blueprint
-from main_app.controllers.user.auth_controllers import handle_registration, handle_registration_with_tag_id
+from main_app.controllers.user.auth_controllers import handle_registration
 from main_app.controllers.user.OTP_controllers import generate_and_send_otp, verify_user_otp
 from main_app.controllers.user.login_controllers import handle_email_login, logout_user, product_purchase
 from main_app.controllers.user.forgotpassword_controllers import reset_password, forgot_password
@@ -33,7 +33,7 @@ def referral_register(tag_id):
     Accepts: POST request with user registration data
     Returns: Registration response from controller
     """
-    return handle_registration_with_tag_id(tag_id)
+    return
 # =============
 
 # Purchase product
@@ -211,16 +211,6 @@ def update_user_profile():
     Returns: Updated user info
     """
     return update_profile()
-
-
-@user_bp.route("/wealth-elite/referral-program/invite_link/<encoded_gen_str>/<tag_id>/<encoded_exp_str>", methods=["POST"])
-def visit_invitation_link(encoded_gen_str, tag_id, encoded_exp_str):
-    """
-    handles the visit on invitation link
-    Accepts: POST request
-    Returns: Confirmation of registration
-    """
-    return handle_invitation_visit(encoded_gen_str, tag_id, encoded_exp_str)
 
 # ====================
 

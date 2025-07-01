@@ -128,7 +128,7 @@ def send_telegram_invite():
 
         return jsonify({
             "success": True,
-            "twitter_link": telegram_link
+            "telegram_link": telegram_link
         })
 
     except Exception as e:
@@ -165,7 +165,7 @@ def send_facebook_invite():
 
         return jsonify({
             "success": True,
-            "twitter_link": facebook_link
+            "facebook_link": facebook_link
         })
 
     except Exception as e:

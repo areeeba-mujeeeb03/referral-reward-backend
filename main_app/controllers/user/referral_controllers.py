@@ -85,33 +85,14 @@ def process_tag_id_and_reward(tag_id, new_user_id):
         tag_id : attached in API
     """
     try:
-        referral_found = False
-        already_completed = False
         valid_user = User.objects(tag_id = tag_id).first()
-        print(valid_user)
-        # if valid_user:
         referrer = Referral.objects(user_id = valid_user.user_id).first()
-        #     print(referrer.all_referrals)
-        #     for referral in referrer.all_referrals:
-        #         if referral.get("user_id") == valid_user.user_id:
-        #             referral_found = False
-        #             if referral.get("referral_status") == "Completed":
-        #                 already_completed = True
-        #             else:
-        #                 referral["referral_status"] = "Completed"
-        #                 referral["earned_meteors"] = referral.get("earned_meteors", 0) + SUCCESS_REFERRAL_REWARD_POINTS
-        #             break
-        #
-        #     if not referral_found:
-        #         logger.warning(f"No matching referral entry for user_id: {valid_user.user_id} under referrer: {referrer.user_id}")
-        #         return
-        #
-        #     if already_completed:
-        #         logger.info(f"Referral already marked completed for user {valid_user.user_id}")
-        #         return
-        #     referrer.referral_earning += PENDING_REFERRAL_REWARD_POINTS
         referrer.save()
-
+        new_user = User.objects(user_id = new_user_id).first()
+        if new_user:
+            new_user.update(
+                set__referred_by = valid_user.user_id
+            )
         referrer.update(
             push__all_referrals={
                 "user_id": new_user_id,
@@ -294,23 +275,24 @@ def change_invite_link():
 
     user = User.objects(user_id=user_id).first()
     if not user:
-        return jsonify({"message": ""}), 404
+        return jsonify({"message": "User not found"}), 404
 
     tag_id = user.tag_id
 
     default_invitation_link = user.invitation_link
 
     link = Link.objects(invitation_link = link).first()
-    user_link = link.invitation_link +f"/{tag_id}"
+    print(Link)
+    user_link = link.invitation_link + f"/{tag_id}"
 
     user.update(
         set__invitation_link=user_link,
     )
     expiry = link.expiry_date
-    base_url = "http://127.0.0.1:4000/wealth-elite/invite_link"
+    base_url = "https://wealthelite.com/invite_link"
     if expiry < datetime.datetime.now():
         user.update(
-            set__invitation_link =f"{base_url}+/{tag_id}"
+            set__invitation_link =f"{base_url}/{tag_id}"
         )
     return jsonify({"success" : True, "message" : "Invitation Link generated"})
 

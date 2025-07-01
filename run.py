@@ -3,10 +3,11 @@ from flask import Flask
 from mongoengine import connect
 from main_app.routes.user.user_routes import user_bp
 from main_app.routes.admin.admin_routes import admin_bp
+from flask_cors import CORS
 
 
 app = Flask(__name__)
-
+CORS(app)
 
 
 # Secret key for session management (CSRF, etc.)
