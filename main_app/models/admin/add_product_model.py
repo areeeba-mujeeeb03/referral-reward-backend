@@ -20,6 +20,8 @@ class Product(Document):
     off_percent = FloatField()
     start_date = DateTimeField()
     expiry_date = DateTimeField()
+    offer_type = StringField()
+    offer_status = StringField()
 
     created_at = DateTimeField(default=datetime.datetime.now)
 

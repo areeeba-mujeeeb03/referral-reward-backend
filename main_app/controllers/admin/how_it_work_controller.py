@@ -46,7 +46,7 @@ def add_how_it_work():
             msg = "Added successfully"
 
         logger.info(f"How it work saved with ID")
-        return jsonify({"message": msg}), 200
+        return jsonify({"success": "true" ,"message": msg}), 200
 
     except Exception as e:
         logger.error(f"how it work failed: {str(e)}")

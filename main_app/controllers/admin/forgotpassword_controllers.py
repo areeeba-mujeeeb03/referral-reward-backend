@@ -6,6 +6,7 @@ from main_app.utils.user.error_handling import get_error
 from main_app.utils.admin.mail import send_otp_email
 import bcrypt
 from datetime import datetime
+from main_app.controllers.admin.admin_auth_controller import _validate_password_strength
 
 logger = logging.getLogger(__name__)
 
@@ -45,8 +46,6 @@ def forgot_otp_email():
         }), 200
     
     except Exception as e:
-        import traceback
-        traceback.print_exc()  
         logger.error(f"OTP send failed:{str(e)}")
         return jsonify({"errro": "Internal server error"}), 500
 
@@ -55,6 +54,7 @@ def forgot_otp_email():
 # ------- Verify OTP
 
 def verify_otp():
+  try:
     data = request.get_json()
     email = data.get("email", "").strip().lower()
     otp = data.get("otp", "").strip()
@@ -68,8 +68,13 @@ def verify_otp():
     
     return jsonify({"error": "Code verified", "success": "True"}), 200
 
+  except Exception as e:
+        logger.error(f"OTP varification failed:{str(e)}")
+        return jsonify({"errro": "Internal server error"}), 500
+
 
 # -----------------------------------------------------------------------------------------------------
+
 
 # -----------Reset Password
 
@@ -79,6 +84,10 @@ def reset_password():
      email = data.get("email", "").strip().lower()
      new_password = data.get("new_password", "")
      confirm_password = data.get("confirm_password", "")
+
+     password_validation = _validate_password_strength(data["new_password"])
+     if password_validation:
+            return password_validation
 
      if new_password != confirm_password:
       return jsonify({"error": "Password do not match"}), 400
@@ -96,7 +105,7 @@ def reset_password():
      user.otp_expiry = None
      user.save()
 
-     return jsonify({"errro": "Password reset successfully", "success": "True"}), 200
+     return jsonify({"success": "true" ,"message": "Password reset successfully",}), 200
   
  except Exception as e:
          logger.error(f"Password reset failed:{str(e)}")

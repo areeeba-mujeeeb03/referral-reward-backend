@@ -5,6 +5,7 @@ from main_app.utils.user.error_handling import get_error
 import logging
 import datetime
 import re
+from main_app.controllers.user.auth_controllers import _validate_password_strength
 
 # Configure logging for better debugging and monitoring
 logging.basicConfig(level=logging.INFO)
@@ -63,7 +64,7 @@ def admin_register():
       )
       user.save()
 
-      return jsonify({"message": "User registered successfully"}), 200
+      return jsonify({"success": "true" , "message": "User registered successfully"}), 200
  
  except Exception as e:
         logger.error(f"Login failed for email with error: {str(e)}")
@@ -71,40 +72,41 @@ def admin_register():
 
 
 
-# ==================
-
-# Password Strength Validation Utility
-
 # # ==================
-def _validate_password_strength(password):
-    """
-    Validate password meets minimum security requirements
+
+# # Password Strength Validation Utility
+
+# # # ==================
+# def _validate_password_strength(password):
+#     """
+#     Validate password meets minimum security requirements
     
-    Password Requirements:
-    - Minimum 8 characters length
-    - At least one uppercase letter
-    - At least one lowercase letter  
-    - At least one numeric digit
+#     Password Requirements:
+#     - Minimum 8 characters length
+#     - At least one uppercase letter
+#     - At least one lowercase letter  
+#     - At least one numeric digit
     
-    Args:
-        password (str): Password to validate
+#     Args:
+#         password (str): Password to validate
         
-    Returns:
-        Flask Response or None: Error response if weak, None if strong
-    """
-    if len(password) < 8:
-        return jsonify({"error": "Password must be at least 8 characters long"}), 400
+#     Returns:
+#         Flask Response or None: Error response if weak, None if strong
+#     """
+#     if len(password) < 8:
+#         return jsonify({"error": "Password must be at least 8 characters long"}), 400
     
-    if not any(c.isupper() for c in password):
-        return jsonify({"error": "Password must contain at least one uppercase letter"}), 400
+#     if not any(c.isupper() for c in password):
+#         return jsonify({"error": "Password must contain at least one uppercase letter"}), 400
     
-    if not any(c.islower() for c in password):
-        return jsonify({"error": "Password must contain at least one lowercase letter"}), 400
+#     if not any(c.islower() for c in password):
+#         return jsonify({"error": "Password must contain at least one lowercase letter"}), 400
     
-    if not any(c.isdigit() for c in password):
-        return jsonify({"error": "Password must contain at least one number"}), 400
+#     if not any(c.isdigit() for c in password):
+#         return jsonify({"error": "Password must contain at least one number"}), 400
     
-    return None
+#     return None
+
 
 
 
@@ -159,6 +161,7 @@ def handle_admin_login():
         #  Return success
         logger.info(f"Admin login Successfully: {user.admin_uid}")
         return jsonify({
+            "success": "true",
             "message": "Logged in successfully",
             "access_token": access_token,
             "session_id": session_id,
