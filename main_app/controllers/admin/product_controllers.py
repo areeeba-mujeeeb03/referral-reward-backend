@@ -39,7 +39,6 @@ def add_product():
          reward_type = data.get("reward_type", "")
          status = data.get("status", "Live")
          visibility_till = data.get("visibility_till")
-         image = request.files.get("image")
          apply_offer = data.get("apply_offer", "").lower() == "true"
 
          if not all([product_name, original_amt, discounted_amt, short_desc]):
@@ -72,51 +71,50 @@ def add_product():
 
          offer_data = {}
          if apply_offer:
-            offer_name = data.get("offer_name")
-            one_liner = data.get("one_liner")
-            button_txt = data.get("button_txt")
-            off_percent = data.get("off_percent")
-            start_date = data.get("start_date")
-            expiry_date = data.get("expiry_date")
+             offer_name = data.get("offer_name")
+             one_liner = data.get("one_liner")
+             button_txt = data.get("button_txt")
+             off_percent = data.get("off_percent")
+             start_date = data.get("start_date")
+             expiry_date = data.get("expiry_date")
 
-            if not all([offer_name, one_liner, button_txt, off_percent, start_date, expiry_date]):
-                return jsonify({"error": "Missing offer fields"}), 400
+             if not all([offer_name, one_liner, button_txt, off_percent, start_date, expiry_date]):
+                 return jsonify({"error": "Missing offer fields"}), 400
 
-            try:
-                off_percent = float(off_percent)
-            except ValueError:
-                return jsonify({"error": "off_percent must be numeric"}), 400
+             try:
+                 off_percent = float(off_percent)
+             except ValueError:
+                 return jsonify({"error": "off_percent must be numeric"}), 400
 
-            start_date_parsed = parse_date_flexible(start_date)
-            expiry_date_parsed = parse_date_flexible(expiry_date)
+             start_date_parsed = parse_date_flexible(start_date)
+             expiry_date_parsed = parse_date_flexible(expiry_date)
 
-            if not start_date_parsed or not expiry_date_parsed:
-                return jsonify({"error": "Invalid offer date format"}), 400
+             if not start_date_parsed or not expiry_date_parsed:
+                 return jsonify({"error": "Invalid offer date format"}), 400
 
-            offer_data = {
-                "offer_name": offer_name,
-                "one_liner": one_liner,
-                "button_txt": button_txt,
-                "off_percent": off_percent,
-                "start_date": start_date_parsed,
-                "expiry_date": expiry_date_parsed,
-                "image_url" : image
-            }
+             offer_data = {
+                 "offer_name": offer_name,
+                 "one_liner": one_liner,
+                 "button_txt": button_txt,
+                 "off_percent": off_percent,
+                 "start_date": start_date_parsed,
+                 "expiry_date": expiry_date_parsed
+             }
 
          # Save product
          product = Product(
-            uid = generate_product_uid(),
-            product_name = product_name,
-            original_amt = original_amt,
-            discounted_amt = discounted_amt,
-            short_desc=short_desc,
-            image_url = image_url,
-            reward_type = reward_type,
-            status = status,
-            visibility_till = visibility_date,
-            apply_offer=apply_offer,
-            **offer_data
-        )
+             uid=generate_product_uid(),
+             product_name=product_name,
+             original_amt=original_amt,
+             discounted_amt=discounted_amt,
+             short_desc=short_desc,
+             image_url=image_url,
+             reward_type=reward_type,
+             status=status,
+             visibility_till=visibility_date,
+             apply_offer=apply_offer,
+             **offer_data
+         )
          product.save()
 
          logger.info(f"Product saved with ID: {product.uid}")
@@ -136,7 +134,7 @@ def update_product(uid):
      logger.info(f"Update Product API called for UID: {uid}")
      data = request.form
 
-     product = Product.objects(uid=uid).first()
+     product = AddProduct.objects(uid=uid).first()
      if not product:
         return jsonify({"error": "Product not found"}), 400
      if data.get("product_name"):
@@ -183,7 +181,7 @@ def update_product(uid):
 
 # --------------------------------------------------------------------------------------------------
 
-# # Add Offer
+# # Add Offer 
 
 # UPLOAD_FOLDER = "uploads/offers"
 # os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -198,7 +196,7 @@ def update_product(uid):
 #      off_percent = int(data.get("off_percent", "0"))
 #      start_date = parse_date_flexible(data.get("start_date", ""))
 #      expiry_date = parse_date_flexible(data.get("expiry_date", ""))
-
+     
 #      if not all([offer_name, one_liner, button_txt, off_percent, start_date, expiry_date]):
 #          return jsonify({"error": "All fields are required"}), 400
 
@@ -208,12 +206,12 @@ def update_product(uid):
 #      file = request.files.get("image")
 #      if not file:
 #         return jsonify({"error": "No image uploaded"}), 400
-
+         
 #      filename = secure_filename(file.filename)
 #      image_path = os.path.join(UPLOAD_FOLDER, filename)
 #      file.save(image_path)
-#      image_url = f"/{image_path}"
-
+#      image_url = f"/{image_path}" 
+     
 #      offer = Offer(
 #         offer_uid = generate_offer_uid(),
 #         offer_name = offer_name,
@@ -224,7 +222,7 @@ def update_product(uid):
 #         start_date = start_date,
 #         expiry_date = expiry_date
 #       )
-
+     
 #      offer.save()
 
 #      logger.info(f"Offer saved with ID: {offer.offer_uid}")
@@ -233,76 +231,73 @@ def update_product(uid):
 #  except Exception as e:
 #           logger.error(f"Offer addition failed: {str(e)}")
 #           return jsonify({"error": "Internal server error"}), 500
-
+ 
 
 # ---------------------------------------------------------------------------------------------
 
-# Update Offers
+# Update Offers 
 def update_offer():
     try:
         logger = logging.getLogger(__name__)
         data = request.form
 
         uid = data.get("uid")
-        apply_offer = data.get("apply_offer", "").lower() == "true"
 
         if not uid:
             return jsonify({"error": "Product uid not found"}), 400
-
-        product = Product.objects(uid=uid).first()
+        
+        product = AddProduct.objects(uid=uid).first()
         if not product:
             return jsonify({"error" : "Product not found"}), 400
+        
+        apply_offer = data.get("apply_offer", "").lower() == "true"
+        product.apply_offer = apply_offer
 
-        if apply_offer:
-            offer_name = data.get("offer_name")
-            one_liner = data.get("one_liner")
-            button_txt = data.get("button_txt")
-            off_percent = data.get("off_percent")
-            start_date = data.get("start_date")
-            expiry_date = data.get("expiry_date")
+           # Partial field updates
+        if apply_offer:   
+            if "apply_offer" in data:
+                product.apply_offer = data.get("apply_offer", "").lower() == "true"
 
-            if not all ([ offer_name, one_liner, button_txt, off_percent, start_date, expiry_date]):
-                return jsonify({"error": "All offer fields are required."}), 400
+            if "offer_name" in data:
+                product.offer_name = data.get("offer_name")
 
-            try:
-                off_percent = float(off_percent)
-            except ValueError:
-                return jsonify({"error": "Offer percent must be number"}), 400
+            if "one_liner" in data:
+                product.one_liner = data.get("one_liner")
 
-            start = parse_date_flexible(start_date)
-            expiry = parse_date_flexible(expiry_date)
+            if "button_txt" in data:
+                product.button_txt = data.get("button_txt")
 
-            if not start or not expiry:
-                return jsonify({"error": "Invalid date format"}), 400
+            if "off_percent" in data:
+                try:
+                    product.off_percent = float(data.get("off_percent"))
+                except ValueError:
+                    return jsonify({"error": "off_percent must be numeric"}), 400
 
-            product.update(
-                apply_offer=True,
-                offer_name=offer_name,
-                one_liner=one_liner,
-                button_txt=button_txt,
-                off_percent=off_percent,
-                start_date=start,
-                expiry_date=expiry
-            )
-      #   else:
-      #       product.update(
-      #           apply_offer=False,
-      #           offer_name=None,
-      #           one_liner=None,
-      #           button_txt=None,
-      #           off_percent=None,
-      #           start_date=None,
-      #           expiry_date=None
-      #       )
+            if "start_date" in data:
+                start = parse_date_flexible(data.get("start_date"))
+                if not start:
+                    return jsonify({"error": "Invalid start_date format"}), 400
+                product.start_date = start
 
+            if "expiry_date" in data:
+                expiry = parse_date_flexible(data.get("expiry_date"))
+                if not expiry:
+                    return jsonify({"error": "Invalid expiry_date format"}), 400
+                product.expiry_date = expiry
+
+            product.save()
             return jsonify({"message": "Offer updated successfully"}), 200
+    
+        else:
+            product.save()
+            return jsonify({"message": "Offer not updated because apply_offer is false"})
 
     except Exception as e:
         logger.error(f"offer updated failed: {str(e)}")
         return jsonify({"error": "Internal server error"}), 500
+    
 
-
-
+        
 
 
 

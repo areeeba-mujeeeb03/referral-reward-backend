@@ -73,8 +73,8 @@ def handle_email_login():
             logger.warning("Login attempt with empty request body")
             return jsonify({"error": get_error("invalid_data")}), 400
 
-        email = data.get("email", "").strip().lower()
-        password = data.get("password", "")
+        email = data.get("email")
+        password = data.get("password")
 
         # Step 2: Validate required fields
         missing_fields = [field for field in ["email", "password"] if not data.get(field)]
@@ -91,13 +91,15 @@ def handle_email_login():
         if not user:
             logger.warning(f"Login attempt with unknown email: {email}")
             return jsonify({"error": get_error("user_not_found")}), 404
-
+        if user.email != email:
+            return jsonify({"message" :  "Invalid email"})
         is_member = user.is_member
 
         if not is_member == True:
             return "Need to purchase before logging in!"
 
         # Step 4: Check if account is active
+
         if hasattr(user, "is_active") and not user.is_active:
             logger.warning(f"Inactive account login attempt: {email}")
             return jsonify({"error": "Account is deactivated"}), 403
