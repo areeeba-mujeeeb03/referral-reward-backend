@@ -69,7 +69,6 @@ def advertisement_card():
       description = data.get("description")
       button_txt = data.get("button_txt")
       admin_uid = data.get("admin_uid")
-    #   image_url = data.get("image_url")
       
       if not all([title, description, button_txt, admin_uid]):
          return jsonify({"error": "All fields are required."}), 400
