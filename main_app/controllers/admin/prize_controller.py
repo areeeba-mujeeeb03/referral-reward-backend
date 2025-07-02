@@ -41,7 +41,7 @@ def add_exciting_prizes():
         prize.save()
         print("prize", prize)
         logger.info(f"Prizes save with ID: {str(prize.id)}")
-        return jsonify({"message": "Prize add successfully", }), 200
+        return jsonify({"success": "true" , "message": "Prize added successfully", }), 200
 
     except Exception as e:
         logger.error(f"Add exciting prize failed:{str(e)}")

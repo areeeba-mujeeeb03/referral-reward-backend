@@ -15,8 +15,11 @@ from main_app.controllers.admin.referral_controllers import generate_invite_link
 admin_bp = Blueprint("admin_routes", __name__)
 
 #--------------------------------------------------------------------------------
+# =================
 
 # Admin Register
+
+# ================
 
 @admin_bp.route("/admin/register", methods=["POST"])
 def register_admin():
@@ -53,13 +56,16 @@ def login_email():
 @admin_bp.route("/admin/login/forgot_password", methods = ["POST"])
 def user_forgot_password():
     """
-    Handle forgot password request - send reset link to email
+    Handle forgot password request - send reset code to email
     Accepts: POST request with email address
-    Returns: Password reset link sent confirmation
     """
     return forgot_otp_email()
 
+# ========================
+
 # Verify OTP (card)
+
+# =========================
 
 @admin_bp.route("/admin/forgot/verify_otp", methods = ["POST"])
 def forget_otp_verify():
@@ -70,7 +76,11 @@ def forget_otp_verify():
      """
      return verify_otp()
 
+# =========================
+
 # Reset Password
+
+# =========================
 
 @admin_bp.route("/admin/login/reset_password", methods = ["POST"])
 def user_reset_password():
@@ -81,9 +91,11 @@ def user_reset_password():
     """
     return reset_password()
 
-# ============================================================================
+# =============================
 
 # Add Products
+
+# =============================
 
 @admin_bp.route("/admin/add_product", methods = ["POST"])
 def admin_add_product():
@@ -94,13 +106,17 @@ def admin_add_product():
     """
     return add_product()
 
+# =======================
+
 # Update Product
 
-@admin_bp.route("/admin/update_offer/<string:uid>", methods = ["PUT"])
+# ========================
+
+@admin_bp.route("/admin/update_product/<string:uid>", methods = ["PUT"])
 def update_add_product(uid):
     """
     Updates an existing product in the database.
-    Expects: JSON body with updated product details.
+    Expects: from-data body with updated product details.
     Returns: Success message or error response.
     """
     return update_product(uid)
@@ -118,7 +134,13 @@ def update_add_product(uid):
 #     """
 #     return create_offer()
 
+
+# ==========================
+
 # Update Offers
+
+# ==========================
+
 @admin_bp.route("/admin/update_offer", methods = ["PUT"])
 def admin_update_offer():
     """
@@ -127,9 +149,13 @@ def admin_update_offer():
     Return: Success message or error reponse.
     """
     return update_offer()
-# ------------------------------------------------------------------------------------------------
+
+
+# ===========================
 
 # Exciting Prizes
+
+# ===========================
 
 @admin_bp.route("/admin/prizes", methods = ["POST"])
 def admin_exciting_offer():
@@ -140,27 +166,32 @@ def admin_exciting_offer():
     """
     return add_exciting_prizes()
 
-# --------------------------------------------------------------------------------------------------
+
+# ========================
 
 # How It Work
+
+# ========================
 
 @admin_bp.route("/admin/how_it_work", methods = ["POST"])
 def admin_how_it_work():
     """
-    
+    Add or update 'How It Work' content based on admin_uid.
     """
     return  add_how_it_work()
 
 
-
-# -----------------------------------------------------------------------------
+# ==========================
 
 # Advertisement Card
+
+# ==========================
 
 @admin_bp.route("/admin/advertisement_card", methods = ["POST"])
 def admim_advertisement_card():
     """
-    
+    Handles the creation of a new advertisement card.
+    Add and update advertisement card by admin_uid.
     """
     return advertisement_card()
 

@@ -20,6 +20,9 @@ def add_how_it_work():
         title3 = data.get("title3")
         desc3 = data.get("desc3")
         admin_uid = data.get("admin_uid")
+        
+        if not data:
+            return jsonify({"error": "No fields provided"}), 400
 
         # Validaiton
         if not all([admin_uid, title1, desc1, title2, desc2, title3, desc3 ]):
@@ -46,7 +49,7 @@ def add_how_it_work():
             msg = "Added successfully"
 
         logger.info(f"How it work saved with ID")
-        return jsonify({"message": msg}), 200
+        return jsonify({"success": "true" ,"message": msg}), 200
 
     except Exception as e:
         logger.error(f"how it work failed: {str(e)}")
@@ -69,7 +72,6 @@ def advertisement_card():
       description = data.get("description")
       button_txt = data.get("button_txt")
       admin_uid = data.get("admin_uid")
-    #   image_url = data.get("image_url")
       
       if not all([title, description, button_txt, admin_uid]):
          return jsonify({"error": "All fields are required."}), 400
