@@ -10,8 +10,8 @@ class Admin(Document):
     session_id = StringField()
     expiry_time = DateTimeField()
     # OTP Fields
-    otp = StringField()
-    otp_expiry = DateTimeField()
+    code = StringField()
+    code_expiry = DateTimeField()
 
 
     meta = {"db_alias" : "admin-db", 'collection': 'admin'}

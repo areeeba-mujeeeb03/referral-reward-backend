@@ -5,6 +5,7 @@ from werkzeug.utils import secure_filename
 import os
 import logging
 from main_app.models.admin.prize_model import ExcitingPrize
+from main_app.models.admin.admin_model import Admin
 
 
 # Configure logging for better debugging and monitoring
@@ -19,11 +20,25 @@ def add_exciting_prizes():
         logger.info("Add Exciting Prizes API called")
         data = request.form
         title = data.get("title")
-        terms_conditions = data.get("terms_conditions")
+        term_conditions = data.get("term_conditions")
+        admin_uid = data.get("admin_uid")
+        required_meteors = data.get("required_meteors")
 
-        if not title:
-          return jsonify({"error": "Title not found"}), 400
+
+        if not all ([title , term_conditions, admin_uid, required_meteors]):
+          return jsonify({"error": "All fields are required"}), 400
         
+          # Validate meteors is numeric
+        try:
+            required_meteors = int(required_meteors)
+        except ValueError:
+            return jsonify({"error": "required_meteors must be a number"}), 400
+
+         # Check user found or not 
+        if not Admin.objects(admin_uid=admin_uid).first():
+            return jsonify({"error": "Admin not found" }), 400
+      
+
         files = request.files.get("image")
         if not files:
             return jsonify({"error": "Image not found"}), 400
@@ -33,16 +48,46 @@ def add_exciting_prizes():
         files.save(image_path)
         image_url = f"/{image_path}"
 
-        prize = ExcitingPrize(
-            title = title,
-            image_url = image_url,
-            terms_conditions = terms_conditions
-        )
-        prize.save()
+        prize = ExcitingPrize.objects(admin_uid=admin_uid).first()
+        if prize:
+            prize.update(
+              title = title,
+              image_url = image_url,
+              term_conditions = term_conditions,
+              required_meteors=required_meteors
+            )
+            msg = "Updated prize successfully"
+        else:
+             ExcitingPrize(
+                 title=title,
+                 term_conditions=term_conditions,
+                 admin_uid=admin_uid,
+                 image_url=image_url,
+                 required_meteors=required_meteors
+                ).save()
+             msg = "Added prize successfully"  
+            
         
-        logger.info(f"Prizes save with ID: {str(prize.id)}")
-        return jsonify({"success": "true" , "message": "Prize added successfully", }), 200
+        logger.info(f"Prizes save with ID:")
+        return jsonify({"success": "true" , "message": msg }), 200
 
     except Exception as e:
         logger.error(f"Add exciting prize failed:{str(e)}")
         return jsonify({"error": "Internal server error"}), 500   
+    
+
+    # -------------------------------------------------------------------------
+
+def check_eligibility():
+    data = request.get_json()
+    user_meteors = data.get("meteors")
+    admin_uid = data.get("admin_uid")
+
+    prize = ExcitingPrize.objects(admin_uid=admin_uid).first()
+    if not prize:
+        return jsonify({"error": "Prize not found"}), 404
+
+    if user_meteors >= prize.required_meteors:
+        return jsonify({"eligible": True, "message": "User is eligible for this prize"}), 200
+    else:
+        return jsonify({"eligible": False, "message": "Not enough meteors"}), 200

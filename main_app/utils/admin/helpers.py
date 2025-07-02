@@ -1,7 +1,8 @@
 import random
 import datetime 
 from main_app.models.admin.add_product_model import Product
-from main_app.models.admin.product_offer_model import Offer
+# from main_app.models.admin.product_offer_model import Offer
+
 
 def generate_otp(length=6):
     return ''.join(random.choices("0123456789", k=length))
@@ -28,3 +29,5 @@ def generate_product_uid():
 def generate_offer_uid():
     count = Offer.objects.count() + 1
     return f"OFR_{str(count).zfill(2)}"
+
+

@@ -36,7 +36,7 @@ def add_product():
          original_amt = data.get("original_amt")
          discounted_amt = data.get("discounted_amt")
          short_desc = data.get("short_desc")
-         reward_type = data.get("reward_type", "")
+         reward_type = data.get("reward_type")
          status = data.get("status", "Live")
          visibility_till = data.get("visibility_till")
          apply_offer = data.get("apply_offer", "").lower() == "true"
@@ -58,15 +58,15 @@ def add_product():
                 return jsonify({"error": "Date must be in DD/MM/YYYY or DD-MM-YYYY format"}), 400
        
           # Image upload
-            image = request.files.get("image")
-            image_url = ""
-            if not image:
-               return jsonify({"error": "No image uploaded"}), 400
+         image = request.files.get("image")
+         image_url = ""
+         if not image:
+            return jsonify({"error": "No image uploaded"}), 400
          
-            filename = secure_filename(image.filename)
-            image_path = os.path.join(UPLOAD_FOLDER, filename)
-            image.save(image_path)
-            image_url = f"/{image_path}"            
+         filename = secure_filename(image.filename)
+         image_path = os.path.join(UPLOAD_FOLDER, filename)
+         image.save(image_path)
+         image_url = f"/{image_path}"            
             
 
          offer_data = {}
@@ -92,14 +92,17 @@ def add_product():
 
             if not start_date_parsed or not expiry_date_parsed:
                 return jsonify({"error": "Invalid offer date format"}), 400
-            
-            #  Determine offer status based on date
+           #  Determine offer status based on date 
             current_date = datetime.datetime.now().date()
+
             if start_date_parsed.date() > current_date:
                 offer_status = "Upcoming"
-            else:
+            elif start_date_parsed.date() <= current_date <= expiry_date_parsed.date():
                 offer_status = "Live"
+            else:
+                 offer_status = "Pause"
 
+        #   Offer Data
             offer_data = {
                 "offer_name": offer_name,
                 "one_liner": one_liner,
@@ -307,6 +310,17 @@ def update_offer():
 
             if "offer_type" in data:
                 product.offer_name = data.get("offer_name")
+
+            # # Check and update offer status
+            # current_date = datetime.datetime.now().date()
+            # is_live = start_date and start_date and start_date.date() <= current_date <= expiry_date.date()
+
+            # if product.offer_status == "Live" and not is_live:
+            #     product.offer_status = "Pause"
+            # elif is_live:
+            #     product.offer_status = "Live"  # in case it's coming back live after pause
+            # elif start_date.date() > current_date:
+            #     product.offer_status = "Upcoming"    
                  
             product.save()
             return jsonify({"success": "true" , "message": "Offer updated successfully"}), 200

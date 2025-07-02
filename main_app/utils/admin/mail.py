@@ -2,11 +2,11 @@
 import smtplib
 from email.mime.text import MIMEText
 
-def send_otp_email(recipient, otp):
+def send_otp_email(recipient, code):
     sender_email = "nabirkhan1662@gmail.com"
     sender_password = "iulh zxvz hpxi ejlk"
-    subject = "Your OTP for Password Reset"
-    body = f"Your OTP is: {otp}\nIt is valid for 5 minutes."
+    subject = "Your code for Password Reset"
+    body = f"Your code is: {code}\nIt is valid for 5 minutes."
 
     msg = MIMEText(body)
     msg["Subject"] = subject

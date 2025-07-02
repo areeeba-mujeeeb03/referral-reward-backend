@@ -12,9 +12,9 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def is_valid_email(email):
-    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{3}$'
-    return re.match(pattern, email) is not None
+# def is_valid_email(email):
+#     pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{3}$'
+#     return re.match(pattern, email) is not None
 
 #------- Register 
 
@@ -37,7 +37,7 @@ def admin_register():
     #  # Email format validation
     #   if not is_valid_email(email):
     #    return jsonify({"error": "Invalid email format"}), 400
-    # Step 3: Additional field-specific validation
+     # Additional field-specific validation
       email_validation = _validate_email_format(data["email"])
       if email_validation:
             return email_validation
@@ -71,7 +71,7 @@ def admin_register():
       return jsonify({"success": "true" , "message": "User registered successfully"}), 200
  
  except Exception as e:
-        logger.error(f"Login failed for email with error: {str(e)}")
+        logger.error(f"Register failed for email with error: {str(e)}")
         return jsonify({"error": "Internal server error"}), 500
 
 
@@ -80,7 +80,6 @@ def admin_register():
 # ----------- Login
 
 def handle_admin_login():
-
     try:
         logger.info("Starting email login authentication")
 
@@ -119,15 +118,13 @@ def handle_admin_login():
         user.access_token = access_token
         user.session_id = session_id
         user.last_login = datetime.datetime.now()
-        # user.login_count = (user.login_count or 0) + 1  # safe increment
-
         user.save()
 
         #  Return success
         logger.info(f"Admin login Successfully: {user.admin_uid}")
         return jsonify({
             "success": "true",
-            "message": "Logged in successfully",
+            "message": "Login successfully",
             "access_token": access_token,
             "session_id": session_id,
             "admin_uid": user.admin_uid,
