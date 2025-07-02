@@ -7,7 +7,7 @@ from main_app.controllers.admin.help_request_controllers import list_faqs, add_f
     list_contact_messages
 from main_app.controllers.admin.profile_controllers import edit_profile_data
 from main_app.controllers.admin.product_controllers import add_product, update_product, update_offer
-from main_app.controllers.admin.prize_controller import add_exciting_prizes
+from main_app.controllers.admin.prize_controller import add_exciting_prizes, check_eligibility
 from main_app.controllers.admin.referral_controllers import generate_invite_link_with_expiry
 from main_app.controllers.admin.how_it_work_controller import add_how_it_work, advertisement_card
 from main_app.controllers.admin.referral_controllers import generate_invite_link_with_expiry
@@ -54,7 +54,7 @@ def login_email():
 # ==============
 
 
-@admin_bp.route("/admin/login/forgot_password", methods = ["POST"])
+@admin_bp.route("/admin/forgot_password", methods = ["POST"])
 def user_forgot_password():
     """
     Handle forgot password request - send reset code to email
@@ -68,7 +68,7 @@ def user_forgot_password():
 
 # =========================
 
-@admin_bp.route("/admin/forgot/verify_otp", methods = ["POST"])
+@admin_bp.route("/admin/verify_otp", methods = ["POST"])
 def forget_otp_verify():
      """
     Handle verify otp request - send to email
@@ -83,7 +83,7 @@ def forget_otp_verify():
 
 # =========================
 
-@admin_bp.route("/admin/login/reset_password", methods = ["POST"])
+@admin_bp.route("/admin/reset_password", methods = ["POST"])
 def user_reset_password():
     """
     Handle password reset using code(otp) from email
@@ -166,6 +166,13 @@ def admin_exciting_offer():
     Returns: Success message or error response.
     """
     return add_exciting_prizes()
+
+
+@admin_bp.route('/admin/check_prize_eligibility', methods=["POST"])
+def prize_check_eligibility():
+
+    return check_eligibility()
+
 
 
 # ========================

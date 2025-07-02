@@ -8,6 +8,8 @@ import bcrypt
 from datetime import datetime
 from main_app.controllers.admin.admin_auth_controller import _validate_password_strength
 
+# Configure logging for better debugging and monitoring
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # ------ Forgot Password
@@ -26,50 +28,51 @@ def forgot_otp_email():
         if not user:
             return jsonify({"error": get_error("user_not_found")}), 400
         
-        # Generate OTP
-        otp =   generate_otp()
+        # Generate code
+        code =   generate_otp()
         expiry_time = get_expiry_time()
-        user.otp = otp
-        user.otp_expiry = expiry_time
+        user.code = code
+        user.code_expiry = expiry_time
         user.save()
 
         # send Email
-        email_status = send_otp_email(email, otp)
+        email_status = send_otp_email(email, code)
         if not email_status:
-            return jsonify({"error": "Failed to send OTP"}), 500
+            return jsonify({"error": "Failed to send code"}), 500
         
         return jsonify({
-            "message": " OTP send successfully to email",
-            "success": "True",
-            "otp": otp,
-            "expiry_time": expiry_time.isoformat()
+            "message": "Code send successfully to email",
+            "success": "True"
         }), 200
     
     except Exception as e:
-        logger.error(f"OTP send failed:{str(e)}")
+        logger.error(f"code send failed:{str(e)}")
         return jsonify({"errro": "Internal server error"}), 500
 
 # ----------------------------------------------------------------------------------------------------
 
-# ------- Verify OTP
+# ------- Verify code
 
 def verify_otp():
   try:
     data = request.get_json()
     email = data.get("email", "").strip()
-    otp = data.get("otp", "").strip()
+    code = data.get("code", "").strip()
 
     user = Admin.objects(email = email).first()
-    if not user or user.otp != otp:
-     return jsonify({"error": "Invalid OTP"}), 400
+    if not user:
+      return jsonify({"error": get_error("user_not_found")}), 400
+
+    if not user or user.code != code:
+     return jsonify({"error": "Invalid code"}), 400
     
-    if user.otp_expiry < datetime.now():
+    if user.code_expiry < datetime.now():
         return jsonify({"error": "Code expired"}), 400
     
     return jsonify({"error": "Code verified", "success": "True"}), 200
 
   except Exception as e:
-        logger.error(f"OTP varification failed:{str(e)}")
+        logger.error(f"code varification failed:{str(e)}")
         return jsonify({"errro": "Internal server error"}), 500
 
 
@@ -85,6 +88,13 @@ def reset_password():
      new_password = data.get("new_password", "")
      confirm_password = data.get("confirm_password", "")
 
+     if not data:
+         return jsonify({"error": "No fields provided."}), 400
+
+     user = Admin.objects(email = email).first()
+     if not user:
+        return jsonify({"error": "user_not_found"}), 400
+
      password_validation = _validate_password_strength(data["new_password"])
      if password_validation:
             return password_validation
@@ -92,20 +102,13 @@ def reset_password():
      if new_password != confirm_password:
       return jsonify({"error": "Password do not match"}), 400
     
-     user = Admin.objects(email = email).first()
-     if not user:
-        return jsonify({"error": "user_not_found"}), 400
-
-     password_validation = _validate_password_strength(new_password)
-     if password_validation:
-         return password_validation
 
      salt = bcrypt.gensalt(rounds=12)
      hashed = bcrypt.hashpw(new_password.encode(), salt)
 
      user.password = hashed.decode()
-     user.otp = None
-     user.otp_expiry = None
+     user.code = None
+     user.code_expiry = None
      user.save()
 
      return jsonify({"success": "true" ,"message": "Password reset successfully",}), 200

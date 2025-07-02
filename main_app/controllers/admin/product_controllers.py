@@ -36,7 +36,7 @@ def add_product():
          original_amt = data.get("original_amt")
          discounted_amt = data.get("discounted_amt")
          short_desc = data.get("short_desc")
-         reward_type = data.get("reward_type", "")
+         reward_type = data.get("reward_type")
          status = data.get("status", "Live")
          visibility_till = data.get("visibility_till")
          apply_offer = data.get("apply_offer", "").lower() == "true"
@@ -61,7 +61,7 @@ def add_product():
          image = request.files.get("image")
          image_url = ""
          if not image:
-           return jsonify({"error": "No image uploaded"}), 400
+            return jsonify({"error": "No image uploaded"}), 400
 
          filename = secure_filename(image.filename)
          image_path = os.path.join(UPLOAD_FOLDER, filename)
@@ -92,14 +92,17 @@ def add_product():
 
             if not start_date_parsed or not expiry_date_parsed:
                 return jsonify({"error": "Invalid offer date format"}), 400
-
-            #  Determine offer status based on date
+           #  Determine offer status based on date
             current_date = datetime.datetime.now().date()
+
             if start_date_parsed.date() > current_date:
                 offer_status = "Upcoming"
-            else:
+            elif start_date_parsed.date() <= current_date <= expiry_date_parsed.date():
                 offer_status = "Live"
+            else:
+                 offer_status = "Pause"
 
+        #   Offer Data
             offer_data = {
                 "offer_name": offer_name,
                 "one_liner": one_liner,
@@ -113,18 +116,18 @@ def add_product():
 
          # Save product
          product = Product(
-             uid=generate_product_uid(),
-             product_name=product_name,
-             original_amt=original_amt,
-             discounted_amt=discounted_amt,
-             short_desc=short_desc,
-             image_url=image_url,
-             reward_type=reward_type,
-             status=status,
-             visibility_till=visibility_date,
-             apply_offer=apply_offer,
-             **offer_data
-         )
+            uid = generate_product_uid(),
+            product_name = product_name,
+            original_amt = original_amt,
+            discounted_amt = discounted_amt,
+            short_desc=short_desc,
+            image_url = image_url,
+            reward_type = reward_type,
+            status = status,
+            visibility_till = visibility_date,
+            apply_offer=apply_offer,
+            **offer_data
+        )
          product.save()
 
          logger.info(f"Product saved with ID: {product.uid}")
@@ -133,7 +136,6 @@ def add_product():
     except Exception as e:
         logger.error(f"Product addition failed: {str(e)}")
         return jsonify({"error": "Internal server error"}), 500
-
 
 
 #  --------------------------------------------------------------------------------------------------
@@ -266,12 +268,12 @@ def update_offer():
         product = Product.objects(uid=uid).first()
         if not product:
             return jsonify({"error" : "Product not found"}), 400
-
+        
         apply_offer = data.get("apply_offer", "").lower() == "true"
         product.apply_offer = apply_offer
 
         # Validation for field updates
-        if apply_offer:
+        if apply_offer: 
             offer_fields = ["offer_name", "one_liner", "button_txt", "off_percent", "start_date", "expiry_date", "offer_type"]
             if not any(field in data for field in offer_fields):
               return jsonify({"error": "No offer fields provided for update"}), 400
@@ -309,9 +311,20 @@ def update_offer():
             if "offer_type" in data:
                 product.offer_name = data.get("offer_name")
 
+            # # Check and update offer status
+            # current_date = datetime.datetime.now().date()
+            # is_live = start_date and start_date and start_date.date() <= current_date <= expiry_date.date()
+
+            # if product.offer_status == "Live" and not is_live:
+            #     product.offer_status = "Pause"
+            # elif is_live:
+            #     product.offer_status = "Live"  # in case it's coming back live after pause
+            # elif start_date.date() > current_date:
+            #     product.offer_status = "Upcoming"
+
             product.save()
             return jsonify({"success": "true" , "message": "Offer updated successfully"}), 200
-
+    
         else:
             # product.save()
             return jsonify({"error": "Offer not updated because apply_offer is false"}), 400
@@ -319,9 +332,6 @@ def update_offer():
     except Exception as e:
         logger.error(f"offer updated failed: {str(e)}")
         return jsonify({"error": "Internal server error"}), 500
-
-
-
 
 
 

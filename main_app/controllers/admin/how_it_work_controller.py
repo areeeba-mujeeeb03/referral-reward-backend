@@ -115,5 +115,5 @@ def advertisement_card():
       return jsonify({"message": msg, "success": "true"}), 200
     
     except Exception as e:
-       logger.error(f"  : {str(e)}")
+       logger.error(f"Add advertisment card failed : {str(e)}")
        return jsonify({"error": "Internal server error"}), 500
