@@ -129,8 +129,7 @@ def admin_exciting_offer():
 # --------------------------------------------------------------------------------------------------
 
 
-@admin_bp.route("/edit/<admin_uid>", methods = ["POST"])
-def edit_profile(admin_uid):
+
 @admin_bp.route("/admin/how_it_work", methods = ["POST"])
 def admin_how_it_work():
     """
@@ -143,7 +142,7 @@ def admin_how_it_work():
 # -----------------------------------------------------------------------------
 
 @admin_bp.route("/admin/advertisement_card", methods = ["POST"])
-def admim_advertisement_card():
+def admin_advertisement_card():
     """
 
     """
@@ -164,7 +163,7 @@ def edit_profile():
     Handle profile data updates like username, email
 
     """
-    return edit_profile_data(admin_id)
+    return edit_profile_data()
 
 
 
@@ -172,11 +171,10 @@ def edit_profile():
 # --------------------------------------------------------------------------------------------------
 
 
-def route(app):
-    @app.route("/dashboard", methods=["POST"])
-    def route():
-        return encode_data()
-    return edit_profile_data()
+
+@admin_bp.route("/dashboard", methods=["POST"])
+def route():
+    return encode_data()
 
 # ==============
 
