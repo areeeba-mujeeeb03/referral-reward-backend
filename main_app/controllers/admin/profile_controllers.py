@@ -6,15 +6,15 @@ from main_app.models.admin.admin_model import Admin
 def edit_profile_data():
     try:
         data = request.get_json()
-        admin_id = data.get("admin_id")
-        access_token = data.get("mode")
-        session_id = data.get("log_alt")
+        admin_uid = data.get("admin_uid")
+        # access_token = data.get("mode")
+        # session_id = data.get("log_alt")
 
-        admin = Admin.objects(admin_id=admin_id).first()
+        admin = Admin.objects(admin_uid=admin_uid).first()
 
         if not admin:
             return jsonify({"success": False, "message": "User does not exist"})
-        validate_session_token(admin, access_token, session_id)
+        # validate_session_token(admin, access_token, session_id)
 
         update_fields = {}
 

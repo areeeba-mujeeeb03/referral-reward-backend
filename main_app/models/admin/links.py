@@ -13,9 +13,8 @@ class Link(Document):
 
 
 class LinkSharing(Document):
-    facebook_sent = IntField()
-    whatsapp_sent = IntField()
-    telegram_sent = IntField()
-    twitter_sent = IntField()
+    app_name = StringField()
+    total_sent = IntField(default=0)
+    successful_registered = IntField(required=True,default = 0)
 
     meta = {"db_alias": "admin-db", "collection": "SharingApps"}

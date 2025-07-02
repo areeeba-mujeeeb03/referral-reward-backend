@@ -3,6 +3,7 @@ import logging
 from flask import request, jsonify, session
 from main_app.models.user.user import User
 from main_app.controllers.user.auth_controllers import validate_session_token
+from main_app.models.admin.links import LinkSharing
 
 # ================
 
@@ -25,6 +26,7 @@ def generate_msg(user):
     return encoded_msg
 
 def send_whatsapp_invite():
+
     try:
         data = request.get_json()
         user_id = data.get("user_id")
@@ -50,10 +52,14 @@ def send_whatsapp_invite():
 
         encoded_msg = generate_msg(user_exist)
         whatsapp_link = f"https://wa.me/?text={encoded_msg}"
-
+        app = LinkSharing.objects(app_name = "WhatsApp").first()
+        if app :
+            app.update(inc__total_sent=1)
+        else:
+            LinkSharing(app_name = "WhatsApp", total_sent=1).save()
         return jsonify({
             "success": True,
-            "whatsapp_msg": whatsapp_link
+            "link": whatsapp_link
         })
 
     except Exception as e:
@@ -88,10 +94,15 @@ def send_twitter_invite():
 
         encoded_msg = generate_msg(user_exist)
         twitter_link = f"https://twitter.com/intent/tweet?text={encoded_msg}"
+        app = LinkSharing.objects(app_name = "Twitter").first()
+        if app :
+            app.update(inc__total_sent=1)
+        else:
+            LinkSharing(app_name = "Twitter", total_sent=1).save()
 
         return jsonify({
             "success": True,
-            "twitter_link": twitter_link
+            "link": twitter_link
         })
 
     except Exception as e:
@@ -125,10 +136,15 @@ def send_telegram_invite():
 
         encoded_msg = generate_msg(user_exist)
         telegram_link = f"https://t.me/share/url?url={quote_plus(user_exist.invitation_link)}&text={encoded_msg}"
+        app = LinkSharing.objects(app_name="Telegram").first()
+        if app:
+            app.update(inc__total_sent=1)
+        else:
+            LinkSharing(app_name="Telegram", total_sent=1).save()
 
         return jsonify({
             "success": True,
-            "telegram_link": telegram_link
+            "link": telegram_link
         })
 
     except Exception as e:
@@ -162,10 +178,15 @@ def send_facebook_invite():
         encoded_msg = generate_msg(user_exist)
 
         facebook_link = f"https://www.facebook.com/sharer/sharer.php?u={quote_plus(user_exist.invitation_link)}"
+        app = LinkSharing.objects(app_name="Facebook").first()
+        if app:
+            app.update(inc__total_sent=1)
+        else:
+            LinkSharing(app_name="Facebook", total_sent=1).save()
 
         return jsonify({
             "success": True,
-            "facebook_link": facebook_link
+            "link": facebook_link
         })
 
     except Exception as e:

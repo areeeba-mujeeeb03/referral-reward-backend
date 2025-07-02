@@ -123,6 +123,7 @@ def process_tag_id_and_reward(tag_id, new_user_id):
 
 
 def update_referral_status_and_reward(referrer_id, user_id):
+
     """
     Update referrer's referral statistics and tracking records.
 

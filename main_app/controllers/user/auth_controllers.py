@@ -122,8 +122,10 @@ def handle_registration():
             if referral_code:
                 referrer = User.objects(invitation_code = referral_code).first()
                 if not referrer:
-                    Errors(username=data['username'], email=data["email"], error_source="Sign Up Form",
-                           error_type=get_error("Invalid code"))
+                    print("a")
+                    error = Errors(username=data['username'], email=data["email"], error_source="Sign up form",
+                           error_type= "Invalid referral code")
+                    error.save()
                     logger.info("No such code exists.")
                     return jsonify({"success" : False, "error" : "Invalid referral code."})
                 if referrer.user_id == user.user_id:
@@ -249,8 +251,6 @@ def _validate_password_strength(password):
     if not any(c.isdigit() for c in password):
         return jsonify({"error": "Password must contain at least one number"}), 400
 
-
-    
     return None
 
 

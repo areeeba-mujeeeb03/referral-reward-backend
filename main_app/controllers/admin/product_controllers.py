@@ -58,15 +58,15 @@ def add_product():
                 return jsonify({"error": "Date must be in DD/MM/YYYY or DD-MM-YYYY format"}), 400
        
           # Image upload
-            image = request.files.get("image")
-            image_url = ""
-            if not image:
-               return jsonify({"error": "No image uploaded"}), 400
-         
-            filename = secure_filename(image.filename)
-            image_path = os.path.join(UPLOAD_FOLDER, filename)
-            image.save(image_path)
-            image_url = f"/{image_path}"            
+         image = request.files.get("image")
+         image_url = ""
+         if not image:
+           return jsonify({"error": "No image uploaded"}), 400
+
+         filename = secure_filename(image.filename)
+         image_path = os.path.join(UPLOAD_FOLDER, filename)
+         image.save(image_path)
+         image_url = f"/{image_path}"
             
 
          offer_data = {}

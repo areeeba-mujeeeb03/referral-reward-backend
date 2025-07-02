@@ -11,6 +11,7 @@ from main_app.controllers.admin.prize_controller import add_exciting_prizes
 from main_app.controllers.admin.referral_controllers import generate_invite_link_with_expiry
 from main_app.controllers.admin.how_it_work_controller import add_how_it_work, advertisement_card
 from main_app.controllers.admin.referral_controllers import generate_invite_link_with_expiry
+from main_app.controllers.admin.rewards_controllers import add_new_galaxy, add_new_milestones
 
 admin_bp = Blueprint("admin_routes", __name__)
 
@@ -270,4 +271,22 @@ def view_msgs():
 
 @admin_bp.route('/generate-link', methods = ['POST'])
 def generate_link():
+
     return generate_invite_link_with_expiry()
+
+# ==============
+
+# Generate invitation link with expiry
+
+# ==============
+
+@admin_bp.route('/admin/add-galaxy', methods = ['POST'])
+def add_galaxy():
+
+    return add_new_galaxy()
+
+
+@admin_bp.route('/admin/add-new-milestones', methods = ['POST'])
+def add_milestone():
+
+    return add_new_milestones()

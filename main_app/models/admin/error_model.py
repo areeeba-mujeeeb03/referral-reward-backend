@@ -9,4 +9,4 @@ class Errors(Document):
     status = StringField(default="Unresolved")
     generated_at = DateTimeField(default=datetime.now)
 
-    meta = {"db_alias" : "admin-db", "collection" : "links"}
+    meta = {"db_alias" : "admin-db", "collection" : "errors"}

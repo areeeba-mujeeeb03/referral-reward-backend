@@ -1,4 +1,7 @@
 from typing import final
+from cryptography.fernet import Fernet
+key = Fernet.generate_key()
+cipher_suite = Fernet(key)
 
 import bcrypt
 def generate_encoded_string(info: dict, fields_to_encode: list):
@@ -12,7 +15,7 @@ def generate_encoded_string(info: dict, fields_to_encode: list):
     reversed_string = original_string[::-1]
 
     # Step 4: Hash with bcrypt
-    encrypted_string =reversed_string.encode('utf-8')
+    encrypted_string =reversed_string
 
     # Step 5: Reverse the encrypted string again
     final_string = encrypted_string[::-1]

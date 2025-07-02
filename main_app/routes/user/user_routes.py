@@ -3,7 +3,7 @@ from flask import Blueprint
 from main_app.controllers.user.auth_controllers import handle_registration
 from main_app.controllers.user.OTP_controllers import generate_and_send_otp, verify_user_otp
 from main_app.controllers.user.login_controllers import handle_email_login, logout_user, product_purchase
-from main_app.controllers.user.forgotpassword_controllers import reset_password, forgot_password
+from main_app.controllers.user.forgotpassword_controllers import reset_password,send_verification_code, verify_code
 from main_app.controllers.user.landingpage_controllers import my_rewards, my_referrals, my_profile, home_page
 from main_app.controllers.user.referral_controllers import handle_invitation_visit, change_invite_link
 from main_app.controllers.user.invite import send_whatsapp_invite, send_telegram_invite, send_twitter_invite, send_facebook_invite
@@ -106,17 +106,22 @@ def user_forgot_password():
     Accepts: POST request with email address
     Returns: Password reset link sent confirmation
     """
-    return forgot_password()
+    return send_verification_code()
 
-@user_bp.route("/login/reset-password/<token>", methods = ["POST"])
-def user_reset_password(token):
+@user_bp.route("/login/verify-code", methods = ["POST"])
+def verify_sent_code():
+
+    return verify_code()
+
+@user_bp.route("/login/reset-password", methods = ["POST"])
+def user_reset_password():
     """
     Handle password reset using token from email
     Accepts: POST request with new password and reset token
     Args: token (str) - Password reset token from email
     Returns: Password reset confirmation response
     """
-    return reset_password(token)
+    return reset_password()
 
 # ====================
 

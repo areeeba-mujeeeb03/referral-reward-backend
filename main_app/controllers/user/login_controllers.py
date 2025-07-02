@@ -84,8 +84,6 @@ def handle_email_login():
     # Step 3: Find user by email
     user = User.objects(email=email).first()
     try:
-
-
         if not user:
             logger.warning(f"Login attempt with unknown email: {email}")
             return jsonify({"error": get_error("user_not_found")}), 404
@@ -140,7 +138,8 @@ def handle_email_login():
 
     except Exception as e:
         logger.error(f"Login failed for email with error: {str(e)}")
-        Errors(username = user.username, email = user.email, error_type = get_error("login_failed"), error_source = "Login form")
+        Errors(username = user.username, email = user.email,
+               error_type = get_error("login_failed"), error_source = "Login form").save()
         return jsonify({"error": get_error("login_failed")}), 500
 
 # ==================
@@ -159,10 +158,10 @@ def logout_user():
     Returns:
         bool: True if logout successful, False otherwise
     """
+    data = request.json
+    user_id = data.get("user_id")
+    user = User.objects(user_id=user_id).first()
     try:
-        data = request.json
-        user_id = data.get("user_id")
-        user = User.objects(user_id=user_id).first()
         if user:
             user.update(
                 access_token=None,
@@ -176,4 +175,6 @@ def logout_user():
 
     except Exception as e:
         logger.error(f"Logout failed for user {user_id}: {str(e)}")
+        Errors(username=user.username, email=user.email, error_type=get_error("logout_failed"),
+               error_source="Login form").save()
         return False
