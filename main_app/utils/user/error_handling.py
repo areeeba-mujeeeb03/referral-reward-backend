@@ -13,6 +13,7 @@ except FileNotFoundError:
     # Fallback error messages if configuration file is missing
     error_messages = {
         "username_exists": "Username already exists",
+        "failed_to_update" : "Error in registration",
         "email_exists": "Email already exists",
         "mobile_number_exists" : "Mobile Number already exists",
         "user_not_found": "User not found",

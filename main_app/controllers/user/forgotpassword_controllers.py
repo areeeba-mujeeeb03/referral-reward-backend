@@ -8,7 +8,7 @@ from main_app.controllers.user.OTP_controllers import _generate_otp
 from main_app.models.user.user import User
 from main_app.models.user.links import Link
 from flask import request,jsonify
-from main_app.controllers.user.auth_controllers import _validate_password_strength
+from main_app.controllers.user.auth_controllers import validate_password_strength
 from main_app.utils.user.helpers import hash_password
 
 
@@ -141,7 +141,7 @@ def reset_password():
     if not user:
         return jsonify({"message": "User Not Found"}), 404
 
-    password_validation = _validate_password_strength(new_password)
+    password_validation = validate_password_strength(new_password)
     if password_validation:
         return password_validation
 

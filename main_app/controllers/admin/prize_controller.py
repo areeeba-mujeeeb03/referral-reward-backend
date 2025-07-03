@@ -1,5 +1,4 @@
 # ----------- Exciting Prizes
-
 from flask import request, jsonify
 from werkzeug.utils import secure_filename
 import os
@@ -23,7 +22,8 @@ def add_exciting_prizes():
         term_conditions = data.get("term_conditions")
         admin_uid = data.get("admin_uid")
         required_meteors = data.get("required_meteors")
-
+        # data_s = jsonify(data)
+        print(data)
 
         if not all ([title , term_conditions, admin_uid, required_meteors]):
           return jsonify({"error": "All fields are required"}), 400
@@ -42,13 +42,16 @@ def add_exciting_prizes():
         files = request.files.get("image")
         if not files:
             return jsonify({"error": "Image not found"}), 400
-        
-        filename = secure_filename(files.filename)
-        image_path = os.path.join(UPLOAD_FOLDER, filename)
-        files.save(image_path)
-        image_url = f"/{image_path}"
-
         prize = ExcitingPrize.objects(admin_uid=admin_uid).first()
+        image_file = request.files.get("image")
+        if image_file:
+            filename = secure_filename(image_file.filename)
+            image_path = os.path.join(UPLOAD_FOLDER, filename)
+            image_file.save(image_path)
+            image_url = f"/{image_path}"
+        else:
+            image_url = prize.image_url
+
         if prize:
             prize.update(
               title = title,
@@ -72,6 +75,7 @@ def add_exciting_prizes():
         return jsonify({"success": "true" , "message": msg }), 200
 
     except Exception as e:
+        print(e)
         logger.error(f"Add exciting prize failed:{str(e)}")
         return jsonify({"error": "Internal server error"}), 500
 

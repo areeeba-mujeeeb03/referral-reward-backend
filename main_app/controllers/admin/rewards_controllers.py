@@ -72,3 +72,21 @@ def add_new_milestones():
 
     except Exception as e:
         return jsonify({"message" : f"Adding new milestone failed : {str(e)}"})
+
+def remove_milestone():
+    data = request.get_json()
+    galaxy_name = data.get("galaxy_name")
+    milestone_name = data.get("milestone_name")
+
+    exist = Galaxy.objects(galaxy_name=galaxy_name).first()
+    if not exist:
+        return jsonify({"message": "Galaxy with this name does not exist"})
+
+    for milestone in exist.all_milestones:
+        if not milestone.get("milestone_name") == milestone_name:
+            return jsonify({"message" : "milestone not found"})
+        if milestone.get("milestone_name") == milestone_name:
+           milestone_name.delete(milestone_name = milestone_name)
+        return jsonify({"message": "Milestone with this name already exists"})
+
+

@@ -74,7 +74,7 @@ def handle_registration():
         if validation_result:
             return validation_result
         # Step 3: Additional field-specific validation
-        email_validation = _validate_email_format(data["email"])
+        email_validation = validate_email_format(data["email"])
         if email_validation:
             return email_validation
             
@@ -86,7 +86,7 @@ def handle_registration():
             return jsonify({"error": "Password and Confirm Password do not match"}), 400
 
 
-        password_validation = _validate_password_strength(data["password"])
+        password_validation = validate_password_strength(data["password"])
         if password_validation:
             return password_validation
         
@@ -115,7 +115,7 @@ def handle_registration():
             user.save()
             process_tag_id_and_reward(user_exist.tag_id, user.user_id)
 
-
+        user.save()
         # Step 6: Process referral code if provided
         try:
             referral_code = data.get("referral_code")
@@ -132,23 +132,22 @@ def handle_registration():
                     return jsonify({"success" : False, "error" : "You can not refer yourself"})
                 if referral_code:
                     logger.info(f"Processing referral code: {referral_code}")
-                    user.save()
                     user.update(
                         set__referred_by = referrer.user_id
                     )
-                    process_referral_code_and_reward(referral_code, user.user_id)
-
+                    print(user.user_id, user.username)
+                    process_referral_code_and_reward(referral_code, user.user_id, user.username)
 
         except Exception as e:
             Errors(username=data['username'], email=data["email"], error_source="Sign Up Form",
                   error_type=get_error("failed_to_update"))
             return jsonify({"error" : get_error("failed_to_update")})
-        user.save()
-        logger.info(f"User account created successfully with ID: {user.user_id}")
 
+        logger.info(f"User account created successfully with ID: {user.user_id}")
+        user.save()
         # Step 7: Initialize user's reward and referral tracking records
         initialize_user_records(user.user_id)
-        
+
         # Step 8: Return successful registration response
         logger.info(f"User registration completed successfully for: {user.user_id}")
         return jsonify({
@@ -194,7 +193,7 @@ def _validate_required_fields(data, required_fields):
 
 # ==================
 
-def _validate_email_format(email):
+def validate_email_format(email):
     """
     Validate email address format using regex pattern
     
@@ -221,7 +220,7 @@ def _validate_email_format(email):
 # Password Strength Validation Utility
 
 # ==================
-def _validate_password_strength(password):
+def validate_password_strength(password):
     """
     Validate password meets minimum security requirements
     
@@ -333,4 +332,3 @@ def validate_session_token(user, access_token, session_id):
 
         return jsonify({"success" : False,
                         "message" : "Token validation failed"}), 500
-

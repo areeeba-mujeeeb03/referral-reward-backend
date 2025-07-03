@@ -5,7 +5,7 @@ from main_app.utils.user.error_handling import get_error
 import logging
 import datetime
 import re
-from main_app.controllers.user.auth_controllers import _validate_password_strength, _validate_email_format
+from main_app.controllers.user.auth_controllers import validate_password_strength, validate_email_format
 
 # Configure logging for better debugging and monitoring
 logging.basicConfig(level=logging.INFO)
@@ -38,7 +38,7 @@ def admin_register():
     #   if not is_valid_email(email):
     #    return jsonify({"error": "Invalid email format"}), 400
      # Additional field-specific validation
-      email_validation = _validate_email_format(data["email"])
+      email_validation = validate_email_format(data["email"])
       if email_validation:
             return email_validation
 
@@ -47,7 +47,7 @@ def admin_register():
             return jsonify({"error": "Mobile must be 10 digits"}), 400
 
     # Password validation
-      password_validation = _validate_password_strength(data["password"])
+      password_validation = validate_password_strength(data["password"])
       if password_validation:
             return password_validation
 
@@ -57,6 +57,9 @@ def admin_register():
     
       if Admin.objects(email=data["email"]).first():
         return jsonify({"error": get_error("email_exists")}), 400
+
+      if Admin.objects(mobile_number=data["mobile_number"]).first():
+        return jsonify({"message": "mobile number already exists", "success" : False}), 400
 
       hashed_password = hash_password(data["password"])
 
@@ -135,4 +138,3 @@ def handle_admin_login():
     except Exception as e:
         logger.error(f"Login failed for email with error: {str(e)}")
         return jsonify({"error": get_error("login_failed")}), 500
-

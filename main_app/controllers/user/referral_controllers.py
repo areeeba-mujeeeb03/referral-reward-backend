@@ -1,5 +1,6 @@
 import datetime
 import logging
+from main_app.controllers.user.landingpage_controllers import my_rewards
 from main_app.models.admin.links import Link
 from main_app.models.user.reward import Reward
 from main_app.models.user.referral import Referral
@@ -14,14 +15,15 @@ logger = logging.getLogger(__name__)
 PENDING_REFERRAL_REWARD_POINTS = 400
 SUCCESS_REFERRAL_REWARD_POINTS = 600
 SESSION_EXPIRY_MINUTES = 30
-
+SIGN_UP_REWARD = 200
 
 # ==================
 
 # Referral Code Processing Utility
 
 # ==================
-def process_referral_code_and_reward(referral_code, new_user_id):
+galaxies = ['Milky Way Galaxy' , 'Andromeda Galaxy', 'Bear Paw Galaxy', 'Blinking Galaxy', 'Fireworks Galaxy', '']
+def process_referral_code_and_reward(referral_code, new_user_id, new_username):
     """
     Process referral code and update referrer's rewards and statistics
 
@@ -35,16 +37,22 @@ def process_referral_code_and_reward(referral_code, new_user_id):
         referral_code (str): Referral code provided during registration
         new_user_id (str): ID of the newly registered user
     """
+
     try:
         valid_code = User.objects(invitation_code = referral_code).first()
+        print(valid_code)
         referrer_id = str(valid_code.user_id)
+        print(referrer_id)
         if valid_code:
             referrer = Referral.objects(user_id = referrer_id).first()
+            new_user = User.objects(user_id = new_user_id)
+            date = datetime.datetime.now()
             referrer.update(
                 push__all_referrals={
+                    "username" : new_username,
                     "user_id": new_user_id,
                     "referral_status": "Pending",
-                    "date" : datetime.datetime.now(),
+                    "date" : date.strftime('%d-%m-%y'),
                     "earned_meteors" : PENDING_REFERRAL_REWARD_POINTS
 
                 },
@@ -54,18 +62,16 @@ def process_referral_code_and_reward(referral_code, new_user_id):
 
             )
             reward_record = Reward.objects(user_id=referrer_id).first()
+            new_user = User.objects(user_id = new_user_id).first()
             if reward_record:
-                # Add reward points
                 reward_record.total_meteors += PENDING_REFERRAL_REWARD_POINTS
                 reward_record.reward_history.append({
                     "earned_by_action": "referral",
                     "earned_meteors": PENDING_REFERRAL_REWARD_POINTS,
-                    "referred_to" : new_user_id,
+                    "referred_to" : new_user.username,
                     "referral_status": "pending",
-                    "referred_on": datetime.datetime.now(),
-                    "transaction_type": "credit"
-                })
-
+                    "referred_on": date.strftime('%d-%m-%y'),
+                    "transaction_type": "credit"})
                 reward_record.save()
 
     except Exception as e:
@@ -93,11 +99,14 @@ def process_tag_id_and_reward(tag_id, new_user_id):
             new_user.update(
                 set__referred_by = valid_user.user_id
             )
+        date = datetime.datetime.now()
         referrer.update(
             push__all_referrals={
+                "username" : new_user.username,
                 "user_id": new_user_id,
+                "email" : new_user.email,
                 "referral_status": "Pending",
-                "date" : datetime.datetime.now(),
+                "date" : date.strftime('%d-%m-%y'),
                 "earned_meteors" : PENDING_REFERRAL_REWARD_POINTS
             },
             inc__total_referrals = 1,
@@ -110,12 +119,11 @@ def process_tag_id_and_reward(tag_id, new_user_id):
             reward_record.reward_history.append({
                 "earned_by_action": "referral",
                 "earned_meteors": PENDING_REFERRAL_REWARD_POINTS,
-                "referred_to" : new_user_id,
+                "referred_to" : new_user.username,
                 "referral_status": "pending",
-                "referred_on": datetime.datetime.now(),
+                "referred_on": date.strftime('%d-%m-%y'),
                 "transaction_type": "credit"
             })
-
             reward_record.save()
 
     except Exception as e:
@@ -183,7 +191,7 @@ def update_referral_status_and_reward(referrer_id, user_id):
     if already_rewarded:
         logger.info(f"Reward already credited for referral of user {user_id}")
         return
-
+    date = datetime.datetime.now()
     # Append a new reward entry
     reward_record.total_meteors += SUCCESS_REFERRAL_REWARD_POINTS
     reward_record.reward_history.append({
@@ -191,7 +199,7 @@ def update_referral_status_and_reward(referrer_id, user_id):
         "earned_meteors": SUCCESS_REFERRAL_REWARD_POINTS,
         "referral_status": "Completed",
         "referred_user_id": user_id,
-        "referred_on": datetime.datetime.utcnow(),
+        "referred_on": date.strftime('%d-%m-%y'),
         "transaction_type": "credit"
     })
     reward_record.save()
@@ -212,11 +220,15 @@ def initialize_user_records(user_id):
             return "The rewards for this user is already initialized"
         user_reward = Reward(
             user_id=user_id,
-            total_meteors=0,
-            reward_history=[]
+            reward_history=[],
         )
         user_reward.save()
 
+        Reward.objects(user_id = user_id).update(
+            inc__total_meteors = SIGN_UP_REWARD,
+            push__galaxy_name=['Milky Way Galaxy','Andromeda Galaxy'],
+            push__current_planet=['Planet A']
+        )
         user_referral = Referral(
             user_id=user_id,
             total_referrals=0,
@@ -298,6 +310,12 @@ def change_invite_link():
     return jsonify({"success" : True, "message" : "Invitation Link generated"})
 
 
+def update_meteors_and_stars():
+
+
+    return jsonify({})
+
+
 # ==================
 
 # Handles rewards for special offer
@@ -322,14 +340,14 @@ def reward_referrer_by_tag(tag_id: str):
 
     if already_rewarded:
         return False, "Reward already claimed for this referral link"
-
+    date = datetime.datetime.now()
     reward_record.total_meteors += SUCCESS_REFERRAL_REWARD_POINTS
     reward_record.reward_history.append({
         "earned_by_action": "link_visit",
         "earned_meteors": SUCCESS_REFERRAL_REWARD_POINTS,
         "referral_status": "Visited",
         "referred_user_id": "anonymous",
-        "referred_on": datetime.datetime.utcnow(),
+        "referred_on": date.strftime('%d-%m-%y'),
         "transaction_type": "credit"
     })
     reward_record.save()

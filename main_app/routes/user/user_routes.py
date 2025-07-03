@@ -5,7 +5,7 @@ from main_app.controllers.user.OTP_controllers import generate_and_send_otp, ver
 from main_app.controllers.user.login_controllers import handle_email_login, logout_user, product_purchase
 from main_app.controllers.user.forgotpassword_controllers import reset_password,send_verification_code, verify_code
 from main_app.controllers.user.landingpage_controllers import my_rewards, my_referrals, my_profile, home_page
-from main_app.controllers.user.referral_controllers import handle_invitation_visit, change_invite_link
+from main_app.controllers.user.referral_controllers import change_invite_link
 from main_app.controllers.user.invite import send_whatsapp_invite, send_telegram_invite, send_twitter_invite, send_facebook_invite
 from main_app.controllers.user.user_profile_controllers import update_profile, help_faq, submit_msg
 

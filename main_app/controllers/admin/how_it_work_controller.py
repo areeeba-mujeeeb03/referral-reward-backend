@@ -6,7 +6,7 @@ from main_app.models.admin.how_it_work_model import HowItWork
 from main_app.models.admin.advertisment_card_model import AdvertisementCard
 from main_app.models.admin.admin_model import Admin
 
-
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def add_how_it_work():

@@ -1,14 +1,11 @@
 import datetime
-
 from main_app.models.user.user import User
 from main_app.models.user.reward import Reward
 from main_app.models.user.referral import Referral
-from flask import jsonify
 from main_app.utils.user.error_handling import get_error
 import logging
 from flask import request, jsonify
 from main_app.utils.user.string_encoding import generate_encoded_string
-from main_app.controllers.user.auth_controllers import validate_session_token
 
 
 # Configure logging for better debugging and monitoring
@@ -49,8 +46,8 @@ def home_page():
         info = {
             "total_stars": reward.total_stars,
             "total_meteors": reward.total_meteors,
-            "galaxy_name": reward.galaxy_name,
-            "current_planet": reward.current_planet,
+            "galaxy_name": list(reward.galaxy_name),
+            "current_planet": list(reward.current_planet),
             "invitation_link": user.invitation_link
         }
 
@@ -98,17 +95,17 @@ def my_rewards():
                 "invitation_link": user.invitation_link,
                 "total_stars": user_reward.total_stars,
                 "total_meteors": user_reward.total_meteors,
-                "galaxy_name": user_reward.galaxy_name,
-                "current_planet": user_reward.current_planet,
+                # "galaxy_name": list(user_reward.galaxy_name),
+                # "current_planet": list(user_reward.current_planet),
                 "total_vouchers": user_reward.total_vouchers,
-                "reward_history": user_reward.reward_history
+                "reward_history": list(user_reward.reward_history)
             }
 
             fields_to_encode = ["total_stars",
                                 "total_meteors",
-                                "galaxy_name",
+                                # "galaxy_name",
                                 "total_vouchers",
-                                "current_planet",
+                                # "current_planet",
                                 "reward_history",
                                 "invitation_link"]
 
@@ -153,12 +150,16 @@ def my_referrals():
             info = {"total_referrals" : referral.total_referrals,
                     "referral_earning": referral.referral_earning,
                     "pending_referrals": referral.pending_referrals,
+                    "invite_code" : user.invitation_code,
+                    "invitation_link" : user.invitation_link,
                     "all_referrals": referral.all_referrals
             }
             fields_to_encode = ["total_referrals",
                                 "referral_earning",
                                 "pending_referrals",
-                                "all_referrals"
+                                "all_referrals",
+                                "invite_code" ,
+                                "invitation_link"
                                 ]
 
             encoded_str = generate_encoded_string(info, fields_to_encode)
@@ -201,12 +202,16 @@ def my_profile():
             info = {"username" : user.username,
                     "email" : user.email,
                     "password" : user.password,
-                    "mobile_number" : user.mobile_number
+                    "mobile_number" : user.mobile_number,
+                    "invitation_link" : user.invitation_link,
+                    "invite_code" : user.invitation_code
                     }
             fields_to_encode = ["username",
                                 "email",
                                 "password"
-                                "mobile_number"
+                                "mobile_number",
+                                "invite_link",
+                                "invite_code"
                                 ]
 
             encoded_str = generate_encoded_string(info, fields_to_encode)

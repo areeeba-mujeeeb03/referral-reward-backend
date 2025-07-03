@@ -26,8 +26,8 @@ def generate_product_uid():
 
 # Example OFR_01, OFR_02, .....
 
-def generate_offer_uid():
-    count = Offer.objects.count() + 1
-    return f"OFR_{str(count).zfill(2)}"
+# def generate_offer_uid():
+#     count = Offer.objects.count() + 1
+#     return f"OFR_{str(count).zfill(2)}"
 
 

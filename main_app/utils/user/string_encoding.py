@@ -3,7 +3,7 @@ from cryptography.fernet import Fernet
 key = Fernet.generate_key()
 cipher_suite = Fernet(key)
 
-import bcrypt
+
 def generate_encoded_string(info: dict, fields_to_encode: list):
     # Step 1: Extract values
     values = [str(info.get(field, "")) for field in fields_to_encode]
@@ -15,7 +15,22 @@ def generate_encoded_string(info: dict, fields_to_encode: list):
     reversed_string = original_string[::-1]
 
     # Step 4: Hash with bcrypt
-    encrypted_string =reversed_string
+    charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#*%!$"
+    shift = 5
+    encoded = ""
+
+    for ch in reversed_string:
+        if ch in charset:
+            idx = 0
+            for i in range(len(charset)):
+                if charset[i] == ch:
+                    idx = i
+                    break
+            new_index = (idx + shift) % len(charset)
+            encoded += charset[new_index]
+        else:
+            encoded += ch
+    encrypted_string = encoded
 
     # Step 5: Reverse the encrypted string again
     final_string = encrypted_string[::-1]
@@ -23,12 +38,11 @@ def generate_encoded_string(info: dict, fields_to_encode: list):
     # Step 6: Map each encoded field to R1, R2
     length = len(final_string)
     part_size = length // 4
-
     result = {
         "date": final_string[0:part_size],
         "age": final_string[part_size:part_size * 2],
         "gender": final_string[part_size * 2:part_size * 3],
         "arn_id": final_string[part_size * 3:]
     }
+    print((result['date'] + result['age'] + result['gender'] + result['arn_id']).split('#$'))
     return result
-# print(decode_str(res , keys_decode))

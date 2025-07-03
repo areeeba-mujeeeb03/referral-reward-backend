@@ -4,7 +4,7 @@ from werkzeug.utils import secure_filename
 import os, datetime
 import logging
 from main_app.models.admin.add_product_model import Product
-from main_app.utils.admin.helpers import generate_product_uid, generate_offer_uid
+from main_app.utils.admin.helpers import generate_product_uid
 # from main_app.models.admin.product_offer_model import Offer
 
 # Configure logging for better debugging and monitoring

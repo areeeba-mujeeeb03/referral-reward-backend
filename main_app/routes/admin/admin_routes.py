@@ -258,6 +258,7 @@ def update_faqs(faq_id):
 
 @admin_bp.route('/admin/delete-faqs/<faq_id>', methods=['DELETE'])
 def remove_faq(faq_id):
+
     return delete_faq(faq_id)
 
 # ==============
@@ -292,8 +293,30 @@ def add_galaxy():
 
     return add_new_galaxy()
 
+# ==============
+
+# Generate invitation link with expiry
+
+# ==============
 
 @admin_bp.route('/admin/add-new-milestones', methods = ['POST'])
 def add_milestone():
 
     return add_new_milestones()
+
+
+@admin_bp.route('/admin/delete-milestone', methods = ['POST'])
+def delete_milestone():
+
+    return remove_milestone()
+
+# ==============
+
+# Generate invitation link with expiry
+
+# ==============
+
+@admin_bp.route('/admin/sharing_apps', methods=['POST'])
+def update_sharing_apps():
+
+    return
