@@ -16,17 +16,20 @@ logger = logging.getLogger(__name__)
 
 def forgot_otp_email():
     try:
+        logger.info("Forgot OTP Email API called")
         data = request.get_json()
         email = data.get("email", "").strip()
        
         # Email validation 
         if not email:
-            return jsonify({"error": "Email is required"}),400
+            logger.warning("Email field is empty")
+            return jsonify({"message": "Email is required"}),400
         
         # Check email exist or not
         user = Admin.objects(email = email).first()
         if not user:
-            return jsonify({"error": get_error("user_not_found")}), 400
+            logger.warning(f"User not found for email: {email}")
+            return jsonify({"message": get_error("user_not_found")}), 400
         
         # Generate code
         code =   generate_otp()
@@ -38,12 +41,11 @@ def forgot_otp_email():
         # send Email
         email_status = send_otp_email(email, code)
         if not email_status:
-            return jsonify({"error": "Failed to send code"}), 500
+            logger.error(f"Failed to send OTP email to: {email}")
+            return jsonify({"message": "Failed to send code"}), 500
         
-        return jsonify({
-            "message": "Code send successfully to email",
-            "success": "True"
-        }), 200
+        logger.info(f"OTP email sent successfully to: {email}")
+        return jsonify({"message": "Code send successfully to email","success": "True"}), 200
     
     except Exception as e:
         logger.error(f"code send failed:{str(e)}")
@@ -55,21 +57,25 @@ def forgot_otp_email():
 
 def verify_otp():
   try:
+    logger.info("Verify OTP API called")
     data = request.get_json()
+    
     email = data.get("email", "").strip()
     code = data.get("code", "").strip()
 
     user = Admin.objects(email = email).first()
     if not user:
-      return jsonify({"error": get_error("user_not_found")}), 400
+      logger.warning(f"No user found for email: {email}")
+      return jsonify({"message": get_error("user_not_found")}), 400
 
     if not user or user.code != code:
-     return jsonify({"error": "Invalid code"}), 400
+     return jsonify({"message": "Invalid code"}), 400
     
     if user.code_expiry < datetime.now():
-        return jsonify({"error": "Code expired"}), 400
+        return jsonify({"message": "Code expired"}), 400
     
-    return jsonify({"error": "Code verified", "success": "True"}), 200
+    logger.info(f"OTP verified successfully for user: {email}")
+    return jsonify({"message": "Code verified", "success": "True"}), 200
 
   except Exception as e:
         logger.error(f"code varification failed:{str(e)}")
@@ -83,24 +89,29 @@ def verify_otp():
 
 def reset_password():
  try:
+     logger.info("Reset password API called")
      data = request.get_json()
+     
      email = data.get("email", "").strip()
      new_password = data.get("new_password", "")
      confirm_password = data.get("confirm_password", "")
 
      if not data:
-         return jsonify({"error": "No fields provided."}), 400
+         logger.warning("No data provided in request")
+         return jsonify({"message": "No fields provided."}), 400
 
      user = Admin.objects(email = email).first()
      if not user:
-        return jsonify({"error": "user_not_found"}), 400
+        logger.warning(f"User not found with email: {email}")
+        return jsonify({"message": "user_not_found"}), 400
     
      password_validation = _validate_password_strength(data["new_password"])
      if password_validation:
             return password_validation
 
      if new_password != confirm_password:
-      return jsonify({"error": "Password do not match"}), 400
+      logger.warning("Passwords do not match")
+      return jsonify({"message": "Password do not match"}), 400
     
     
      salt = bcrypt.gensalt(rounds=12)
@@ -110,16 +121,11 @@ def reset_password():
      user.code = None
      user.code_expiry = None
      user.save()
-
+     
+     logger.info(f"Password reset successful for email: {email}")
      return jsonify({"success": "true" ,"message": "Password reset successfully",}), 200
   
  except Exception as e:
          logger.error(f"Password reset failed:{str(e)}")
          return jsonify({"errro": "Internal server error"}), 500
 
-
-
-
-
-def edit_email_body():
-    return

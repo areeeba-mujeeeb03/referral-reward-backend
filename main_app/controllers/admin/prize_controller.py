@@ -19,28 +19,34 @@ def add_exciting_prizes():
     try:
         logger.info("Add Exciting Prizes API called")
         data = request.form
+        
         title = data.get("title")
         term_conditions = data.get("term_conditions")
         admin_uid = data.get("admin_uid")
         required_meteors = data.get("required_meteors")
 
+        # data = jsonify(data)
 
         if not all ([title , term_conditions, admin_uid, required_meteors]):
+          logger.warning("Missing required fields.")
           return jsonify({"error": "All fields are required"}), 400
         
           # Validate meteors is numeric
         try:
             required_meteors = int(required_meteors)
         except ValueError:
+            logger.warning("Invalid required_meteors: must be an integer.")
             return jsonify({"error": "required_meteors must be a number"}), 400
 
          # Check user found or not 
         if not Admin.objects(admin_uid=admin_uid).first():
+            logger.warning(f"Admin not found for UID: {admin_uid}")
             return jsonify({"error": "Admin not found" }), 400
       
 
         files = request.files.get("image")
         if not files:
+            logger.warning("Image not found in request.")
             return jsonify({"error": "Image not found"}), 400
         
         filename = secure_filename(files.filename)
@@ -50,12 +56,36 @@ def add_exciting_prizes():
 
         prize = ExcitingPrize.objects(admin_uid=admin_uid).first()
         if prize:
-            prize.update(
-              title = title,
-              image_url = image_url,
-              term_conditions = term_conditions,
-              required_meteors=required_meteors
-            )
+            fields_changed = False
+
+            # Compare fields
+            if title != prize.title:
+                fields_changed = True
+
+            if term_conditions != prize.term_conditions:
+                fields_changed = True
+
+            if required_meteors != prize.required_meteors:
+                fields_changed = True
+
+            if image_url and image_url != prize.image_url:
+                fields_changed = True
+    
+            if not fields_changed:
+               logger.info("No fields were updated.")
+               return jsonify({"message": "No fields updated."}), 200
+
+                # Perform update
+            update_data = {
+                "title": title,
+                "term_conditions": term_conditions,
+                "required_meteors": required_meteors
+                }
+
+            if image_url:
+                update_data["image_url"] = image_url
+
+            prize.update(**update_data)
             msg = "Updated prize successfully"
         else:
              ExcitingPrize(
@@ -68,7 +98,7 @@ def add_exciting_prizes():
              msg = "Added prize successfully"  
             
         
-        logger.info(f"Prizes save with ID:")
+        logger.info(f"Prize processed successfully for admin_uid: {admin_uid}")
         return jsonify({"success": "true" , "message": msg }), 200
 
     except Exception as e:
@@ -79,15 +109,23 @@ def add_exciting_prizes():
     # -------------------------------------------------------------------------
 
 def check_eligibility():
-    data = request.get_json()
-    user_meteors = data.get("meteors")
-    admin_uid = data.get("admin_uid")
+    try:
+        logger.warning(f"Check meteors for user:")
+        data = request.get_json()
+       
+        user_meteors = data.get("meteors")
+        admin_uid = data.get("admin_uid")
 
-    prize = ExcitingPrize.objects(admin_uid=admin_uid).first()
-    if not prize:
-        return jsonify({"error": "Prize not found"}), 404
+        prize = ExcitingPrize.objects(admin_uid=admin_uid).first()
+        if not prize:
+            logger.warning(f"Prize not found")
+            return jsonify({"message": "Prize not found"}), 404
 
-    if user_meteors >= prize.required_meteors:
-        return jsonify({"eligible": True, "message": "User is eligible for this prize"}), 200
-    else:
-        return jsonify({"eligible": False, "message": "Not enough meteors"}), 200
+        if user_meteors >= prize.required_meteors:
+            return jsonify({"eligible": True, "message": "User is eligible for this prize"}), 200
+        else:
+            return jsonify({"eligible": False, "message": "Not enough meteors"}), 200
+        
+    except Exception as e:
+        logger.error(f"Check meteors failed:{str(e)}")
+        return jsonify({"error": "Internal server error"}), 500   

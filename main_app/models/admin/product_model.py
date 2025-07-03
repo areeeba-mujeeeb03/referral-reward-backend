@@ -22,9 +22,6 @@ class Product(Document):
     expiry_date = DateTimeField()
     offer_type = StringField()
     offer_status = StringField()
-
     created_at = DateTimeField(default=datetime.datetime.now)
-
-
 
     meta = {"db_alias" : "admin-db", "collection" : "product"}
