@@ -27,7 +27,7 @@ def admin_register():
       required_fields = ["username", "email", "mobile_number", "password"]
       for field in required_fields:
             if field not in data or not data[field].strip():
-                return jsonify({"error": f"{field} is required"}), 400
+                return jsonify({"message": f"{field} is required"}), 400
 
       username = data["username"].strip()
       email = data["email"].strip()
@@ -44,7 +44,7 @@ def admin_register():
 
      # Mobile number validation  
       if not re.match(r'^\d{10}$',data["mobile_number"]):
-            return jsonify({"error": "Mobile must be 10 digits"}), 400
+            return jsonify({"message": "Mobile must be 10 digits"}), 400
 
     # Password validation
       password_validation = validate_password_strength(data["password"])
@@ -53,10 +53,10 @@ def admin_register():
 
     # Check username exists or not   
       if Admin.objects(username=data["username"]).first():
-        return jsonify({"error": get_error("username_exists")}), 400
+        return jsonify({"message": get_error("username_exists")}), 400
     
       if Admin.objects(email=data["email"]).first():
-        return jsonify({"error": get_error("email_exists")}), 400
+        return jsonify({"message": get_error("email_exists")}), 400
 
       if Admin.objects(mobile_number=data["mobile_number"]).first():
         return jsonify({"message": "mobile number already exists", "success" : False}), 400
@@ -90,7 +90,7 @@ def handle_admin_login():
         data = request.get_json()
         if not data:
             logger.warning("Login attempt with empty request body")
-            return jsonify({"error": get_error("invalid_data")}), 400
+            return jsonify({"message": get_error("invalid_data")}), 400
 
         email = data.get("email", "").strip()
         password = data.get("password", "")
@@ -98,7 +98,7 @@ def handle_admin_login():
         #  Validate required fields
         if not email or not password:
             return jsonify({
-                "error": "Email and password are required",
+                "message": "Email and password are required",
                 "missing_fields": ["email", "password"]
             }), 400
 
@@ -106,12 +106,12 @@ def handle_admin_login():
         user = Admin.objects(email=email).first()
         if not user:
             logger.warning(f"Login attempt with unknown email: {email}")
-            return jsonify({"error": get_error("user_not_found")}), 404
+            return jsonify({"message": get_error("user_not_found")}), 404
 
         #  Check password
         if not check_password(password, user.password):
             logger.warning(f"Incorrect password attempt for: {email}")
-            return jsonify({"error": get_error("incorrect_password")}), 400
+            return jsonify({"message": get_error("incorrect_password")}), 400
 
         #  Generate tokens
         access_token = generate_access_token(user.admin_uid)

@@ -1,6 +1,6 @@
 import random
 import datetime 
-from main_app.models.admin.add_product_model import Product
+from main_app.models.admin.product_model import Product
 # from main_app.models.admin.product_offer_model import Offer
 
 

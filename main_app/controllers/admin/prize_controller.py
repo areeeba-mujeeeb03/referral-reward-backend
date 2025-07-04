@@ -1,4 +1,5 @@
 # ----------- Exciting Prizes
+
 from flask import request, jsonify
 from werkzeug.utils import secure_filename
 import os
@@ -18,40 +19,41 @@ def add_exciting_prizes():
     try:
         logger.info("Add Exciting Prizes API called")
         data = request.form
+
         title = data.get("title")
         term_conditions = data.get("term_conditions")
         admin_uid = data.get("admin_uid")
         required_meteors = data.get("required_meteors")
-        # data_s = jsonify(data)
-        print(data)
+
+        # data = jsonify(data)
 
         if not all ([title , term_conditions, admin_uid, required_meteors]):
+          logger.warning("Missing required fields.")
           return jsonify({"error": "All fields are required"}), 400
-
+        
           # Validate meteors is numeric
         try:
             required_meteors = int(required_meteors)
         except ValueError:
+            logger.warning("Invalid required_meteors: must be an integer.")
             return jsonify({"error": "required_meteors must be a number"}), 400
 
-         # Check user found or not
+         # Check user found or not 
         if not Admin.objects(admin_uid=admin_uid).first():
+            logger.warning(f"Admin not found for UID: {admin_uid}")
             return jsonify({"error": "Admin not found" }), 400
-
+      
 
         files = request.files.get("image")
         if not files:
             return jsonify({"error": "Image not found"}), 400
-        prize = ExcitingPrize.objects(admin_uid=admin_uid).first()
-        image_file = request.files.get("image")
-        if image_file:
-            filename = secure_filename(image_file.filename)
-            image_path = os.path.join(UPLOAD_FOLDER, filename)
-            image_file.save(image_path)
-            image_url = f"/{image_path}"
-        else:
-            image_url = prize.image_url
+        
+        filename = secure_filename(files.filename)
+        image_path = os.path.join(UPLOAD_FOLDER, filename)
+        files.save(image_path)
+        image_url = f"/{image_path}"
 
+        prize = ExcitingPrize.objects(admin_uid=admin_uid).first()
         if prize:
             prize.update(
               title = title,
@@ -68,30 +70,37 @@ def add_exciting_prizes():
                  image_url=image_url,
                  required_meteors=required_meteors
                 ).save()
-             msg = "Added prize successfully"
-
-
-        logger.info(f"Prizes save with ID:")
+             msg = "Added prize successfully"  
+            
+        
+        logger.info(f"Prize processed successfully for admin_uid: {admin_uid}")
         return jsonify({"success": "true" , "message": msg }), 200
 
     except Exception as e:
-        print(e)
         logger.error(f"Add exciting prize failed:{str(e)}")
-        return jsonify({"error": "Internal server error"}), 500
-
+        return jsonify({"error": "Internal server error"}), 500   
+    
 
     # -------------------------------------------------------------------------
 
 def check_eligibility():
-    data = request.get_json()
-    user_meteors = data.get("meteors")
-    admin_uid = data.get("admin_uid")
+    try:
+        logger.warning(f"Check meteors for user:")
+        data = request.get_json()
 
-    prize = ExcitingPrize.objects(admin_uid=admin_uid).first()
-    if not prize:
-        return jsonify({"error": "Prize not found"}), 404
+        user_meteors = data.get("meteors")
+        admin_uid = data.get("admin_uid")
 
-    if user_meteors >= prize.required_meteors:
-        return jsonify({"eligible": True, "message": "User is eligible for this prize"}), 200
-    else:
-        return jsonify({"eligible": False, "message": "Not enough meteors"}), 200
+        prize = ExcitingPrize.objects(admin_uid=admin_uid).first()
+        if not prize:
+            logger.warning(f"Prize not found")
+            return jsonify({"message": "Prize not found"}), 404
+
+        if user_meteors >= prize.required_meteors:
+            return jsonify({"eligible": True, "message": "User is eligible for this prize"}), 200
+        else:
+            return jsonify({"eligible": False, "message": "Not enough meteors"}), 200
+
+    except Exception as e:
+        logger.error(f"Check meteors failed:{str(e)}")
+        return jsonify({"error": "Internal server error"}), 500

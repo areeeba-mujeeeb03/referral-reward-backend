@@ -9,7 +9,7 @@ from main_app.models.admin.help_model import FAQ, Contact
 from flask import request, jsonify
 from main_app.models.user.user import User
 from main_app.controllers.user.auth_controllers import validate_session_token
-from main_app.models.admin.add_product_model import Product
+from main_app.models.admin.product_model import Product
 
 
 def update_profile():
