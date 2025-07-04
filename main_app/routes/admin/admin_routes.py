@@ -11,7 +11,9 @@ from main_app.controllers.admin.prize_controller import add_exciting_prizes, che
 from main_app.controllers.admin.referral_controllers import generate_invite_link_with_expiry
 from main_app.controllers.admin.how_it_work_controller import add_how_it_work, advertisement_card
 from main_app.controllers.admin.referral_controllers import generate_invite_link_with_expiry
-from main_app.controllers.admin.rewards_controllers import add_new_galaxy, add_new_milestones
+from main_app.controllers.admin.rewards_controllers import add_new_galaxy, add_new_milestones,remove_milestone
+from main_app.controllers.admin.dashboard_controllers import error_table, participant_table
+from main_app.controllers.admin.email_controller import create_email
 
 admin_bp = Blueprint("admin_routes", __name__)
 
@@ -122,20 +124,6 @@ def update_add_product(uid):
     """
     return update_product(uid)
 
-# -------------------------------------------------------------------------------------------------
-
-# Add Offers
-
-# @admin_bp.route("/admin/add_offer", methods = ["POST"])
-# def admin_add_offer():
-#     """
-#     Creates a new offer entry.
-#     Expects: JSON body with offer details including start and expiry dates.
-#     Returns: Success message or error response.
-#     """
-#     return create_offer()
-
-
 # ==========================
 
 # Update Offers
@@ -162,7 +150,7 @@ def admin_update_offer():
 def admin_exciting_offer():
     """
     Adds exciting prizes.
-    Expects: form-data body with prize details such as title, image, terms and conditions
+    Expects: form-data body with prize details such as title, image, term and conditions
     Returns: Success message or error response.
     """
     return add_exciting_prizes()
@@ -170,7 +158,9 @@ def admin_exciting_offer():
 
 @admin_bp.route('/admin/check_prize_eligibility', methods=["POST"])
 def prize_check_eligibility():
-
+    """
+    Checks if a user is eligible for the prize based on certain criteria.
+    """
     return check_eligibility()
 
 
@@ -204,6 +194,33 @@ def admim_advertisement_card():
     return advertisement_card()
 
 
+# =======================================
+
+# Participant table 
+
+# =======================================
+
+@admin_bp.route("/admin/participant_table", methods =["POST"])
+def admin_reward_participant_table():
+     return participant_table()
+
+
+
+# ===============
+# Error
+# ===============
+
+@admin_bp.route("/admin/error_table", methods = ["POST"])
+def admin_error_table():
+    return error_table()
+
+
+# =============
+# Email save
+# =============
+@admin_bp.route("/admin/send_email", methods = ["POST"])
+def admin_send_email():
+    return create_email()
 
 
 # ==============
@@ -320,3 +337,68 @@ def delete_milestone():
 def update_sharing_apps():
 
     return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# -------------------------------------------------------------------------------------------------
+
+# Add Offers
+
+# @admin_bp.route("/admin/add_offer", methods = ["POST"])
+# def admin_add_offer():
+#     """
+#     Creates a new offer entry.
+#     Expects: JSON body with offer details including start and expiry dates.
+#     Returns: Success message or error response.
+#     """
+#     return create_offer()
+
+# ----------------------------------------------------------------------------------------

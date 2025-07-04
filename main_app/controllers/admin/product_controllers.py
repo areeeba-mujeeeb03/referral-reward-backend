@@ -59,14 +59,14 @@ def add_product():
        
           # Image upload
          image = request.files.get("image")
-         image_url = ""
-         if not image:
-            return jsonify({"message": "No image uploaded"}), 400
-         
-         filename = secure_filename(image.filename)
-         image_path = os.path.join(UPLOAD_FOLDER, filename)
-         image.save(image_path)
-         image_url = f"/{image_path}"            
+         image_url = None
+        #  if not image:
+        #     return jsonify({"message": "No image uploaded"}), 400
+         if image:
+            filename = secure_filename(image.filename)
+            image_path = os.path.join(UPLOAD_FOLDER, filename)
+            image.save(image_path)
+            image_url = f"/{image_path}"            
             
 
          offer_data = {}

@@ -2,8 +2,6 @@ import datetime
 import logging
 import re
 from flask import request, jsonify, session
-
-from main_app.models.admin.admin_model import Admin
 from main_app.models.admin.error_model import Errors
 from main_app.models.user.user import User
 from main_app.controllers.user.referral_controllers import (process_referral_code_and_reward, initialize_user_records,

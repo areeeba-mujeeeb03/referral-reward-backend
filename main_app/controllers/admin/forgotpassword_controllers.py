@@ -127,6 +127,3 @@ def reset_password():
  except Exception as e:
          logger.error(f"Password reset failed:{str(e)}")
          return jsonify({"errro": "Internal server error"}), 500
-
-def edit_email_body():
-    return
