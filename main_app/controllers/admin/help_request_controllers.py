@@ -16,6 +16,7 @@ def list_faqs():
 
 def add_faq():
     data = request.get_json()
+    admin_uid = data.get("admin_uid")
     question = data.get("question")
     answer = data.get("answer")
     category = data.get("category")
@@ -23,7 +24,7 @@ def add_faq():
     if not question or not answer:
         return jsonify({"error": "Both question and answer are required"}), 400
 
-    faq = FAQ(question=question, answer=answer, category = category)
+    faq = FAQ(admin_uid = admin_uid, question=question, answer=answer, category = category)
     faq.save()
     return jsonify({"message": "FAQ added successfully"}), 201
 

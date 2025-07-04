@@ -2,6 +2,7 @@ from mongoengine import Document, StringField, EmailField, DateTimeField
 import datetime
 
 class FAQ(Document):
+    admin_uid = StringField(unique=True)
     faq_id = StringField(required = True)
     category = StringField()
     question = StringField(required=True)
@@ -15,6 +16,7 @@ class FAQ(Document):
         return super(FAQ, self).save(*args, **kwargs)
 
 class Contact(Document):
+    admin_uid = StringField(required=True, unique=True)
     user_id = StringField(required= True)
     username = StringField(required=True)
     email = EmailField(required=True)

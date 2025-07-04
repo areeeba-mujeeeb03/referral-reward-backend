@@ -1,7 +1,8 @@
 import datetime
+import os
 from itertools import product
 from flask import request, jsonify
-
+from werkzeug.utils import secure_filename
 from main_app.models.user.reward import Reward
 from main_app.models.user.user import User
 from main_app.controllers.user.auth_controllers import validate_session_token
@@ -10,7 +11,10 @@ from flask import request, jsonify
 from main_app.models.user.user import User
 from main_app.controllers.user.auth_controllers import validate_session_token
 from main_app.models.admin.product_model import Product
+from main_app.utils.user.error_handling import get_error
 
+UPLOAD_FOLDER ="uploads/profile"
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 def update_profile():
     try:
@@ -23,16 +27,25 @@ def update_profile():
 
         if not user_exist:
             return jsonify({"success": False, "message": "User does not exist"})
+
+        # Check username exists or not
+        if User.objects(username=data["username"]).first():
+            return jsonify({"error": get_error("username_exists")}), 400
+
+        if User.objects(email=data["email"]).first():
+            return jsonify({"error": get_error("email_exists")}), 400
+
+        if User.objects(mobile_number=data["mobile_number"]).first():
+            return jsonify({"error": get_error("mobile_number_exists")}), 400
+
         if not access_token or not session_id:
             return jsonify({"message": "Missing token or session", "success": False}), 400
         if user_exist.access_token != access_token:
             return ({"success": False,
                      "message": "Invalid access token"}), 401
-
         if user_exist.session_id != session_id:
             return ({"success": False,
                      "message": "Session mismatch or invalid session"}), 403
-
 
         update_fields = {}
 
@@ -42,8 +55,18 @@ def update_profile():
             update_fields["email"] = data["email"]
         if "mobile_number" in data:
             update_fields["mobile_number"] = data["mobile_number"]
-        if "profile_picture" in data:
-            update_fields["profile_picture"] = data["profile_picture"]
+
+        files = request.files.get("image")
+        if not files:
+            return jsonify({"error": "Image not found"}), 400
+
+        filename = secure_filename(files.filename)
+        image_path = os.path.join(UPLOAD_FOLDER, filename)
+        files.save(image_path)
+        img_file = f"/{image_path}"
+
+        if "image" in data:
+            update_fields["profile_picture"] = img_file
 
         if not update_fields:
             return jsonify({"success": False, "message": "No fields to update"}), 400

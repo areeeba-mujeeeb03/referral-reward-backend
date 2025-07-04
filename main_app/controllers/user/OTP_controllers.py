@@ -8,6 +8,7 @@ from flask import request, jsonify
 from dotenv import load_dotenv
 from main_app.controllers.user.login_controllers import SESSION_EXPIRY_MINUTES
 from main_app.controllers.user.referral_controllers import update_referral_status_and_reward
+from main_app.models.admin.error_model import Errors
 from main_app.models.user.user import User
 from main_app.utils.user.helpers import generate_access_token, create_user_session
 
@@ -85,22 +86,26 @@ def generate_and_send_otp():
         - Error (404): User not found
         - Error (500): SMS service failure
     """
+    data = request.get_json()
+    mobile_number = data["mobile_number"].strip()
+    user = User.objects(mobile_number=mobile_number).first()
+
     try:
         logger.info("Starting OTP generation and sending process")
         
         # Step 1: Validate request data
-        data = request.get_json()
         if not data:
             logger.warning("OTP request with empty request body")
             return jsonify({
                 "success": False, 
                 "message": "Invalid request data"
             }), 400
-        
-        mobile_number = data["mobile_number"].strip()
-        
+
         # Step 2: Validate mobile number format
         if not mobile_number:
+            Errors(username=user.username, email=user.email,
+                   error_type="User Tried to request otp without giving mobile number",
+                   error_source="Login form").save()
             logger.warning("OTP request with missing mobile number")
             return jsonify({
                 "success": False, 
@@ -116,7 +121,7 @@ def generate_and_send_otp():
             }), 400
         
         # Step 3: Find user by mobile number
-        user = User.objects(mobile_number=mobile_number).first()
+
         if not user:
             logger.warning(f"OTP request for unregistered mobile: {mobile_number}")
             return jsonify({
@@ -155,13 +160,16 @@ def generate_and_send_otp():
             return jsonify({
                 "success": True,
                 "message": "OTP sent successfully (Development Mode)",
-                "dev_otp": otp,  # Only for development
+                "dev_otp": otp,
                 "expires_in_minutes": OTP_EXPIRY_MINUTES
             }), 200
         else:
             # Production: Send actual SMS
             sms_result = _send_otp_sms(mobile_number, otp)
             if not sms_result:
+                Errors(username=user.username, email=user.email,
+                       error_type=f"Failed to send OTP SMS to: {mobile_number}",
+                       error_source="Login Using OTP").save()
                 logger.error(f"Failed to send OTP SMS to: {mobile_number}")
                 return jsonify({
                     "success": False,
@@ -178,6 +186,9 @@ def generate_and_send_otp():
         }), 200
         
     except Exception as e:
+        Errors(username=user.username, email=user.email,
+               error_type=f"Error in OTP generation: {str(e)}",
+               error_source="Login Using OTP").save()
         logger.error(f"Error in OTP generation: {str(e)}")
         return jsonify({
             "success": False,
@@ -264,7 +275,7 @@ def _send_otp_sms(mobile_number, otp):
     if not twilio_client:
         logger.error("Twilio client not initialized")
         return False
-    
+    user = User.objects(mobile_number = mobile_number).first()
     try:
         message_body = f"Your verification code is: {otp}. This code will expire in {OTP_EXPIRY_MINUTES} minutes. Do not share this code with anyone."
         
@@ -278,9 +289,16 @@ def _send_otp_sms(mobile_number, otp):
         return True
         
     except TwilioException as e:
+        Errors(username=user.username, email=user.email,
+               error_type=f"Twilio error sending SMS: {str(e)}",
+               error_source="Login Using OTP").save()
         logger.error(f"Twilio error sending SMS: {e}")
         return False
+
     except Exception as e:
+        Errors(username=user.username, email=user.email,
+               error_type=f"Unexpected error sending SMS : {str(e)}",
+               error_source="Login Using OTP").save()
         logger.error(f"Unexpected error sending SMS: {e}")
         return False
 
@@ -316,11 +334,13 @@ def verify_user_otp():
         - Error (404): User not found
         - Error (429): Too many attempts
     """
+    data = request.get_json()
+    mobile_number = data.get("mobile_number", "").strip()
+    user = User.objects(mobile_number=mobile_number).first()
     try:
         logger.info("Starting OTP verification process")
         
         # Step 1: Validate request data
-        data = request.get_json()
         if not data:
             logger.warning("OTP verification with empty request body")
             return jsonify({
@@ -328,9 +348,8 @@ def verify_user_otp():
                 "message": "Invalid request data"
             }), 400
         
-        mobile_number = data.get("mobile_number", "").strip()
-        otp_input = data.get("otp_input")
 
+        otp_input = data.get("otp_input")
         # Step 2: Validate required fields
         if not mobile_number or otp_input is None:
             logger.warning("OTP verification with missing required fields")
@@ -354,7 +373,7 @@ def verify_user_otp():
             }), 400
         
         # Step 4: Find user by mobile number
-        user = User.objects(mobile_number=mobile_number).first()
+
         if not user:
             logger.warning(f"OTP verification for unknown mobile: {mobile_number}")
             return jsonify({
@@ -386,6 +405,9 @@ def verify_user_otp():
             logger.warning(f"Expired OTP verification attempt for user: {user.user_id}")
             # Clear expired OTP
             user.update(unset__otp=1, unset__otp_expires_at=1)
+            Errors(username=user.username, email=user.email,
+                   error_type=f"Expired OTP verification attempt for user: {user.user_id}",
+                   error_source="Login Using OTP").save()
             return jsonify({
                 "success": False,
                 "message": "OTP has expired. Please request a new OTP."
@@ -454,6 +476,9 @@ def verify_user_otp():
         
     except Exception as e:
         logger.error(f"Error in OTP verification: {str(e)}")
+        Errors(username=user.username, email=user.email,
+               error_type=f"Error in OTP verification: {str(e)}",
+               error_source="Login Using OTP").save()
         return jsonify({
             "success": False,
             "message": "Internal server error occurred"

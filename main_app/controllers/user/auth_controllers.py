@@ -2,8 +2,6 @@ import datetime
 import logging
 import re
 from flask import request, jsonify, session
-
-from main_app.models.admin.admin_model import Admin
 from main_app.models.admin.error_model import Errors
 from main_app.models.user.user import User
 from main_app.controllers.user.referral_controllers import (process_referral_code_and_reward, initialize_user_records,
@@ -111,7 +109,7 @@ def handle_registration():
         if data.get("tag_id"):
             user_exist = User.objects(tag_id=data['tag_id']).first()
             if not user_exist:
-                return jsonify({"message": "referral link is not valid"})
+                return jsonify({"message": "referral link is not valid"}),400
             user.save()
             process_tag_id_and_reward(user_exist.tag_id, user.user_id)
 
@@ -122,14 +120,13 @@ def handle_registration():
             if referral_code:
                 referrer = User.objects(invitation_code = referral_code).first()
                 if not referrer:
-                    print("a")
                     error = Errors(username=data['username'], email=data["email"], error_source="Sign up form",
                            error_type= "Invalid referral code")
                     error.save()
                     logger.info("No such code exists.")
-                    return jsonify({"success" : False, "error" : "Invalid referral code."})
+                    return jsonify({"success" : False, "error" : "Invalid referral code."}),400
                 if referrer.user_id == user.user_id:
-                    return jsonify({"success" : False, "error" : "You can not refer yourself"})
+                    return jsonify({"success" : False, "error" : "You can not refer yourself"}),400
                 if referral_code:
                     logger.info(f"Processing referral code: {referral_code}")
                     user.update(
@@ -140,7 +137,7 @@ def handle_registration():
 
         except Exception as e:
             Errors(username=data['username'], email=data["email"], error_source="Sign Up Form",
-                  error_type=get_error("failed_to_update"))
+                  error_type=get_error("failed_to_update")).save()
             return jsonify({"error" : get_error("failed_to_update")})
 
         logger.info(f"User account created successfully with ID: {user.user_id}")
@@ -158,7 +155,9 @@ def handle_registration():
         
     except Exception as e:
         logger.error(f"Registration failed with error: {str(e)}")
-        Errors(username = data['username'], email = data["email"], error_source = "Sign Up Form", error_type = get_error("registration_failed"))
+        Errors(username = data['username'], email = data["email"],
+               error_source = "Sign Up Form", error_type = get_error("registration_failed")).save()
+
         return jsonify({"error": get_error("registration_failed")}), 500
 
 # ==================
@@ -273,17 +272,23 @@ def _check_user_conflicts(username, email, mobile_number):
     # Check for existing username
     existing_username = User.objects(username=username).first()
     if existing_username:
+        Errors(username = username, email = existing_username.email,
+               error_source = "Sign Up Form", error_type = get_error("registration_failed")).save()
         logger.warning(f"Registration attempt with existing username: {username}")
         return jsonify({"error": get_error("username_exists")}), 400
     
     # Check for existing email
     existing_email = User.objects(email=email).first()
     if existing_email:
+        Errors(username = existing_email.username, email = email,
+               error_source = "Sign Up Form", error_type = get_error("registration_failed")).save()
         logger.warning(f"Registration attempt with existing email: {email}")
         return jsonify({"error": get_error("email_exists")}), 400
 
     existing_mobile_num = User.objects(mobile_number=mobile_number).first()
     if existing_mobile_num:
+        Errors(username = existing_mobile_num.username, email = existing_mobile_num.email,
+               error_source = "Sign Up Form", error_type = get_error("registration_failed")).save()
         logger.warning(f"Registration attempt with existing mobile number: {mobile_number}")
         return jsonify({"error": "Mobile number already exists"}), 400
     return None
@@ -327,8 +332,7 @@ def validate_session_token(user, access_token, session_id):
         print("function run 3")
     except Exception as e:
         logger.error(f"Token validation error: {str(e)}")
-        Admin(username=user.username, email=user.email, error_source="Reset Password",
-              error_type=get_error("Token validation failed"))
-
+        Errors(username=user.username, email=user.email, error_source="Reset Password",
+              error_type=get_error("code validation failed")).save()
         return jsonify({"success" : False,
                         "message" : "Token validation failed"}), 500

@@ -11,7 +11,7 @@ from main_app.controllers.admin.prize_controller import add_exciting_prizes, che
 from main_app.controllers.admin.referral_controllers import generate_invite_link_with_expiry
 from main_app.controllers.admin.how_it_work_controller import add_how_it_work, advertisement_card
 from main_app.controllers.admin.referral_controllers import generate_invite_link_with_expiry
-from main_app.controllers.admin.rewards_controllers import add_new_galaxy, add_new_milestones
+from main_app.controllers.admin.rewards_controllers import add_new_galaxy, add_new_milestones, remove_milestone
 
 admin_bp = Blueprint("admin_routes", __name__)
 

@@ -1,4 +1,7 @@
 import datetime
+
+from main_app.models.admin.error_model import Errors
+from main_app.models.admin.help_model import FAQ
 from main_app.models.user.user import User
 from main_app.models.user.reward import Reward
 from main_app.models.user.referral import Referral
@@ -13,13 +16,13 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def home_page():
-    try:
-        data = request.get_json()
-        user_id = data.get("user_id")
-        access_token = data.get("mode")
-        session_id = data.get("log_alt")
+    data = request.get_json()
+    user_id = data.get("user_id")
+    access_token = data.get("mode")
+    session_id = data.get("log_alt")
 
-        user = User.objects(user_id = user_id).first()
+    user = User.objects(user_id=user_id).first()
+    try:
         if not user:
             return jsonify({"success" : False, "message" : "User does not exist"})
 
@@ -42,33 +45,47 @@ def home_page():
         # validate_session_token(user, access_token, session_id)
 
         reward = Reward.objects(user_id = user_id).first()
+        all_faqs = FAQ.objects(category = "Home Screen FAQs")
+        faqs = []
+        for faq in all_faqs:
+            faq = faq.to_mongo().to_dict()
+            faq.pop('_id' , None)
+            faq.pop('faq_id', None)
+            faq.pop('admin_uid', None)
+            faq.pop('category', None)
+            faqs.append(faq)
+
 
         info = {
             "total_stars": reward.total_stars,
             "total_meteors": reward.total_meteors,
-            "galaxy_name": list(reward.galaxy_name),
-            "current_planet": list(reward.current_planet),
-            "invitation_link": user.invitation_link
+            "galaxy_name": reward.galaxy_name,
+            "current_planet": reward.current_planet,
+            "invitation_link": user.invitation_link,
+            "redeemed_meteors" : reward.redeemed_meteors,
+            "faqs" : faqs
         }
 
-        fields_to_encode = ["total_stars", "total_meteors", "galaxy_name", "current_planet", "invitation_link"]
+        fields_to_encode = ["total_stars", "total_meteors", "galaxy_name", "current_planet", "invitation_link", "redeemed_meteors","faqs"]
         encoded_str = generate_encoded_string(info, fields_to_encode)
 
         return encoded_str, 200
 
     except Exception as e:
+        Errors(username = user.username, email = user.email,
+               error_source = "Sign Up Form", error_type = "server_error").save()
         logger.error(f"Server Error: {str(e)}")
         return jsonify({"error": "Server error occurred", "success": False}), 500
 
 
 def my_rewards():
-    try:
-        data = request.get_json()
-        user_id = data.get("user_id")
-        access_token = data.get("mode")
-        session_id = data.get("log_alt")
+    data = request.get_json()
+    user_id = data.get("user_id")
+    access_token = data.get("mode")
+    session_id = data.get("log_alt")
 
-        user = User.objects(user_id = user_id).first()
+    user = User.objects(user_id=user_id).first()
+    try:
         if not user:
             return jsonify({"success" : False, "message" : "User does not exist"})
 
@@ -89,6 +106,16 @@ def my_rewards():
                          "message": "Access token has expired"}), 401
 
         # validate_session_token(user, access_token, session_id)
+        reward = Reward.objects(user_id = user_id).first()
+        all_faqs = FAQ.objects(category = "Rewards FAQs")
+        faqs = []
+        for faq in all_faqs:
+            faq = faq.to_mongo().to_dict()
+            faq.pop('_id' , None)
+            faq.pop('faq_id', None)
+            faq.pop('admin_uid', None)
+            faq.pop('category', None)
+            faqs.append(faq)
         user_reward = Reward.objects(user_id = user_id).first()
         if user :
             info = {
@@ -98,32 +125,38 @@ def my_rewards():
                 # "galaxy_name": list(user_reward.galaxy_name),
                 # "current_planet": list(user_reward.current_planet),
                 "total_vouchers": user_reward.total_vouchers,
-                "reward_history": list(user_reward.reward_history)
+                "invite_code": user.invitation_code,
+                "reward_history": list(user_reward.reward_history),
+                "faqs" : faqs
             }
 
             fields_to_encode = ["total_stars",
                                 "total_meteors",
                                 # "galaxy_name",
                                 "total_vouchers",
+                                "invite_code",
                                 # "current_planet",
                                 "reward_history",
-                                "invitation_link"]
+                                "invitation_link",
+                                "faqs"]
 
             encoded_str = generate_encoded_string(info, fields_to_encode)
             return encoded_str, 200
 
     except Exception as e:
+        Errors(username = user.username, email = user.email,
+               error_source = "Sign Up Form", error_type = "server_error").save()
         logger.error(f"Server Error: {str(e)}")
         return jsonify({"error": get_error("server_error")}), 500
 
 def my_referrals():
-    try:
-        data = request.get_json()
-        user_id = data.get("user_id")
-        access_token = data.get("mode")
-        session_id = data.get("log_alt")
+    data = request.get_json()
+    user_id = data.get("user_id")
+    access_token = data.get("mode")
+    session_id = data.get("log_alt")
 
-        user = User.objects(user_id = user_id).first()
+    user = User.objects(user_id=user_id).first()
+    try:
         if not user:
             return jsonify({"success" : False, "message" : "User does not exist"})
 
@@ -145,39 +178,52 @@ def my_referrals():
 
         # validate_session_token(user, access_token, session_id)
         referral = Referral.objects(user_id = user.user_id).first()
+        reward = Reward.objects(user_id = user_id).first()
+        all_faqs = FAQ.objects(category = "Referrals FAQs")
+        faqs = []
+        for faq in all_faqs:
+            faq = faq.to_mongo().to_dict()
+            faq.pop('_id' , None)
+            faq.pop('faq_id', None)
+            faq.pop('admin_uid', None)
+            faq.pop('category', None)
+            faqs.append(faq)
 
         if user:
             info = {"total_referrals" : referral.total_referrals,
                     "referral_earning": referral.referral_earning,
                     "pending_referrals": referral.pending_referrals,
-                    "invite_code" : user.invitation_code,
                     "invitation_link" : user.invitation_link,
-                    "all_referrals": referral.all_referrals
+                    "all_referrals": referral.all_referrals,
+                    "invite_code": user.invitation_code,
+                    "faqs" : faqs
             }
             fields_to_encode = ["total_referrals",
                                 "referral_earning",
                                 "pending_referrals",
-                                "all_referrals",
-                                "invite_code" ,
-                                "invitation_link"
-                                ]
+                                "all_referrals" ,
+                                "invitation_link",
+                                "invite_code",
+                                "faqs"]
 
             encoded_str = generate_encoded_string(info, fields_to_encode)
             return encoded_str, 200
     except Exception as e:
+        Errors(username = user.username, email = user.email,
+               error_source = "Sign Up Form", error_type = "server_error").save()
         logger.error(f"Server Error: {str(e)}")
         return jsonify({"error": get_error("server_error")}), 500
 
 #----------------------------------------------------------------------------------------------------
 
 def my_profile():
-    try:
-        data = request.get_json()
-        user_id = data.get("user_id")
-        access_token = data.get("mode")
-        session_id = data.get("log_alt")
+    data = request.get_json()
+    user_id = data.get("user_id")
+    access_token = data.get("mode")
+    session_id = data.get("log_alt")
 
-        user = User.objects(user_id = user_id).first()
+    user = User.objects(user_id=user_id).first()
+    try:
         if not user:
             return jsonify({"success" : False, "message" : "User does not exist"})
 
@@ -197,6 +243,17 @@ def my_profile():
                 return ({"success": False,
                          "message": "Access token has expired"}), 401
 
+        reward = Reward.objects(user_id = user_id).first()
+        all_faqs = FAQ.objects(category = "Home Screen FAQs")
+        faqs = []
+        for faq in all_faqs:
+            faq = faq.to_mongo().to_dict()
+            faq.pop('_id' , None)
+            faq.pop('faq_id', None)
+            faq.pop('admin_uid', None)
+            faq.pop('category', None)
+            faqs.append(faq)
+
         # validate_session_token(user, access_token, session_id)
         if user:
             info = {"username" : user.username,
@@ -204,18 +261,22 @@ def my_profile():
                     "password" : user.password,
                     "mobile_number" : user.mobile_number,
                     "invitation_link" : user.invitation_link,
-                    "invite_code" : user.invitation_code
+                    "invite_code" : user.invitation_code,
+                    "faqs" : faqs
                     }
             fields_to_encode = ["username",
                                 "email",
                                 "password"
                                 "mobile_number",
                                 "invite_link",
-                                "invite_code"
+                                "invite_code",
+                                "faqs"
                                 ]
 
             encoded_str = generate_encoded_string(info, fields_to_encode)
             return encoded_str, 200
     except Exception as e:
+        Errors(username = user.username, email = user.email,
+               error_source = "Sign Up Form", error_type = "server_error").save()
         logger.error(f"Server Error: {str(e)}")
         return jsonify({"error": get_error("server_error")}), 500
