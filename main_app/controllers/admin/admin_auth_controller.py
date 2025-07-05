@@ -12,10 +12,6 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-# def is_valid_email(email):
-#     pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{3}$'
-#     return re.match(pattern, email) is not None
-
 #------- Register 
 
 def admin_register():
@@ -34,9 +30,6 @@ def admin_register():
       mobile = data["mobile_number"].strip()
       password = data["password"].strip()
 
-    #  # Email format validation
-    #   if not is_valid_email(email):
-    #    return jsonify({"error": "Invalid email format"}), 400
      # Additional field-specific validation
       email_validation = validate_email_format(data["email"])
       if email_validation:
@@ -85,8 +78,6 @@ def admin_register():
 def handle_admin_login():
     try:
         logger.info("Starting email login authentication")
-
-        #  Extract and validate request data
         data = request.get_json()
         if not data:
             logger.warning("Login attempt with empty request body")

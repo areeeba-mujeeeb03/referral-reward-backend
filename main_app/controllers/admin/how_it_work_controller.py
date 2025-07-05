@@ -74,7 +74,7 @@ def add_how_it_work():
 
             existing.update(**update_data)
             logger.info(f"'How It Work' updated successfully for UID: {admin_uid}")
-            msg = "Updated prize successfully"
+            msg = "Updated successfully"
         else:
             HowItWork(**data).save()
             logger.info(f"'How It Work' added successfully for UID: {admin_uid}")
@@ -116,14 +116,14 @@ def advertisement_card():
       
        # Image upload
       image = request.files.get("image_url")
-      image_url = ""
-      if not image:
-        return jsonify({"message": "No image uploaded"}), 400
-         
-      filename = secure_filename(image.filename)
-      image_path = os.path.join(UPLOAD_FOLDER, filename)
-      image.save(image_path)
-      image_url = f"/{image_path}"    
+      image_url = None
+    #   if not image:
+    #     return jsonify({"message": "No image uploaded"}), 400
+      if image:   
+        filename = secure_filename(image.filename)
+        image_path = os.path.join(UPLOAD_FOLDER, filename)
+        image.save(image_path)
+        image_url = f"/{image_path}"    
       
        # Check if document exists
       existing = AdvertisementCard.objects(admin_uid=admin_uid).first()
@@ -159,7 +159,7 @@ def advertisement_card():
 
            existing.update(**update_data)
            logger.info(f"Advertisement card updated for admin UID: {admin_uid}")
-           msg = "Updated prize successfully"
+           msg = "Updated advertisement card successfully"
       else:
             AdvertisementCard( 
                 title=title,
@@ -169,7 +169,7 @@ def advertisement_card():
                 image_url=image_url  
             ).save()
             logger.info(f"New advertisement card added for admin UID: {admin_uid}")
-            msg = "Added advertisment card successfully"
+            msg = "Added advertisement card successfully"
       
 
       return jsonify({"message": msg, "success": "true"}), 200

@@ -25,8 +25,7 @@ def add_exciting_prizes():
         admin_uid = data.get("admin_uid")
         required_meteors = data.get("required_meteors")
 
-        # data = jsonify(data)
-
+        #  Validation fields
         if not all ([title , term_conditions, admin_uid, required_meteors]):
           logger.warning("Missing required fields.")
           return jsonify({"error": "All fields are required"}), 400
@@ -45,22 +44,42 @@ def add_exciting_prizes():
       
 
         files = request.files.get("image")
-        if not files:
-            return jsonify({"error": "Image not found"}), 400
-        
-        filename = secure_filename(files.filename)
-        image_path = os.path.join(UPLOAD_FOLDER, filename)
-        files.save(image_path)
-        image_url = f"/{image_path}"
+        image_url = None
+        # if not files:
+        #     return jsonify({"error": "Image not found"}), 400
+        if files:
+            filename = secure_filename(files.filename)
+            image_path = os.path.join(UPLOAD_FOLDER, filename)
+            files.save(image_path)
+            image_url = f"/{image_path}"
 
         prize = ExcitingPrize.objects(admin_uid=admin_uid).first()
         if prize:
-            prize.update(
-              title = title,
-              image_url = image_url,
-              term_conditions = term_conditions,
-              required_meteors=required_meteors
-            )
+            fields_changed = False
+
+            if title != prize.title:
+                 fields_changed = True
+
+            if term_conditions != prize.term_conditions:
+                 fields_changed = True  
+            
+            if required_meteors != prize.required_meteors:
+                 fields_changed = True 
+
+            if not fields_changed:
+                return jsonify({"message": "No fields updated"})                      
+
+            update_data = {
+               "title":title,
+               "term_conditions":term_conditions,
+               "image_url":image_url,
+               "required_meteors":required_meteors
+            }
+           
+            if image_url:
+                update_data["image_url"] = image_url
+            
+            prize.update(**update_data)
             msg = "Updated prize successfully"
         else:
              ExcitingPrize(
