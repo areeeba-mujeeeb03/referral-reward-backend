@@ -4,60 +4,110 @@ from main_app.models.user.referral import Referral
 from main_app.models.user.reward import Reward
 from main_app.models.user.links import Link
 from main_app.models.admin.error_model import Errors
+from main_app.models.admin.product_model import Product
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # ------------Error Table
 
 def error_table():
-    data = request.get_json()
-    errors = Errors.objects()
+    try:
+        logger.info("Create error table API called.")
+        data = request.get_json()
+        errors = Errors.objects()
 
-    all_errors = []
-    for error in errors:
-        error_dict = error.to_mongo().to_dict()
-        error_dict.pop('_id', None)
-        response = error_dict
-        all_errors.append(error_dict)
+        all_errors = []
+        for error in errors:
+            error_dict = error.to_mongo().to_dict()
+            error_dict.pop('_id', None)
+            response = error_dict
+            all_errors.append(error_dict)
 
-    return jsonify({
-        "message": "Data retrieved successfully",
-        "data": all_errors
-    }), 200
-
+        return jsonify({
+            "message": "Data retrieved successfully",
+            "data": all_errors
+        }), 200
+    except Exception as e:
+        logger.error("Internal Server Error while saving email.")
+        return jsonify({"error": "Internal server error"})
 
 # ---------------------------------------------------------------------------------
 
-# Participant Table
+#------- Participant Table
 
 def participant_table():
-    data = request.get_json()
-    user_id = data.get("user_id")
+    try:
+        logger.info("Create participant table API called.")
+        data = request.get_json()
+        user_id = data.get("user_id")
+        uid = data.get("uid")
 
-    if not user_id:
-        return jsonify({"message": "User ID is required"}), 400
+        if not user_id:
+            return jsonify({"message": "User ID is required"}), 400
 
-    user = User.objects(user_id=user_id).first()
-    referral = Referral.objects(user_id=user_id).first()
-    reward = Reward.objects(user_id=user_id).first()
+        user = User.objects(user_id=user_id).first()
+        referral = Referral.objects(user_id=user_id).first()
+        reward = Reward.objects(user_id=user_id).first()
+        # redeem = Redeem.objects(user_id=user_id).first()
+        product = Product.objects(uid=uid).first()
 
-    game = [{
-            "usermname": user.username,
-            "email": user.email,
-            "mobile_number": user.mobile_number
+        game = [{
+                "usermname": user.username,
+                "email": user.email,
+                "mobile_number": user.mobile_number
+            }]
+
+        refer = [{
+            "total_referrals":referral.total_referrals,
+            "referral_earning":referral.referral_earning,
+            "total_meteors":reward.total_meteors
         }]
 
-    refer = [{
-        "total_referrals":referral.total_referrals,
-        "referral_earning":referral.referral_earning,
-        "total_meteors":reward.total_meteors
-    }]
+        # redemption = [{
+        #     "no_of_redeem":redeem.no_of_redeem,
+        #     "points_use":redeem.points_use,
+        #     "total_points":redeem.total_points
+        # }]
 
-    return jsonify ({
-        "message": "Data fetch successfull",
-        "data": {
-            "game": game,
-            "refer":refer
-        }
-    }), 200
+        product_purchased = [{
+            "product_name":product.product_name,
+            "original_amt":product.original_amt,
+            # "coupon_code":product.coupon_code,
+            # "referral_code":product.referral_code
+        }]
+
+        return jsonify ({
+            "message": "Data fetch successfull",
+            "data": {
+                "game": game,
+                "refer":refer,
+                # "redemption": redemption,
+                "product_purchased":product_purchased
+            }
+        }), 200
+    except Exception as e:
+        logger.error("Internal Server Error while saving email.")
+        return jsonify({"error": "Internal server error"})
+
+# --------------------------------------------------------------------------------------------------
+
+# -------- Push up Notification
+# def create_notification():
+#     try: 
+#         data = 
+#         return jsonify({"message": ""})
+#     except Exception as e:
+#         return jsonify({"error": "Internal server error"})
+
+
+
+
+
+
+
+
 
     # # Get user
     # user = User.objects(user_id=user_id).first()
