@@ -78,7 +78,8 @@ def handle_email_login():
         logger.warning(f"Missing fields during login: {missing_fields}")
         return jsonify({
             "error": "Email and password are required",
-            "missing_fields": missing_fields
+            "missing_fields": missing_fields,
+            "success" : False
         }), 400
 
     # Step 3: Find user by email
@@ -92,7 +93,9 @@ def handle_email_login():
         is_member = user.is_member
 
         if not is_member == True:
-            return "Need to purchase before logging in!"
+            Errors(username=user.username, email=user.email, error_type="User Tried to login before purchasing",
+                   error_source="Login form").save()
+            return jsonify({"success" : False, "message" : "Need to purchase before logging in!"}), 400
 
         # Step 4: Check if account is active
 
@@ -105,6 +108,8 @@ def handle_email_login():
             return jsonify({"success": False, "message": "Something went wrong. Please reset your password."}), 400
         # Step 5: Verify password
         if not check_password(password, user.password):
+            Errors(username=user.username, email=email,
+                   error_source="Login Form", error_type= f"Incorrect password attempt for: {email}").save()
             logger.warning(f"Incorrect password attempt for: {email}")
             return jsonify({"error": get_error("incorrect_password")}), 400
 
@@ -171,10 +176,10 @@ def logout_user():
             )
             logger.info(f"User logged out successfully: {user_id}")
             return True
-        return False
+        return False, 400
 
     except Exception as e:
         logger.error(f"Logout failed for user {user_id}: {str(e)}")
         Errors(username=user.username, email=user.email, error_type=get_error("logout_failed"),
-               error_source="Login form").save()
-        return False
+               error_source="Logout form").save()
+        return False, 400

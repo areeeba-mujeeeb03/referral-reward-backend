@@ -2,17 +2,14 @@ from flask import Blueprint
 from main_app.controllers.admin.admin_auth_controller import admin_register
 from main_app.controllers.admin.admin_auth_controller import handle_admin_login
 from main_app.controllers.admin.forgotpassword_controllers import forgot_otp_email, verify_otp, reset_password
-from main_app.controllers.admin.help_request_controllers import list_faqs, add_faq, update_faq, delete_faq,list_contact_messages
-from main_app.controllers.admin.help_request_controllers import list_faqs, add_faq, update_faq, delete_faq, \
-    list_contact_messages
+from main_app.controllers.admin.help_request_controllers import add_faq, update_faq, delete_faq, list_contact_messages
 from main_app.controllers.admin.profile_controllers import edit_profile_data
 from main_app.controllers.admin.product_controllers import add_product, update_product, update_offer
 from main_app.controllers.admin.prize_controller import add_exciting_prizes, check_eligibility
-from main_app.controllers.admin.referral_controllers import generate_invite_link_with_expiry
 from main_app.controllers.admin.how_it_work_controller import add_how_it_work, advertisement_card
 from main_app.controllers.admin.referral_controllers import generate_invite_link_with_expiry
 from main_app.controllers.admin.rewards_controllers import add_new_galaxy, add_new_milestones,remove_milestone
-from main_app.controllers.admin.dashboard_controllers import error_table, participant_table
+from main_app.controllers.admin.dashboard_controllers import error_table, dashboard_participants
 from main_app.controllers.admin.email_controller import create_email
 
 admin_bp = Blueprint("admin_routes", __name__)
@@ -186,7 +183,7 @@ def admin_how_it_work():
 # ==========================
 
 @admin_bp.route("/admin/advertisement_card", methods = ["POST"])
-def admim_advertisement_card():
+def admin_advertisement_card():
     """
     Handles the creation of a new advertisement card.
     Add and update advertisement card by admin_uid.
@@ -196,13 +193,13 @@ def admim_advertisement_card():
 
 # =======================================
 
-# Participant table 
+# Participant table
 
 # =======================================
 
 @admin_bp.route("/admin/participant_table", methods =["POST"])
 def admin_reward_participant_table():
-     return participant_table()
+     return dashboard_participants()
 
 
 
@@ -242,10 +239,6 @@ def edit_profile():
 # View all FAQs
 
 # ==============
-
-@admin_bp.route('/admin/faqs', methods=['GET'])
-def all_faqs():
-    return list_faqs()
 
 # ==============
 
@@ -337,68 +330,3 @@ def delete_milestone():
 def update_sharing_apps():
 
     return
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# -------------------------------------------------------------------------------------------------
-
-# Add Offers
-
-# @admin_bp.route("/admin/add_offer", methods = ["POST"])
-# def admin_add_offer():
-#     """
-#     Creates a new offer entry.
-#     Expects: JSON body with offer details including start and expiry dates.
-#     Returns: Success message or error response.
-#     """
-#     return create_offer()
-
-# ----------------------------------------------------------------------------------------

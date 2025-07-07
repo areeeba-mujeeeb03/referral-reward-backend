@@ -50,7 +50,7 @@ def parse_date_flexible(date_str):
 
 def generate_invite_link_with_expiry():
     data = request.get_json()
-
+    admin_uid = data.get("admin_uid")
     start_date = parse_date_flexible(data.get("start_date"))
     expiry_date = parse_date_flexible(data.get("expiry_date"))
     referrer_reward = data.get("referrer_reward")

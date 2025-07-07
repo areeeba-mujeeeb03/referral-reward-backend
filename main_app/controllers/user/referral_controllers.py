@@ -1,7 +1,9 @@
 import datetime
 import logging
-from main_app.controllers.user.landingpage_controllers import my_rewards
+from main_app.controllers.user.rewards_controllers import win_voucher
+from main_app.models.admin.error_model import Errors
 from main_app.models.admin.links import Link
+from main_app.models.admin.participants_model import UserData
 from main_app.models.user.reward import Reward
 from main_app.models.user.referral import Referral
 from main_app.models.user.user import User
@@ -37,12 +39,9 @@ def process_referral_code_and_reward(referral_code, new_user_id, new_username):
         referral_code (str): Referral code provided during registration
         new_user_id (str): ID of the newly registered user
     """
-
+    valid_code = User.objects(invitation_code=referral_code).first()
     try:
-        valid_code = User.objects(invitation_code = referral_code).first()
-        print(valid_code)
         referrer_id = str(valid_code.user_id)
-        print(referrer_id)
         if valid_code:
             referrer = Referral.objects(user_id = referrer_id).first()
             new_user = User.objects(user_id = new_user_id)
@@ -59,9 +58,11 @@ def process_referral_code_and_reward(referral_code, new_user_id, new_username):
                 inc__total_referrals = 1,
                 inc__pending_referrals=1,
                 inc__referral_earning = PENDING_REFERRAL_REWARD_POINTS
-
             )
+
+
             reward_record = Reward.objects(user_id=referrer_id).first()
+            UserData.objects().first()
             new_user = User.objects(user_id = new_user_id).first()
             if reward_record:
                 reward_record.total_meteors += PENDING_REFERRAL_REWARD_POINTS
@@ -75,7 +76,11 @@ def process_referral_code_and_reward(referral_code, new_user_id, new_username):
                 reward_record.save()
 
     except Exception as e:
-        logger.error(f"Failed to initialize user records.: {str(e)}")
+        Errors(username=valid_code.user_id, email=valid_code.email, error_source="Sign Up Form",
+               error_type=f"Failed to initialize user records : {valid_code.user_id}").save()
+        logger.error(f"Failed to initialize user rewards : {str(e)}")
+        return jsonify({"message" : "Failed to initialize user rewards.", "success" : False})
+
 
 def process_tag_id_and_reward(tag_id, new_user_id):
     """
@@ -90,6 +95,8 @@ def process_tag_id_and_reward(tag_id, new_user_id):
     Args:
         tag_id : attached in API
     """
+    valid_user = User.objects(tag_id=tag_id).first()
+    referrer = Referral.objects(user_id=valid_user.user_id).first()
     try:
         valid_user = User.objects(tag_id = tag_id).first()
         referrer = Referral.objects(user_id = valid_user.user_id).first()
@@ -127,7 +134,9 @@ def process_tag_id_and_reward(tag_id, new_user_id):
             reward_record.save()
 
     except Exception as e:
-        logger.error(f"Failed to initialize user records.: {str(e)}")
+        Errors(username=valid_user.user_id, email=valid_user.email, error_source="Referee Sign Up Form",
+               error_type=f"Failed to update referrer records of referrer {valid_user.user_id}").save()
+        logger.error(f"Failed to update referrer records of referrer {valid_user.user_id}.: {str(e)}")
 
 
 def update_referral_status_and_reward(referrer_id, user_id):
@@ -171,6 +180,7 @@ def update_referral_status_and_reward(referrer_id, user_id):
     # Update
     referral_record.referral_earning += SUCCESS_REFERRAL_REWARD_POINTS
     referral_record.pending_referrals = max(0, referral_record.pending_referrals - 1)
+    referral_record.successful_referrals = max(0, referral_record.successful_referrals + 1)
     referral_record.save()
     logger.info(f"Referral stats updated for referrer: {referrer_id}")
 
@@ -180,7 +190,6 @@ def update_referral_status_and_reward(referrer_id, user_id):
         logger.warning(f"No reward record found for user: {referrer_id}")
         return
 
-    # No double-crediting
     already_rewarded = any(
         entry.get("earned_by_action") == "referral" and
         entry.get("referral_status") == "Completed" and
@@ -202,6 +211,7 @@ def update_referral_status_and_reward(referrer_id, user_id):
         "referred_on": date.strftime('%d-%m-%y'),
         "transaction_type": "credit"
     })
+    win_voucher(referrer_id)
     reward_record.save()
     logger.info(f"Reward added for referrer: {referrer_id}")
 
@@ -214,8 +224,9 @@ def initialize_user_records(user_id):
     Args:
         user_id (str): ID of the newly registered user
     """
+    user = Reward.objects(user_id=user_id).first()
     try:
-        user = Reward.objects(user_id = user_id).first()
+
         if user :
             return "The rewards for this user is already initialized"
         user_reward = Reward(
@@ -226,14 +237,16 @@ def initialize_user_records(user_id):
 
         Reward.objects(user_id = user_id).update(
             inc__total_meteors = SIGN_UP_REWARD,
-            push__galaxy_name=['Milky Way Galaxy','Andromeda Galaxy'],
-            push__current_planet=['Planet A']
+            redeemed_meteors = 0,
+            push__galaxy_name= 'Milky Way Galaxy',
+            push__current_planet='Planet A'
         )
         user_referral = Referral(
             user_id=user_id,
             total_referrals=0,
             referral_earning=0,
             pending_referrals=0,
+            successful_referrals=0,
             all_referrals=[]
         )
         user_referral.save()
@@ -241,8 +254,10 @@ def initialize_user_records(user_id):
         logger.info(f"Initialized reward and referral records for user: {user_id}")
 
     except Exception as e:
+        Errors(username=user.user_id, email=user.email, error_source="Sign Up Form",
+               error_type=f"Failed to initialize user records for {user_id}").save()
         logger.error(f"Failed to initialize user records for {user_id}: {str(e)}")
-        # This is non-critical, so we don't fail the registration
+
 
 # ==================
 
@@ -322,36 +337,44 @@ def update_meteors_and_stars():
 
 # ==================
 
-def reward_referrer_by_tag(tag_id: str):
+def reward_referrer_by_tag(tag_id):
     user = User.objects(tag_id=tag_id).first()
-    if not user:
-        return False, "Invalid tag ID"
+    try:
+        # if not user:
+        #     return False, "Invalid tag ID"
+        referral = Referral.objects(user_id = user.user_id).first()
+        referrer_id = user.user_id
 
-    referrer_id = user.user_id
+        reward_record = Reward.objects(user_id=referrer_id).first()
+        if not reward_record:
+            return False, "No reward record found for referrer"
 
-    reward_record = Reward.objects(user_id=referrer_id).first()
-    if not reward_record:
-        return False, "No reward record found for referrer"
+        already_rewarded = any(
+            entry.get("earned_by_action") == "link_visit"
+            for entry in reward_record.reward_history
+        )
 
-    already_rewarded = any(
-        entry.get("earned_by_action") == "link_visit"
-        for entry in reward_record.reward_history
-    )
-
-    if already_rewarded:
-        return False, "Reward already claimed for this referral link"
-    date = datetime.datetime.now()
-    reward_record.total_meteors += SUCCESS_REFERRAL_REWARD_POINTS
-    reward_record.reward_history.append({
-        "earned_by_action": "link_visit",
-        "earned_meteors": SUCCESS_REFERRAL_REWARD_POINTS,
-        "referral_status": "Visited",
-        "referred_user_id": "anonymous",
-        "referred_on": date.strftime('%d-%m-%y'),
-        "transaction_type": "credit"
-    })
-    reward_record.save()
-    return True, "Referral reward granted successfully"
+        if already_rewarded:
+            return False, "Reward already claimed for this referral link"
+        date = datetime.datetime.now()
+        reward_record.total_meteors += SUCCESS_REFERRAL_REWARD_POINTS
+        reward_record.reward_history.append({
+            "earned_by_action": "link_visit",
+            "earned_meteors": SUCCESS_REFERRAL_REWARD_POINTS,
+            "referral_status": "Visited",
+            "referred_user_id": "anonymous",
+            "referred_on": date.strftime('%d-%m-%y'),
+            "transaction_type": "credit"
+        })
+        reward_record.save()
+        referral.update(
+            inc__successful_referrals = 1
+        )
+        return True, "Referral reward granted successfully"
+    except Exception as e:
+        Errors(username=user.user_id, email=user.email, error_source="Sign Up Form",
+               error_type=f" Invalid invitation link {user.user_id}").save()
+        return jsonify({"message" : "Invalid link"})
 
 def handle_invitation_visit(encoded_gen_str, tag_id, encoded_exp_str):
     """Args:
@@ -359,17 +382,22 @@ def handle_invitation_visit(encoded_gen_str, tag_id, encoded_exp_str):
         encoded_gen_str : generation time of link
         encoded_exp_str : expiry time of link
     """
+    user = User.objects(tag_id = tag_id).first()
     try:
         decoded_gen_str = decode_timestamp(encoded_gen_str)
         decoded_exp_str = decode_timestamp(encoded_exp_str)
+
+
+        now = datetime.datetime.utcnow()
+        now_timestamp = int(now.strftime("%Y%m%d%H%M%S"))
+
+        if now_timestamp > decoded_exp_str:
+            return jsonify({"message": "This link has expired"}), 400
+
+        success, msg = reward_referrer_by_tag(tag_id)
+        return jsonify({"message": msg}), 200 if success else 400
+
     except Exception as e:
-        return jsonify({"message": "Invalid referral link"}), 400
-
-    now = datetime.datetime.utcnow()
-    now_timestamp = int(now.strftime("%Y%m%d%H%M%S"))
-
-    if now_timestamp > decoded_exp_str:
-        return jsonify({"message": "This link has expired"}), 400
-
-    success, msg = reward_referrer_by_tag(tag_id)
-    return jsonify({"message": msg}), 200 if success else 400
+        Errors(username=user.user_id, email=user.email, error_source="Sign Up Form",
+               error_type=f"Expired or Invalid referral link : {user.user_id}").save()
+        return jsonify({"message": "Expired or Invalid referral link"}), 400

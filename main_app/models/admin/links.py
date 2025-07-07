@@ -2,6 +2,7 @@ from mongoengine import Document, StringField, IntField, DateTimeField
 from datetime import datetime
 
 class Link(Document):
+    admin_uid = StringField(required=True, unique=True)
     invitation_link = StringField()
     created_at = DateTimeField(default=datetime.now)
     start_date = DateTimeField()
@@ -13,6 +14,7 @@ class Link(Document):
 
 
 class LinkSharing(Document):
+    admin_uid = StringField(required=True, unique=True)
     app_name = StringField()
     total_sent = IntField(default=0)
     successful_registered = IntField(required=True,default = 0)
