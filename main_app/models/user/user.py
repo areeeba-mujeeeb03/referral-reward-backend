@@ -23,6 +23,7 @@ class User(Document):
     login_count = IntField()
     generation_time = IntField()
     link_expiry_time = IntField()
+    admin_uid = StringField()
     is_member = BooleanField(default= False)
 
     meta = {"db" : "user-db", 'collection': 'users'}

@@ -91,5 +91,3 @@ def remove_milestone():
         if milestone.get("milestone_name") == milestone_name:
            milestone_name.delete(admin_uid = admin_uid, milestone_name = milestone_name)
         return jsonify({"message": "Milestone with this name already exists"})
-
-

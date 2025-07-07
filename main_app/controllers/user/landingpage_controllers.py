@@ -1,7 +1,6 @@
 import datetime
-
+from main_app.controllers.admin.help_request_controllers import get_faqs_by_category_name
 from main_app.models.admin.error_model import Errors
-from main_app.models.admin.help_model import FAQ
 from main_app.models.user.user import User
 from main_app.models.user.reward import Reward
 from main_app.models.user.referral import Referral
@@ -37,6 +36,7 @@ def home_page():
             return ({"success": False,
                      "message": "Session mismatch or invalid session"}), 403
 
+
         if hasattr(user, 'expiry_time') and user.expiry_time:
             if datetime.datetime.now() > user.expiry_time:
                 return ({"success": False,
@@ -45,15 +45,9 @@ def home_page():
         # validate_session_token(user, access_token, session_id)
 
         reward = Reward.objects(user_id = user_id).first()
-        all_faqs = FAQ.objects(category = "Home Screen FAQs")
-        faqs = []
-        for faq in all_faqs:
-            faq = faq.to_mongo().to_dict()
-            faq.pop('_id' , None)
-            faq.pop('faq_id', None)
-            faq.pop('admin_uid', None)
-            faq.pop('category', None)
-            faqs.append(faq)
+
+        admin_uid = user.admin_uid
+        faqs = get_faqs_by_category_name(admin_uid, "Referrals") or []
 
 
         info = {
@@ -107,15 +101,9 @@ def my_rewards():
 
         # validate_session_token(user, access_token, session_id)
         reward = Reward.objects(user_id = user_id).first()
-        all_faqs = FAQ.objects(category = "Rewards FAQs")
-        faqs = []
-        for faq in all_faqs:
-            faq = faq.to_mongo().to_dict()
-            faq.pop('_id' , None)
-            faq.pop('faq_id', None)
-            faq.pop('admin_uid', None)
-            faq.pop('category', None)
-            faqs.append(faq)
+        admin_uid = user.admin_uid
+        faqs = get_faqs_by_category_name(admin_uid, "Rewards") or []
+
         user_reward = Reward.objects(user_id = user_id).first()
         if user :
             info = {
@@ -179,15 +167,8 @@ def my_referrals():
         # validate_session_token(user, access_token, session_id)
         referral = Referral.objects(user_id = user.user_id).first()
         reward = Reward.objects(user_id = user_id).first()
-        all_faqs = FAQ.objects(category = "Referrals FAQs")
-        faqs = []
-        for faq in all_faqs:
-            faq = faq.to_mongo().to_dict()
-            faq.pop('_id' , None)
-            faq.pop('faq_id', None)
-            faq.pop('admin_uid', None)
-            faq.pop('category', None)
-            faqs.append(faq)
+        admin_uid = user.admin_uid
+        faqs = get_faqs_by_category_name(admin_uid, "Referrals") or []
 
         if user:
             info = {"total_referrals" : referral.total_referrals,
@@ -244,15 +225,8 @@ def my_profile():
                          "message": "Access token has expired"}), 401
 
         reward = Reward.objects(user_id = user_id).first()
-        all_faqs = FAQ.objects(category = "Home Screen FAQs")
-        faqs = []
-        for faq in all_faqs:
-            faq = faq.to_mongo().to_dict()
-            faq.pop('_id' , None)
-            faq.pop('faq_id', None)
-            faq.pop('admin_uid', None)
-            faq.pop('category', None)
-            faqs.append(faq)
+        admin_uid = user.admin_uid
+        faqs = get_faqs_by_category_name(admin_uid, "Help and Support FAQs") or []
 
         # validate_session_token(user, access_token, session_id)
         if user:

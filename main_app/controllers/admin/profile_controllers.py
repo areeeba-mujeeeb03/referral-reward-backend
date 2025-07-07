@@ -21,9 +21,6 @@ def edit_profile_data():
         if not admin:
             return jsonify({"success": False, "message": "User does not exist"})
 
-        if not update_fields:
-            return jsonify({"success": False, "message": "No fields to update"}), 400
-
         email_validation = validate_email_format(data["email"])
         if email_validation:
             return email_validation
@@ -68,6 +65,9 @@ def edit_profile_data():
 
         if "image" in data:
             update_fields["profile_picture"] = img_file
+
+        if not update_fields:
+            return jsonify({"success": False, "message": "No fields to update"}), 400
 
         admin.update(**update_fields)
 

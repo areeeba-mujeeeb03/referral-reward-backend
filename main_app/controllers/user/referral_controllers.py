@@ -1,6 +1,6 @@
 import datetime
 import logging
-from main_app.controllers.user.landingpage_controllers import my_rewards
+from main_app.controllers.user.rewards_controllers import win_voucher
 from main_app.models.admin.error_model import Errors
 from main_app.models.admin.links import Link
 from main_app.models.admin.participants_model import UserData
@@ -58,8 +58,8 @@ def process_referral_code_and_reward(referral_code, new_user_id, new_username):
                 inc__total_referrals = 1,
                 inc__pending_referrals=1,
                 inc__referral_earning = PENDING_REFERRAL_REWARD_POINTS
-
             )
+
 
             reward_record = Reward.objects(user_id=referrer_id).first()
             UserData.objects().first()
@@ -180,6 +180,7 @@ def update_referral_status_and_reward(referrer_id, user_id):
     # Update
     referral_record.referral_earning += SUCCESS_REFERRAL_REWARD_POINTS
     referral_record.pending_referrals = max(0, referral_record.pending_referrals - 1)
+    referral_record.successful_referrals = max(0, referral_record.successful_referrals + 1)
     referral_record.save()
     logger.info(f"Referral stats updated for referrer: {referrer_id}")
 
@@ -189,7 +190,6 @@ def update_referral_status_and_reward(referrer_id, user_id):
         logger.warning(f"No reward record found for user: {referrer_id}")
         return
 
-    # No double-crediting
     already_rewarded = any(
         entry.get("earned_by_action") == "referral" and
         entry.get("referral_status") == "Completed" and
@@ -211,6 +211,7 @@ def update_referral_status_and_reward(referrer_id, user_id):
         "referred_on": date.strftime('%d-%m-%y'),
         "transaction_type": "credit"
     })
+    win_voucher(referrer_id)
     reward_record.save()
     logger.info(f"Reward added for referrer: {referrer_id}")
 
@@ -245,6 +246,7 @@ def initialize_user_records(user_id):
             total_referrals=0,
             referral_earning=0,
             pending_referrals=0,
+            successful_referrals=0,
             all_referrals=[]
         )
         user_referral.save()
@@ -340,7 +342,7 @@ def reward_referrer_by_tag(tag_id):
     try:
         # if not user:
         #     return False, "Invalid tag ID"
-
+        referral = Referral.objects(user_id = user.user_id).first()
         referrer_id = user.user_id
 
         reward_record = Reward.objects(user_id=referrer_id).first()
@@ -365,6 +367,9 @@ def reward_referrer_by_tag(tag_id):
             "transaction_type": "credit"
         })
         reward_record.save()
+        referral.update(
+            inc__successful_referrals = 1
+        )
         return True, "Referral reward granted successfully"
     except Exception as e:
         Errors(username=user.user_id, email=user.email, error_source="Sign Up Form",
@@ -394,5 +399,5 @@ def handle_invitation_visit(encoded_gen_str, tag_id, encoded_exp_str):
 
     except Exception as e:
         Errors(username=user.user_id, email=user.email, error_source="Sign Up Form",
-               error_type=f"Invalid referral link : {user.user_id}").save()
-        return jsonify({"message": "Invalid referral link"}), 400
+               error_type=f"Expired or Invalid referral link : {user.user_id}").save()
+        return jsonify({"message": "Expired or Invalid referral link"}), 400
