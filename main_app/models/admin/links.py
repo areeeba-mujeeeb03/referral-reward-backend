@@ -1,4 +1,5 @@
-from mongoengine import Document, StringField, IntField, DateTimeField
+from mongoengine import Document, StringField, IntField, DateTimeField, ListField, DictField, EmbeddedDocument, \
+    EmbeddedDocumentField
 from datetime import datetime
 
 class Link(Document):
@@ -13,10 +14,11 @@ class Link(Document):
     meta = {"db_alias" : "admin-db", "collection" : "links"}
 
 
-class LinkSharing(Document):
-    admin_uid = StringField(required=True, unique=True)
-    app_name = StringField()
-    total_sent = IntField(default=0)
-    successful_registered = IntField(required=True,default = 0)
+
+
+class AppStats(Document):
+    admin_uid = StringField(required=True)
+    apps = ListField(DictField())
+
 
     meta = {"db_alias": "admin-db", "collection": "SharingApps"}

@@ -1,13 +1,11 @@
 from flask import request, jsonify
-
 from main_app.models.admin.admin_model import Admin
+from main_app.models.admin.links import AppStats
 from main_app.models.admin.participants_model import UserData
 from main_app.models.user.user import User
 from main_app.models.user.referral import Referral
 from main_app.models.user.reward import Reward
-from main_app.models.user.links import Link
 from main_app.models.admin.error_model import Errors
-from main_app.routes.admin.admin_routes import admin_bp
 
 
 def dashboard_stats():
@@ -16,16 +14,26 @@ def dashboard_stats():
     exist = Admin.objects(admin_uid = admin_uid).first()
     if exist:
         all_user_data = UserData.objects(admin_uid = admin_uid).first()
+        apps_data = AppStats.objects(admin_uid = admin_uid).first()
+        sharing_apps_data = []
+        if apps_data:
+            for app_data in apps_data.apps:
+                userdata = {
+                    "app_name": app_data.app_name,
+                    "total_sent": app_data.total_sent,
+                    "successful_registered": app_data.successful_registered
+                }
+                sharing_apps_data.append(userdata)
+
         return jsonify({"total_participants" : all_user_data.total_participants,
                         "total_referrals" : all_user_data.succesful_referrals,
-                        "completed_referrals" : all_user_data.completed_referrals})
+                        "completed_referrals" : all_user_data.completed_referrals,
+                        "sharing_apps_data" : sharing_apps_data})
     if not exist:
         return jsonify({"success": False, "message" : "Admin id not found"})
 
 
 # ---------------------------------------------------------------------------------
-
-
 def dashboard_participants():
     users = User.objects()
 
@@ -56,18 +64,16 @@ def dashboard_participants():
         userdata['total_vouchers'] = reward['total_vouchers']
         redemption_data.append(userdata)
 
-    return jsonify({"Partcipants_and_earning_with_referral" : data, "redeem_table" : redemption_data})
+    return jsonify({"Participants_and_earning_with_referral" : data, "redeem_table" : redemption_data})
 # ------------Error Table
 
 def error_table():
-    data = request.get_json()
     errors = Errors.objects()
 
     all_errors = []
     for error in errors:
         error_dict = error.to_mongo().to_dict()
         error_dict.pop('_id', None)
-        response = error_dict
         all_errors.append(error_dict)
 
     return jsonify({
