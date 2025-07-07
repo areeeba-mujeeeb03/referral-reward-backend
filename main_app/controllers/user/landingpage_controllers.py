@@ -254,3 +254,24 @@ def my_profile():
                error_source = "Sign Up Form", error_type = "server_error").save()
         logger.error(f"Server Error: {str(e)}")
         return jsonify({"error": get_error("server_error")}), 500
+    
+
+    # -------------------------------------------------------------------------
+
+#     # ---- how it work data fetch
+
+# from main_app.models.admin.how_it_work_model import HowItWork
+
+
+# def admin__howitwork_fetch_data():
+#         data = request.get_json()
+#         admin_uid = data.get("admin_uid")
+#         user_id = data.get("")
+#         user = User.objects(user_id=user_id).first()
+#         admin_uid = user.admin_uid
+
+#         howitwork = HowItWork.objects(admin_uid=admin_uid)
+
+#         data = []
+
+#         # for howitwork in howitwork:

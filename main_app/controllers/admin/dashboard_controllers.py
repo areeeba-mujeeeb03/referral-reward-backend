@@ -1,5 +1,5 @@
 from flask import request, jsonify
-
+import logging
 from main_app.models.admin.admin_model import Admin
 from main_app.models.admin.participants_model import UserData
 from main_app.models.user.user import User
@@ -7,8 +7,11 @@ from main_app.models.user.referral import Referral
 from main_app.models.user.reward import Reward
 from main_app.models.user.links import Link
 from main_app.models.admin.error_model import Errors
-from main_app.routes.admin.admin_routes import admin_bp
+from main_app.models.admin.product_model import Product
 
+# Configure logging for better debugging and monitoring
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def dashboard_stats():
     data = request.get_json()
@@ -39,9 +42,9 @@ def dashboard_participants():
         userdata['mobile_number'] = user['mobile_number']
         userdata['referral_code'] = user['invitation_code']
         referral = Referral.objects(user_id = user['user_id']).first()
-        userdata['referral_earning'] = referral['referral_earning']
-        userdata['total_referrals'] = referral['total_referrals']
-        userdata['successful_referrals'] = referral['successful_referrals']
+        userdata['referral_earning'] = referral['referral_earning'] if referral else 0
+        userdata['total_referrals'] = referral['total_referrals']if referral else 0
+        userdata['successful_referrals'] = referral['successful_referrals']if referral else 0
         data.append(userdata)
 
     redemption_data = []
@@ -52,11 +55,28 @@ def dashboard_participants():
         userdata['email'] = user['email']
         userdata['mobile_number'] = user['mobile_number']
         reward = Reward.objects(user_id = user['user_id']).first()
-        userdata['redeemed_meteors'] = reward['redeemed_meteors']
-        userdata['total_vouchers'] = reward['total_vouchers']
+        userdata['redeemed_meteors'] = reward['redeemed_meteors']if reward else 0
+        userdata['total_vouchers'] = reward['total_vouchers'] if reward else 0
         redemption_data.append(userdata)
 
-    return jsonify({"Partcipants_and_earning_with_referral" : data, "redeem_table" : redemption_data})
+    product_data =[]
+    for user in users:
+        user = user.to_mongo().to_dict()
+        userdata = {}
+        userdata['username'] = user['username']
+        userdata['email'] = user['email']
+        userdata['mobile_number'] = user['mobile_number']
+        # product_uid = Product.get('product_uid')  # Ensure this exists in the user model
+        # # if product_uid:
+        # product = Product.objects(uid= uid['uid']).first()
+        # userdata['product_name']= product['product_name'] if product else 0
+        # userdata['original_amt'] = product['original_amt']
+        # userdata['referral_code'] = user['invitation_code']
+        product_data.append(userdata)
+
+    return jsonify({"Partcipants_and_earning_with_referral" : data, "redeem_table" : redemption_data, "purchase_product":product_data})
+
+
 # ------------Error Table
 
 def error_table():
@@ -82,64 +102,6 @@ def error_table():
 
 # ---------------------------------------------------------------------------------
 
-#------- Participant Table
-
-def participant_table():
-    try:
-        logger.info("Create participant table API called.")
-        data = request.get_json()
-        user_id = data.get("user_id")
-        uid = data.get("uid")
-
-        if not user_id:
-            return jsonify({"message": "User ID is required"}), 400
-
-        user = User.objects(user_id=user_id).first()
-        referral = Referral.objects(user_id=user_id).first()
-        reward = Reward.objects(user_id=user_id).first()
-        # redeem = Redeem.objects(user_id=user_id).first()
-        product = Product.objects(uid=uid).first()
-
-        game = [{
-                "usermname": user.username,
-                "email": user.email,
-                "mobile_number": user.mobile_number
-            }]
-
-        refer = [{
-            "total_referrals":referral.total_referrals,
-            "referral_earning":referral.referral_earning,
-            "total_meteors":reward.total_meteors
-        }]
-
-        # redemption = [{
-        #     "no_of_redeem":redeem.no_of_redeem,
-        #     "points_use":redeem.points_use,
-        #     "total_points":redeem.total_points
-        # }]
-
-        product_purchased = [{
-            "product_name":product.product_name,
-            "original_amt":product.original_amt,
-            # "coupon_code":product.coupon_code,
-            # "referral_code":product.referral_code
-        }]
-
-        return jsonify ({
-            "message": "Data fetch successfull",
-            "data": {
-                "game": game,
-                "refer":refer,
-                # "redemption": redemption,
-                "product_purchased":product_purchased
-            }
-        }), 200
-    except Exception as e:
-        logger.error("Internal Server Error while saving email.")
-        return jsonify({"error": "Internal server error"})
-
-# --------------------------------------------------------------------------------------------------
-
 # -------- Push up Notification
 # def create_notification():
 #     try: 
@@ -153,45 +115,6 @@ def participant_table():
 
 
 
-
-
-
-    # # Get user
-    # user = User.objects(user_id=user_id).first()
-    # if not user:
-    #     return jsonify({"message": "User not found"}), 400
-
-    # user_data = user.to_mongo().to_dict()
-    # user_data.pop('_id', None)
-
-    # # Get referral data
-    # referral = Referral.objects(user_id=user_id).first()
-    # referral_data = referral.to_mongo().to_dict() if referral else {}
-    # referral_data.pop('_id', None)
-
-    # # Get reward data
-    # reward = Reward.objects(user_id=user_id).first()
-    # reward_data = reward.to_mongo().to_dict() if reward else {}
-    # reward_data.pop('_id', None)
-
-    # # Get link data
-    # link = Link.objects(user_id=user_id).first()
-    # link_data = link.to_mongo().to_dict() if link else {}
-    # link_data.pop('_id', None)
-    # # for user in users :
-
-    # # Combine all into one response
-    # response = {
-    #     "user": user_data,
-    #     "referral": referral_data,
-    #     "reward": reward_data,
-    #     "link": link_data
-    # }
-
-    # return jsonify({
-    #     "message": "Data retrieved successfully",
-    #     "data": response
-    # }), 200
 
 
 
