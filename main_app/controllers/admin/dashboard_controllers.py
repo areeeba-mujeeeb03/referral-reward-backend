@@ -21,23 +21,6 @@ def dashboard_stats():
                         "completed_referrals" : all_user_data.completed_referrals})
     if not exist:
         return jsonify({"success": False, "message" : "Admin id not found"})
-# ------------Error Table
-
-def error_table():
-    data = request.get_json()
-    errors = Errors.objects()
-
-    all_errors = []
-    for error in errors:
-        error_dict = error.to_mongo().to_dict()
-        error_dict.pop('_id', None)
-        response = error_dict
-        all_errors.append(error_dict)
-
-    return jsonify({
-        "message": "Data retrieved successfully",
-        "data": all_errors
-    }), 200
 
 
 # ---------------------------------------------------------------------------------
@@ -74,4 +57,20 @@ def dashboard_participants():
         redemption_data.append(userdata)
 
     return jsonify({"Partcipants_and_earning_with_referral" : data, "redeem_table" : redemption_data})
+# ------------Error Table
 
+def error_table():
+    data = request.get_json()
+    errors = Errors.objects()
+
+    all_errors = []
+    for error in errors:
+        error_dict = error.to_mongo().to_dict()
+        error_dict.pop('_id', None)
+        response = error_dict
+        all_errors.append(error_dict)
+
+    return jsonify({
+        "message": "Data retrieved successfully",
+        "data": all_errors
+    }), 200
