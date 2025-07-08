@@ -101,7 +101,6 @@ def verify_code():
         if datetime.datetime.now() > link.expiry:
             return jsonify({"message": "Reset code expired", "success" : False}), 404
 
-        link.update(unset__verification_code=True, unset__expiry=True, unset__sent_at=True, set__changed_on=datetime.datetime.now())
         return jsonify({"message" : "Verified Successfully", "success" : True}),200
     except Exception as e:
         Errors(username=user.user_id, email=user.email, error_source="send verification code for password reset",
@@ -137,13 +136,26 @@ def reset_password():
     """
     data = request.json
     email = data.get("email")
+
     new_password = data.get("new_password")
     confirm_password = data.get("confirm_password")
+    verification_code = data.get("verification_code")
 
     user = User.objects(email = email).first()
+    user_id = user.user_id
+
+    link = Link.objects(user_id=user_id).first()
+    code = link.verification_code
     try:
         if not user:
             return jsonify({"message": "User Not Found", "success" : False}), 404
+
+
+        if verification_code != link.verification_code:
+            return jsonify({"message" : "Invalid code", "success": False}),400
+
+        if not code:
+            return jsonify({"message" : "resend verification code", "success" : False}),400
 
         password_validation = validate_password_strength(new_password)
         if password_validation:
@@ -155,6 +167,7 @@ def reset_password():
 
         hashed_password = hash_password(data["new_password"])
 
+        link.update(unset__verification_code=True, unset__expiry=True, unset__sent_at=True, set__changed_on=datetime.datetime.now())
 
         user.update(set__password = hashed_password)
 

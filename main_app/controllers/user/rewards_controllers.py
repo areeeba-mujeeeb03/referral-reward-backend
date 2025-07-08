@@ -60,9 +60,9 @@ def update_user_milestone(user_id, galaxy_name, meteors_earned):
     reward.total_meteors += meteors_earned
 
     progress = None
-    for g in reward.galaxy_progress:
-        if g["galaxy_name"] == galaxy_name:
-            progress = g
+    for galaxy in reward.galaxy_progress:
+        if galaxy["galaxy_name"] == galaxy_name:
+            progress = galaxy
             break
 
     if not progress:

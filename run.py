@@ -26,4 +26,4 @@ app.register_blueprint(user_bp)
 app.register_blueprint(admin_bp)
 
 if __name__ == "__main__":
-    app.run(port=4000, debug =True)
+    app.run(port=6000, debug =True)

@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 def home_page():
     data = request.get_json()
+    print("as")
     user_id = data.get("user_id")
     access_token = data.get("mode")
     session_id = data.get("log_alt")
@@ -48,8 +49,8 @@ def home_page():
 
         reward = Reward.objects(user_id = user_id).first()
 
-        admin_uid = user.admin_uid
-        faqs = get_faqs_by_category_name(admin_uid, "Referrals") or []
+        # admin_uid = user.admin_uid
+        # faqs = get_faqs_by_category_name(admin_uid, "Referrals") or []
 
 
         info = {
@@ -59,10 +60,12 @@ def home_page():
             "current_planet": reward.current_planet,
             "invitation_link": user.invitation_link,
             "redeemed_meteors" : reward.redeemed_meteors,
-            "faqs" : list(faqs)
+            # "faqs" : list(faqs)
         }
 
-        fields_to_encode = ["total_stars", "total_meteors", "galaxy_name", "current_planet", "invitation_link", "redeemed_meteors","faqs"]
+        fields_to_encode = ["total_stars", "total_meteors", "galaxy_name", "current_planet", "invitation_link", "redeemed_meteors",
+                            # "faqs"
+                            ]
         encoded_str = generate_encoded_string(info, fields_to_encode)
 
         return encoded_str, 200
@@ -81,6 +84,7 @@ def my_rewards():
     session_id = data.get("log_alt")
 
     user = User.objects(user_id=user_id).first()
+    print(user)
     try:
         if not user:
             return jsonify({"success" : False, "message" : "User does not exist"})
@@ -104,7 +108,7 @@ def my_rewards():
         # validate_session_token(user, access_token, session_id)
         reward = Reward.objects(user_id = user_id).first()
         admin_uid = user.admin_uid
-        faqs = get_faqs_by_category_name(admin_uid, "Rewards") or []
+        # faqs = get_faqs_by_category_name(admin_uid, "Rewards") or []
 
         user_reward = Reward.objects(user_id = user_id).first()
         if user :
@@ -116,8 +120,7 @@ def my_rewards():
                 # "current_planet": list(user_reward.current_planet),
                 "total_vouchers": user_reward.total_vouchers,
                 "invite_code": user.invitation_code,
-                "reward_history": list(user_reward.reward_history),
-                "faqs" : faqs
+                "reward_history": list(user_reward.reward_history)
             }
 
             fields_to_encode = ["total_stars",
@@ -127,8 +130,8 @@ def my_rewards():
                                 "invite_code",
                                 # "current_planet",
                                 "reward_history",
-                                "invitation_link",
-                                "faqs"]
+                                "invitation_link"
+                                ]
 
             encoded_str = generate_encoded_string(info, fields_to_encode)
             return encoded_str, 200
@@ -178,16 +181,16 @@ def my_referrals():
                     "pending_referrals": referral.pending_referrals,
                     "invitation_link" : user.invitation_link,
                     "all_referrals": referral.all_referrals,
-                    "invite_code": user.invitation_code,
-                    "faqs" : faqs
+                    "invite_code": user.invitation_code
             }
             fields_to_encode = ["total_referrals",
                                 "referral_earning",
                                 "pending_referrals",
                                 "all_referrals" ,
                                 "invitation_link",
-                                "invite_code",
-                                "faqs"]
+                                "invite_code"
+                                ]
+
 
             encoded_str = generate_encoded_string(info, fields_to_encode)
             return encoded_str, 200
@@ -197,7 +200,7 @@ def my_referrals():
         logger.error(f"Server Error: {str(e)}")
         return jsonify({"error": get_error("server_error")}), 500
 
-#----------------------------------------------------------------------------------------------------
+##--------------------------------------------PROFILE API-------------------------------------------------------##
 
 def my_profile():
     data = request.get_json()
@@ -239,8 +242,7 @@ def my_profile():
                     "redeemed_vouchers" : reward.used_vouchers,
                     "pending_rewards" : reward.unused_vouchers,
                     "invitation_link" : user.invitation_link,
-                    "invite_code" : user.invitation_code,
-                    "faqs" : faqs
+                    "invite_code" : user.invitation_code
                     }
             print(info)
             fields_to_encode = ["username",
@@ -250,8 +252,8 @@ def my_profile():
                                 "redeemed_vouchers",
                                 "pending_rewards",
                                 "invitation_link",
-                                "invite_code",
-                                "faqs"]
+                                "invite_code"
+                                ]
 
             encoded_str = generate_encoded_string(info, fields_to_encode)
             return encoded_str, 200
@@ -271,6 +273,7 @@ def fetch_data_from_admin():
         return jsonify({"success": False, "message" : "User does not exist"})
 
     admin_uid = user.admin_uid
+    faqs = get_faqs_by_category_name(admin_uid, "Referrals") or []
 
     how_it_works_text = HowItWork.objects(admin_uid=admin_uid).first()
 
@@ -282,28 +285,25 @@ def fetch_data_from_admin():
     how_text.pop('_id', None)
     how_text.pop('admin_uid', None)
     data.append(how_text)
-    # data = how_text
+    data.append(how_text)
 
-      # --- Fetch exciting prize
     prize = AdminPrizes.objects(admin_uid=admin_uid).first()
-    prize_data = {}
+    prize_data = []
+
     if prize:
         prize_dict = prize.to_mongo().to_dict()
         prize_dict.pop('_id', None)
         prize_dict.pop('admin_uid', None)
-        prize_data = prize_dict
-
-      # --- Merge both
+        prize_data.append(prize_dict)
 
     if user:
-        info = {
-            "how_it_works": data,
-            "exciting_prize": prize_data
-        }
-        fields_to_encode = ["how_it_works", "exciting_prize"]
-        encoded_str = generate_encoded_string(info, fields_to_encode)
-        return encoded_str, 200
-    return ({"message": "An Unexpected error occurred", "success" : False}), 400
+        return jsonify({
+            "success" : True ,
+            "how_it_works" : data,
+            "exciting_prizes" : prize_data,
+            "faqs" : faqs
+            })
 
-
-
+    return ({"message": "An Unexpected error occurred",
+             "success" : False,
+             }), 400

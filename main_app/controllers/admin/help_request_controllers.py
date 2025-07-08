@@ -9,7 +9,7 @@ def get_faqs_by_category_name(admin_uid, category):
         return None
     faqs = []
     for cate in faq_doc.categories:
-        if cate["category"] == category:
+        if cate["category"].strip('').lower() == category.strip('').lower():
             return cate["faqs"]
     return jsonify({"message" : "No FAQs"})
 
