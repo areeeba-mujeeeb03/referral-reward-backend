@@ -2,7 +2,8 @@ import os
 from flask import request, jsonify
 from werkzeug.utils import secure_filename
 from main_app.controllers.admin.how_it_work_controller import UPLOAD_FOLDER
-from main_app.models.admin.galaxy_model import Galaxy
+from main_app.models.admin.galaxy_model import Galaxy, Milestone
+
 
 def rewards():
     try:
@@ -14,24 +15,32 @@ def rewards():
     except Exception as e:
         return
 
-
-def add_new_galaxy():
-    try:
-        data = request.get_json()
-        admin_uid = data.get("admin_uid")
-        galaxy_name = data.get("galaxy_name")
-        total_milestones = data.get("no_of_milestones")
-
-        exist = Galaxy.objects(admin_uid = admin_uid, galaxy_name = galaxy_name).first()
-        if exist:
-            return jsonify({"message" : "Galaxy with this name already exists"}),400
-        else:
-            save = Galaxy(galaxy_name = galaxy_name, total_milestones = total_milestones)
-            save.save()
-            return jsonify({"message" : "New Galaxy Added"})
-
-    except Exception as e:
-        return jsonify({"message" : f"Adding new Planet Failed! {str(e)}"}), 400
+def create_galaxy_with_milestones(data, admin_uid):
+    """
+    `data` = {
+        "galaxy_name": "Milky Way Galaxy",
+        "milestones": [
+            {
+            "milestone_id": "M1",
+            "milestone_name": "Planet A",
+            "milestone_reward": 1000,
+            "meteors_required_to_unlock": 2000,
+            "milestone_description": "Complete the level...",\
+            },
+            ...
+        ]
+    }
+    """
+    milestones = [Milestone(**m) for m in data["milestones"]]
+    galaxy = Galaxy(
+        galaxy_name=data["galaxy_name"],
+        total_meteors_required=sum(m.meteors_required_to_unlock for m in milestones),
+        total_milestones=len(milestones),
+        all_milestones=milestones,
+        admin_uid=admin_uid
+    )
+    galaxy.save()
+    return str(galaxy.id)
 
 def add_new_milestones():
     try:

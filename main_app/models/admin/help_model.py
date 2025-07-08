@@ -18,15 +18,17 @@ import datetime
 
 class FAQ(Document):
     admin_uid = StringField(required=True, unique=True)
-    categories = ListField(DictField())
+    categories = ListField(DictField(), default=list)
     meta = {"db_alias": "admin-db", "collection": "FAQs"}
 
 class Contact(Document):
-    admin_uid = StringField(required=True, unique=True)
+    admin_uid = StringField(required=True)
     user_id = StringField(required= True)
     username = StringField(required=True)
     email = EmailField(required=True)
     message = StringField(required=True)
+    file_url = StringField()
+
     date = DateTimeField(default=datetime.datetime.now())
 
     meta = {"db_alias": "admin-db", "collection": "Messages"}

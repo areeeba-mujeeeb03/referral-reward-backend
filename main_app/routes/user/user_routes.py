@@ -305,7 +305,7 @@ def invite_link():
     """
     return change_invite_link()
 
-@user_bp.route('/admin/fetch_custom_data', methods=['POST'])
+@user_bp.route('/admin/fetch-custom-data', methods=['POST'])
 def fetch_custom_data():
 
     return fetch_data_from_admin()

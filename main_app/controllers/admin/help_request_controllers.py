@@ -4,17 +4,14 @@ from main_app.models.admin.help_model import FAQ, Contact
 ##--------------------------------------------- View all FAQs---------------------------------------------##
 
 def get_faqs_by_category_name(admin_uid, category):
-    if not category:
-        return None
-
     faq_doc = FAQ.objects(admin_uid=admin_uid).first()
     if not faq_doc:
         return None
-
-    for cat in faq_doc.categories:
-        if cat["category"].strip(" ,").lower() == category.strip(" ,").lower():
-            return cat["faqs"]
-    return None
+    faqs = []
+    for cate in faq_doc.categories:
+        if cate["category"] == category:
+            return cate["faqs"]
+    return jsonify({"message" : "No FAQs"})
 
 ##---------------------------------------------- Add a new FAQ---------------------------------------------##
 

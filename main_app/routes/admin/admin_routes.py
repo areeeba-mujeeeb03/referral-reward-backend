@@ -8,10 +8,9 @@ from main_app.controllers.admin.product_controllers import add_product, update_p
 from main_app.controllers.admin.prize_controller import add_exciting_prizes, check_eligibility
 from main_app.controllers.admin.how_it_work_controller import add_how_it_work, advertisement_card
 from main_app.controllers.admin.referral_controllers import generate_invite_link_with_expiry
-from main_app.controllers.admin.rewards_controllers import add_new_galaxy, add_new_milestones,remove_milestone
+from main_app.controllers.admin.rewards_controllers import  add_new_milestones,remove_milestone
 from main_app.controllers.admin.dashboard_controllers import error_table, dashboard_participants
 from main_app.controllers.admin.email_controller import create_email
-from main_app.controllers.user.landingpage_controllers import fetch_data_from_admin
 
 admin_bp = Blueprint("admin_routes", __name__)
 
@@ -299,10 +298,10 @@ def generate_link():
 
 # ==============
 
-@admin_bp.route('/admin/add-galaxy', methods = ['POST'])
-def add_galaxy():
-
-    return add_new_galaxy()
+# @admin_bp.route('/admin/add-galaxy', methods = ['POST'])
+# def add_galaxy():
+#
+#     return add_new_galaxy()
 
 # ==============
 
@@ -332,12 +331,10 @@ def update_sharing_apps():
 
     return
 
-@admin_bp.route('/admin/fetch_custom_data', methods=['POST'])
-def fetch_custom_data():
-
-    return fetch_data_from_admin()
-
-
-@admin_bp.route('/admin/fetch_prize_data', methods=['POST'])
-def fetch_all_prize_data():
-    return get_admin_prize_list()
+# @admin_bp.route('/admin/fetch_custom_data', methods=['POST'])
+# def fetch_custom_data():
+#
+#     return fetch_data_from_admin()
+# @admin_bp.route('/admin/fetch_prize_data', methods=['POST'])
+# def fetch_all_prize_data():
+#     return get_admin_prize_list()

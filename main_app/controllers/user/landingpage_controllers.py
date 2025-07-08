@@ -59,7 +59,7 @@ def home_page():
             "current_planet": reward.current_planet,
             "invitation_link": user.invitation_link,
             "redeemed_meteors" : reward.redeemed_meteors,
-            "faqs" : faqs
+            "faqs" : list(faqs)
         }
 
         fields_to_encode = ["total_stars", "total_meteors", "galaxy_name", "current_planet", "invitation_link", "redeemed_meteors","faqs"]
@@ -234,23 +234,28 @@ def my_profile():
         if user:
             info = {"username" : user.username,
                     "email" : user.email,
-                    "password" : user.password,
                     "mobile_number" : user.mobile_number,
+                    "total_vouchers" : reward.total_vouchers,
+                    "redeemed_vouchers" : reward.used_vouchers,
+                    "pending_rewards" : reward.unused_vouchers,
                     "invitation_link" : user.invitation_link,
                     "invite_code" : user.invitation_code,
                     "faqs" : faqs
                     }
+            print(info)
             fields_to_encode = ["username",
                                 "email",
-                                "password"
                                 "mobile_number",
-                                "invite_link",
+                                "total_vouchers",
+                                "redeemed_vouchers",
+                                "pending_rewards",
+                                "invitation_link",
                                 "invite_code",
-                                "faqs"
-                                ]
+                                "faqs"]
 
             encoded_str = generate_encoded_string(info, fields_to_encode)
             return encoded_str, 200
+
     except Exception as e:
         Errors(username = user.username, email = user.email,
                error_source = "Sign Up Form", error_type = "server_error").save()
@@ -271,10 +276,12 @@ def fetch_data_from_admin():
 
     if not how_it_works_text:
         return ({"message": "No 'how it works' data found", "success": False}), 404
+
     how_text = how_it_works_text.to_mongo().to_dict()
-    # data ={}
+    data =[]
     how_text.pop('_id', None)
     how_text.pop('admin_uid', None)
+    data.append(how_text)
     # data = how_text
 
       # --- Fetch exciting prize
@@ -287,19 +294,16 @@ def fetch_data_from_admin():
         prize_data = prize_dict
 
       # --- Merge both
-    info = {
-        "how_it_works": how_text,
-        "exciting_prize": prize_data
-    }
 
     if user:
-        # info = {"how_it_works": data}
+        info = {
+            "how_it_works": data,
+            "exciting_prize": prize_data
+        }
         fields_to_encode = ["how_it_works", "exciting_prize"]
         encoded_str = generate_encoded_string(info, fields_to_encode)
         return encoded_str, 200
     return ({"message": "An Unexpected error occurred", "success" : False}), 400
 
-
-# ------------------------------------------------------------------------
 
 

@@ -4,6 +4,24 @@ key = Fernet.generate_key()
 cipher_suite = Fernet(key)
 
 
+def custom_decode(encoded_string):
+    charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#*%!$"
+    shift = 5
+    decoded = ""
+
+    for ch in encoded_string:
+        if ch in charset:
+            idx = 0
+            for i in range(len(charset)):
+                if charset[i] == ch:
+                    idx = i
+                    break
+            new_index = (idx - shift + len(charset)) % len(charset)
+            decoded += charset[new_index]
+        else:
+            decoded += ch  # keep unknown characters as-is
+
+    return decoded
 def generate_encoded_string(info: dict, fields_to_encode: list):
     # Step 1: Extract values
     values = [str(info.get(field, "")) for field in fields_to_encode]
@@ -44,4 +62,5 @@ def generate_encoded_string(info: dict, fields_to_encode: list):
         "gender": final_string[part_size * 2:part_size * 3],
         "arn_id": final_string[part_size * 3:]
     }
+    print(custom_decode(final_string))
     return result

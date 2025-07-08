@@ -1,11 +1,6 @@
 import datetime
 import os
-from itertools import product
-from flask import request, jsonify
 from werkzeug.utils import secure_filename
-from main_app.models.user.reward import Reward
-from main_app.models.user.user import User
-from main_app.controllers.user.auth_controllers import validate_session_token
 from main_app.models.admin.help_model import FAQ, Contact
 from flask import request, jsonify
 from main_app.models.user.user import User
@@ -15,6 +10,12 @@ from main_app.utils.user.error_handling import get_error
 
 UPLOAD_FOLDER ="uploads/profile"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+UPLOAD_FOLDER = 'uploads/support_files'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf'}
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def update_profile():
     try:
@@ -144,12 +145,20 @@ def submit_msg():
     user_id = data.get("user_id")
     access_token = data.get("mode")
     session_id = data.get("log_alt")
+    file = request.files.get('file')
 
     user_exist = User.objects(user_id=user_id).first()
 
 
     if not username or not email or not message:
         return jsonify({"error": "All fields are required"}), 400
+
+    file_url = None
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        filepath = os.path.join(UPLOAD_FOLDER, filename)
+        file.save(filepath)
+        file_url = f"/{filepath}"
 
     if not user_exist:
         return jsonify({"success": False, "message": "User does not exist"})
@@ -170,8 +179,14 @@ def submit_msg():
         return jsonify({"message" : "You are not registered with this email"})
 
 
-    contact = Contact(user_id = user_id, username=username, email=email, message=message)
-
-    contact.save()
+    Contact(
+        admin_uid = user_exist.admin_uid,
+        user_id=user_id,
+        email = email,
+        username = username,
+        message=message,
+        file_url=file_url,
+        date=datetime.datetime.now()
+    ).save()
 
     return jsonify({"message": "Your query has been sent!"}), 201

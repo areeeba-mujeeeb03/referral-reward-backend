@@ -1,24 +1,102 @@
 from flask import request, jsonify
 
+from main_app.models.admin.email_model import EmailTemplate
 from main_app.models.admin.error_model import Errors
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from main_app.models.admin.galaxy_model import Galaxy
 from main_app.models.user.reward import Reward
 from main_app.models.admin.product_model import Product
 import datetime
 import logging
 import random
-
 from main_app.models.user.user import User
 
 # Configure logging for OTP operations
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-def update_planet_and_galaxy(user_id):
-    reward = Reward.objects(user_id = user_id).first()
 
-    all_galaxies = reward.galaxy_name[-1]
 
-    return all_galaxies
+def send_milestone_email(email, email_template_type):
+    try:
+        template = EmailTemplate.objects(email_type= email_template_type).first()
+        if not template:
+            print(f"Email template  {email_template_type} not found.")
+            return False
+
+        smtp_server = "smtp.gmail.com"
+        smtp_port = 587
+        smtp_username = "areebamujeeb309@gmail.com"
+        smtp_password = "rvph suey zpfl smpw"
+
+        msg = MIMEMultipart('alternative')
+        msg['From'] = f"{template.name} <{template.email}>"
+        msg['To'] = email
+        msg['Subject'] = template.subject
+        msg.add_header('Reply-To', template.reply_to)
+        content = template.content
+
+        msg.attach(MIMEText(content, 'plain'))
+
+        server = smtplib.SMTP(smtp_server, smtp_port)
+        server.starttls()
+        server.login(smtp_username, smtp_password)
+        server.sendmail(template.email, email, msg.as_string())
+        server.quit()
+        print(f"Email sent to {email} using template {email_template_type}")
+        return True
+
+    except Exception as e:
+        print(f"Error sending email: {str(e)}")
+        return False
+
+def update_user_milestone(user_id, galaxy_name, meteors_earned):
+    reward = Reward.objects(user_id=user_id).first()
+    galaxy = Galaxy.objects(galaxy_name=galaxy_name).first()
+    if not reward or not galaxy:
+        return {"success": False, "message": "User or galaxy not found"}
+
+    reward.total_meteors += meteors_earned
+
+    progress = None
+    for g in reward.galaxy_progress:
+        if g["galaxy_name"] == galaxy_name:
+            progress = g
+            break
+
+    if not progress:
+        progress = {
+            "galaxy_name": galaxy_name,
+            "earned_meteors": meteors_earned,
+            "milestones_completed": 0
+        }
+        reward.galaxy_progress.append(progress)
+    else:
+        progress["earned_meteors"] += meteors_earned
+
+    completed = progress["milestones_completed"]
+
+    if completed < len(galaxy.all_milestones):
+        milestone = galaxy.all_milestones[completed]
+        if progress["earned_meteors"] >= milestone.meteors_required_to_unlock:
+            reward.total_stars += milestone.milestone_reward
+            progress["milestones_completed"] += 1
+
+            reward.galaxy_name.append(galaxy_name)
+            reward.current_planet.append(milestone.milestone_name)
+
+            reward.reward_history.append({
+                "milestone_id": milestone.milestone_id,
+                "milestone_name": milestone.milestone_name,
+                "galaxy": galaxy_name,
+                "reward": milestone.milestone_reward
+            })
+
+            send_milestone_email(user_id, milestone.email_config)  # explained below
+
+    reward.save()
+    return {"success": True, "message": "Milestone updated"}
 
 
 def win_voucher(user_id):
