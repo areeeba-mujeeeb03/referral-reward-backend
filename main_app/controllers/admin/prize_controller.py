@@ -4,7 +4,7 @@ from flask import request, jsonify
 from werkzeug.utils import secure_filename
 import os
 import logging
-from main_app.models.admin.prize_model import ExcitingPrize
+from main_app.models.admin.prize_model import PrizeDetail, AdminPrizes
 from main_app.models.admin.admin_model import Admin
 
 
@@ -53,47 +53,67 @@ def add_exciting_prizes():
             files.save(image_path)
             image_url = f"/{image_path}"
 
-        prize = ExcitingPrize.objects(admin_uid=admin_uid).first()
-        if prize:
-            fields_changed = False
+        
+        prize = PrizeDetail(
+            title=title,
+            term_conditions=term_conditions,
+            image_url=image_url,
+            required_meteors=required_meteors
+        )
 
-            if title != prize.title:
-                 fields_changed = True
-
-            if term_conditions != prize.term_conditions:
-                 fields_changed = True  
-            
-            if required_meteors != prize.required_meteors:
-                 fields_changed = True 
-
-            if not fields_changed:
-                return jsonify({"message": "No fields updated"})                      
-
-            update_data = {
-               "title":title,
-               "term_conditions":term_conditions,
-               "image_url":image_url,
-               "required_meteors":required_meteors
-            }
-           
-            if image_url:
-                update_data["image_url"] = image_url
-            
-            prize.update(**update_data)
-            msg = "Updated prize successfully"
+        admin_prize = AdminPrizes.objects(admin_uid=admin_uid).first()
+        if admin_prize:
+            admin_prize.prizes.append(prize)
+            admin_prize.save()
+            msg = "Prize added to existing admin"
         else:
-             ExcitingPrize(
-                 title=title,
-                 term_conditions=term_conditions,
-                 admin_uid=admin_uid,
-                 image_url=image_url,
-                 required_meteors=required_meteors
-                ).save()
-             msg = "Added prize successfully"  
+            AdminPrizes(admin_uid=admin_uid, prizes=[prize]).save()
+            msg = "Prize list created for new admin"
+
+        logger.info(f"Prize added for admin_uid: {admin_uid}")
+        return jsonify({"success": True, "message": msg}), 200
+
+        # prize = ExcitingPrize.objects(admin_uid=admin_uid).first()
+        # if prize:
+        #     fields_changed = False
+
+        #     if title != prize.title:
+        #          fields_changed = True
+
+        #     if term_conditions != prize.term_conditions:
+        #          fields_changed = True  
+            
+        #     if required_meteors != prize.required_meteors:
+        #          fields_changed = True 
+
+        #     if not fields_changed:
+        #         return jsonify({"message": "No fields updated"})                      
+
+        #     update_data = {
+        #        "title":title,
+        #        "term_conditions":term_conditions,
+        #        "image_url":image_url,
+        #        "required_meteors":required_meteors
+        #     }
+           
+        #     if image_url:
+        #         update_data["image_url"] = image_url
+            
+        #     prize.update(**update_data)
+        #     msg = "Updated prize successfully"
+        # else:
+        #      ExcitingPrize(
+        #          title=title,
+        #          term_conditions=term_conditions,
+        #          admin_uid=admin_uid,
+        #          image_url=image_url,
+        #          required_meteors=required_meteors
+        #         ).save()
+        #      msg = "Added prize successfully"  
             
         
-        logger.info(f"Prize processed successfully for admin_uid: {admin_uid}")
-        return jsonify({"success": "true" , "message": msg }), 200
+        # logger.info(f"Prize processed successfully for admin_uid: {admin_uid}")
+        # return jsonify({"success": "true" , "message": msg }), 200
 
     except Exception as e:
         logger.error(f"Add exciting prize failed:{str(e)}")

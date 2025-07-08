@@ -336,3 +336,8 @@ def update_sharing_apps():
 def fetch_custom_data():
 
     return fetch_data_from_admin()
+
+
+@admin_bp.route('/admin/fetch_prize_data', methods=['POST'])
+def fetch_all_prize_data():
+    return get_admin_prize_list()

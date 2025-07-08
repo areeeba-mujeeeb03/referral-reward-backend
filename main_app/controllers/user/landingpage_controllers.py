@@ -9,6 +9,8 @@ from main_app.utils.user.error_handling import get_error
 import logging
 from flask import request, jsonify
 from main_app.utils.user.string_encoding import generate_encoded_string
+from main_app.models.admin.product_model import Product
+from main_app.models.admin.prize_model import PrizeDetail, AdminPrizes
 
 # Configure logging for better debugging and monitoring
 logging.basicConfig(level=logging.INFO)
@@ -270,14 +272,34 @@ def fetch_data_from_admin():
     if not how_it_works_text:
         return ({"message":"No 'how it works' data found", "success": False}), 404
     how_text = how_it_works_text.to_mongo().to_dict()
-    data ={}
+    # data ={}
     how_text.pop('_id', None)
     how_text.pop('admin_uid', None)
-    data = how_text
+    # data = how_text
+
+      # --- Fetch exciting prize
+    prize = AdminPrizes.objects(admin_uid=admin_uid).first()
+    prize_data = {}
+    if prize:
+        prize_dict = prize.to_mongo().to_dict()
+        prize_dict.pop('_id', None)
+        prize_dict.pop('admin_uid', None)
+        prize_data = prize_dict
+
+      # --- Merge both
+    info = {
+        "how_it_works": how_text,
+        "exciting_prize": prize_data
+    }    
 
     if user:
-        info = {"how_it_works": data}
-        fields_to_encode = ["how_it_works"]
+        # info = {"how_it_works": data}
+        fields_to_encode = ["how_it_works", "exciting_prize"]
         encoded_str = generate_encoded_string(info, fields_to_encode)
         return encoded_str, 200
     return "An Unexpected error occurred", 400
+
+
+# ------------------------------------------------------------------------
+
+
