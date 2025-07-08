@@ -53,67 +53,48 @@ def add_exciting_prizes():
             files.save(image_path)
             image_url = f"/{image_path}"
 
-        
-        prize = PrizeDetail(
-            title=title,
-            term_conditions=term_conditions,
-            image_url=image_url,
-            required_meteors=required_meteors
-        )
-
+          # Fetch existing admin prizes
         admin_prize = AdminPrizes.objects(admin_uid=admin_uid).first()
+        updated = False
+
         if admin_prize:
-            admin_prize.prizes.append(prize)
-            admin_prize.save()
-            msg = "Prize added to existing admin"
+            # Check if a prize with same title exists → update it
+            for prize in admin_prize.prizes:
+                if prize.title == title:
+                    prize.term_conditions = term_conditions
+                    prize.required_meteors = required_meteors
+                    if image_url:
+                        prize.image_url = image_url
+                    updated = True
+                    break
+
+            if updated:
+                admin_prize.save()
+                msg = "Prize updated successfully"
+            else:
+                # Add new prize
+                new_prize = PrizeDetail(
+                    title=title,
+                    term_conditions=term_conditions,
+                    image_url=image_url,
+                    required_meteors=required_meteors
+                )
+                admin_prize.prizes.append(new_prize)
+                admin_prize.save()
+                msg = "New prize added to existing admin"
         else:
-            AdminPrizes(admin_uid=admin_uid, prizes=[prize]).save()
+            # First time prize creation for admin
+            new_prize = PrizeDetail(
+                title=title,
+                term_conditions=term_conditions,
+                image_url=image_url,
+                required_meteors=required_meteors
+            )
+            AdminPrizes(admin_uid=admin_uid, prizes=[new_prize]).save()
             msg = "Prize list created for new admin"
 
         logger.info(f"Prize added for admin_uid: {admin_uid}")
         return jsonify({"success": True, "message": msg}), 200
-
-        # prize = ExcitingPrize.objects(admin_uid=admin_uid).first()
-        # if prize:
-        #     fields_changed = False
-
-        #     if title != prize.title:
-        #          fields_changed = True
-
-        #     if term_conditions != prize.term_conditions:
-        #          fields_changed = True  
-            
-        #     if required_meteors != prize.required_meteors:
-        #          fields_changed = True 
-
-        #     if not fields_changed:
-        #         return jsonify({"message": "No fields updated"})                      
-
-        #     update_data = {
-        #        "title":title,
-        #        "term_conditions":term_conditions,
-        #        "image_url":image_url,
-        #        "required_meteors":required_meteors
-        #     }
-           
-        #     if image_url:
-        #         update_data["image_url"] = image_url
-            
-        #     prize.update(**update_data)
-        #     msg = "Updated prize successfully"
-        # else:
-        #      ExcitingPrize(
-        #          title=title,
-        #          term_conditions=term_conditions,
-        #          admin_uid=admin_uid,
-        #          image_url=image_url,
-        #          required_meteors=required_meteors
-        #         ).save()
-        #      msg = "Added prize successfully"  
-            
-        
-        # logger.info(f"Prize processed successfully for admin_uid: {admin_uid}")
-        # return jsonify({"success": "true" , "message": msg }), 200
 
     except Exception as e:
         logger.error(f"Add exciting prize failed:{str(e)}")
@@ -130,7 +111,7 @@ def check_eligibility():
         user_meteors = data.get("meteors")
         admin_uid = data.get("admin_uid")
 
-        prize = ExcitingPrize.objects(admin_uid=admin_uid).first()
+        prize = AdminPrizes.objects(admin_uid=admin_uid).first()
         if not prize:
             logger.warning(f"Prize not found")
             return jsonify({"message": "Prize not found"}), 404
