@@ -144,7 +144,7 @@ def admin_update_offer():
 # ===========================
 
 @admin_bp.route("/admin/prizes", methods = ["POST"])
-def admin_exciting_offer():
+def admin_exciting_prizes():
     """
     Adds exciting prizes.
     Expects: form-data body with prize details such as title, image, term and conditions
