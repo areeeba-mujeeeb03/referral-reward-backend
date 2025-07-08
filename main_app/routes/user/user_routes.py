@@ -43,13 +43,16 @@ def referral_register(tag_id):
 # Purchase product
 
 # =============
+
 @user_bp.route("/purchase", methods=["POST"])
 def purchase():
+
     """
     handles the visit on wealth elite product purchase
     Accepts: POST request
     Returns: Confirmation of purchase
     """
+
     return product_purchase()
 
 # =============

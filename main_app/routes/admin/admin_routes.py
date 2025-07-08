@@ -11,6 +11,7 @@ from main_app.controllers.admin.referral_controllers import generate_invite_link
 from main_app.controllers.admin.rewards_controllers import add_new_galaxy, add_new_milestones,remove_milestone
 from main_app.controllers.admin.dashboard_controllers import error_table, dashboard_participants
 from main_app.controllers.admin.email_controller import create_email
+from main_app.controllers.user.landingpage_controllers import fetch_data_from_admin
 
 admin_bp = Blueprint("admin_routes", __name__)
 
@@ -330,3 +331,8 @@ def delete_milestone():
 def update_sharing_apps():
 
     return
+
+@admin_bp.route('/admin/fetch_custom_data', methods=['POST'])
+def fetch_custom_data():
+
+    return fetch_data_from_admin()

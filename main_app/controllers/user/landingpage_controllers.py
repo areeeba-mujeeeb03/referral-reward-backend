@@ -1,6 +1,7 @@
 import datetime
 from main_app.controllers.admin.help_request_controllers import get_faqs_by_category_name
 from main_app.models.admin.error_model import Errors
+from main_app.models.admin.how_it_work_model import HowItWork
 from main_app.models.user.user import User
 from main_app.models.user.reward import Reward
 from main_app.models.user.referral import Referral
@@ -8,7 +9,6 @@ from main_app.utils.user.error_handling import get_error
 import logging
 from flask import request, jsonify
 from main_app.utils.user.string_encoding import generate_encoded_string
-
 
 # Configure logging for better debugging and monitoring
 logging.basicConfig(level=logging.INFO)
@@ -254,24 +254,30 @@ def my_profile():
                error_source = "Sign Up Form", error_type = "server_error").save()
         logger.error(f"Server Error: {str(e)}")
         return jsonify({"error": get_error("server_error")}), 500
-    
 
-    # -------------------------------------------------------------------------
+def fetch_data_from_admin():
+    data = request.get_json()
+    user_id = data.get("user_id")
+    user = User.objects(user_id = user_id).first()
 
-#     # ---- how it work data fetch
+    if not user:
+        return jsonify({"success": False, "message": "User does not exist"})
 
-# from main_app.models.admin.how_it_work_model import HowItWork
+    admin_uid = user.admin_uid
 
+    how_it_works_text = HowItWork.objects(admin_uid=admin_uid).first()
 
-# def admin__howitwork_fetch_data():
-#         data = request.get_json()
-#         admin_uid = data.get("admin_uid")
-#         user_id = data.get("")
-#         user = User.objects(user_id=user_id).first()
-#         admin_uid = user.admin_uid
+    if not how_it_works_text:
+        return ({"message":"No 'how it works' data found", "success": False}), 404
+    how_text = how_it_works_text.to_mongo().to_dict()
+    data ={}
+    how_text.pop('_id', None)
+    how_text.pop('admin_uid', None)
+    data = how_text
 
-#         howitwork = HowItWork.objects(admin_uid=admin_uid)
-
-#         data = []
-
-#         # for howitwork in howitwork:
+    if user:
+        info = {"how_it_works": data}
+        fields_to_encode = ["how_it_works"]
+        encoded_str = generate_encoded_string(info, fields_to_encode)
+        return encoded_str, 200
+    return "An Unexpected error occurred", 400
