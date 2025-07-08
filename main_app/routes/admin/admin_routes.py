@@ -332,7 +332,4 @@ def update_sharing_apps():
 
     return
 
-@admin_bp.route('/admin/fetch_custom_data', methods=['POST'])
-def fetch_custom_data():
 
-    return fetch_data_from_admin()

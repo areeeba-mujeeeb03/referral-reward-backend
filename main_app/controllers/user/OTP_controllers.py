@@ -101,6 +101,7 @@ def generate_and_send_otp():
                 "message": "Invalid request data"
             }), 400
 
+
         # Step 2: Validate mobile number format
         if not mobile_number:
             Errors(username=user.username, email=user.email,
@@ -128,6 +129,12 @@ def generate_and_send_otp():
                 "success": False, 
                 "message": "User not registered with this mobile number"
             }), 404
+        is_member = user.is_member
+
+        if not is_member == True:
+            Errors(username=user.username, email=user.email, error_type="User Tried to login before purchasing",
+                   error_source="Login form").save()
+            return jsonify({"success": False, "message": "Need to purchase before logging in!"}), 400
 
         # Step 4: Check rate limiting
         rate_limit_check = _check_otp_rate_limit(user)
@@ -156,7 +163,7 @@ def generate_and_send_otp():
         if DEVELOPMENT_MODE:
             logger.info(f"Development mode: Using fixed OTP {otp}")
             # In development, use fixed OTP for testing
-            user.update(otp=otp)
+            user.update(otp=str(otp))
             return jsonify({
                 "success": True,
                 "message": "OTP sent successfully (Development Mode)",
@@ -505,7 +512,7 @@ def verify_user_otp():
 #             "message": "Maximum OTP attempts exceeded. Please request a new OTP."
 #         }), 429
 #
-    return None
+    # return None
 
 
 # ==============

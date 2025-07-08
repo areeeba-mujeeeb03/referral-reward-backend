@@ -258,17 +258,18 @@ def my_profile():
 def fetch_data_from_admin():
     data = request.get_json()
     user_id = data.get("user_id")
+
     user = User.objects(user_id = user_id).first()
 
     if not user:
-        return jsonify({"success": False, "message": "User does not exist"})
+        return jsonify({"success": False, "message" : "User does not exist"})
 
     admin_uid = user.admin_uid
 
     how_it_works_text = HowItWork.objects(admin_uid=admin_uid).first()
 
     if not how_it_works_text:
-        return ({"message":"No 'how it works' data found", "success": False}), 404
+        return ({"message": "No 'how it works' data found", "success": False}), 404
     how_text = how_it_works_text.to_mongo().to_dict()
     data ={}
     how_text.pop('_id', None)
@@ -280,4 +281,4 @@ def fetch_data_from_admin():
         fields_to_encode = ["how_it_works"]
         encoded_str = generate_encoded_string(info, fields_to_encode)
         return encoded_str, 200
-    return "An Unexpected error occurred", 400
+    return ({"message": "An Unexpected error occurred", "success" : False}), 400

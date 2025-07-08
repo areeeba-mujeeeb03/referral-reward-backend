@@ -6,7 +6,8 @@ from main_app.controllers.user.auth_controllers import handle_registration
 from main_app.controllers.user.OTP_controllers import generate_and_send_otp, verify_user_otp
 from main_app.controllers.user.login_controllers import handle_email_login, logout_user, product_purchase
 from main_app.controllers.user.forgotpassword_controllers import reset_password,send_verification_code, verify_code
-from main_app.controllers.user.landingpage_controllers import my_rewards, my_referrals, my_profile, home_page
+from main_app.controllers.user.landingpage_controllers import my_rewards, my_referrals, my_profile, home_page, \
+    fetch_data_from_admin
 from main_app.controllers.user.referral_controllers import change_invite_link
 from main_app.controllers.user.invite import send_whatsapp_invite, send_telegram_invite, send_twitter_invite, send_facebook_invite
 from main_app.controllers.user.user_profile_controllers import update_profile, help_faq, submit_msg
@@ -304,6 +305,11 @@ def invite_link():
     """
     return change_invite_link()
 
+@user_bp.route('/admin/fetch_custom_data', methods=['POST'])
+def fetch_custom_data():
+
+    return fetch_data_from_admin()
+
 @user_bp.route('/<user_id>' , methods = ['POST'])
 def update_planet_and_galaxy(user_id):
     reward = Reward.objects(user_id = user_id).first()
@@ -330,7 +336,6 @@ def update_planet_and_galaxy(user_id):
 
     if reward.total_meteors >= target:
         next_planet = Galaxy.objects(galaxy_name__nin = all_galaxies).first()
-        print(next_planet)
         reward.update(
             push__galaxy_name = next_planet.galaxy_name
         )
