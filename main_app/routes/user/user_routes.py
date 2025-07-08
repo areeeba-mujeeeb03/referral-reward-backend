@@ -342,3 +342,4 @@ def update_planet_and_galaxy(user_id):
         print(reward.galaxy_name)
         return jsonify({"message" : "New Galaxy Unlocked", "success" : True})
 
+

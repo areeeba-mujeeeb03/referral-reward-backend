@@ -1,13 +1,28 @@
-from mongoengine import Document, StringField, DateTimeField, IntField
+# from mongoengine import Document, StringField, DateTimeField, IntField
+# import datetime
+
+# class ExcitingPrize(Document):
+#     admin_uid = StringField( unique=True)
+#     title = StringField(required = True)
+#     image_url = StringField()
+#     term_conditions = StringField()
+#     required_meteors = IntField(required=True, default=0)
+#     # usmeteors = IntField(required=True, default=0)
+#     created_at = DateTimeField(default=datetime.datetime.now)
+
+from mongoengine import Document, StringField, IntField, DateTimeField, EmbeddedDocument, EmbeddedDocumentField, ListField
 import datetime
 
-class ExcitingPrize(Document):
-    admin_uid = StringField( unique=True)
-    title = StringField(required = True)
-    image_url = StringField()
+class PrizeDetail(EmbeddedDocument):
+    title = StringField(required=True)
     term_conditions = StringField()
-    required_meteors = IntField(required=True, default=0)
-    # usmeteors = IntField(required=True, default=0)
+    image_url = StringField()
+    required_meteors = IntField(required=True)
     created_at = DateTimeField(default=datetime.datetime.now)
+
+class AdminPrizes(Document):
+    admin_uid = StringField(required=True, unique=True)
+    prizes = ListField(EmbeddedDocumentField(PrizeDetail))
+
 
     meta = {"db_alias" : "admin-db", "collection" : "prizes"}

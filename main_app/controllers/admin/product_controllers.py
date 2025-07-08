@@ -131,8 +131,13 @@ def add_product():
         )
          product.save()
 
+        # Convert product to dictionary for response
+         product_data = product.to_mongo().to_dict()
+         product_data["_id"] = str(product_data["_id"])  # Optional: Convert ObjectId to string
+         product_data["uid"] = str(product.uid)    
+
          logger.info(f"Product saved with ID: {product.uid}")
-         return jsonify({"success":"true" , "message": "Product added successfully", "uid": str(product.uid)}), 200
+         return jsonify({"success":"true" , "message": "Product added successfully", "uid": str(product.uid), "data":product_data }), 200
 
     except Exception as e:
         logger.error(f"Product addition failed: {str(e)}")

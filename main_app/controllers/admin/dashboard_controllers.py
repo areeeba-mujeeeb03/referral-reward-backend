@@ -1,4 +1,5 @@
 from flask import request, jsonify
+import logging
 from main_app.models.admin.admin_model import Admin
 from main_app.models.admin.links import AppStats
 from main_app.models.admin.participants_model import UserData
@@ -6,7 +7,11 @@ from main_app.models.user.user import User
 from main_app.models.user.referral import Referral
 from main_app.models.user.reward import Reward
 from main_app.models.admin.error_model import Errors
+from main_app.models.admin.product_model import Product
 
+# Configure logging for better debugging and monitoring
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def dashboard_stats():
     data = request.get_json()
@@ -47,9 +52,9 @@ def dashboard_participants():
         userdata['mobile_number'] = user['mobile_number']
         userdata['referral_code'] = user['invitation_code']
         referral = Referral.objects(user_id = user['user_id']).first()
-        userdata['referral_earning'] = referral['referral_earning']
-        userdata['total_referrals'] = referral['total_referrals']
-        userdata['successful_referrals'] = referral['successful_referrals']
+        userdata['referral_earning'] = referral['referral_earning'] if referral else 0
+        userdata['total_referrals'] = referral['total_referrals']if referral else 0
+        userdata['successful_referrals'] = referral['successful_referrals']if referral else 0
         data.append(userdata)
 
     redemption_data = []
@@ -60,23 +65,101 @@ def dashboard_participants():
         userdata['email'] = user['email']
         userdata['mobile_number'] = user['mobile_number']
         reward = Reward.objects(user_id = user['user_id']).first()
-        userdata['redeemed_meteors'] = reward['redeemed_meteors']
-        userdata['total_vouchers'] = reward['total_vouchers']
+        userdata['redeemed_meteors'] = reward['redeemed_meteors']if reward else 0
+        userdata['total_vouchers'] = reward['total_vouchers'] if reward else 0
         redemption_data.append(userdata)
 
-    return jsonify({"Participants_and_earning_with_referral" : data, "redeem_table" : redemption_data})
+    product_data =[]
+    for user in users:
+        user = user.to_mongo().to_dict()
+        userdata = {}
+        userdata['username'] = user['username']
+        userdata['email'] = user['email']
+        userdata['mobile_number'] = user['mobile_number']
+        # product_uid = Product.get('product_uid')  # Ensure this exists in the user model
+        # # if product_uid:
+        # product = Product.objects(uid= uid['uid']).first()
+        # userdata['product_name']= product['product_name'] if product else 0
+        # userdata['original_amt'] = product['original_amt']
+        # userdata['referral_code'] = user['invitation_code']
+        product_data.append(userdata)
+
+    return jsonify({"Partcipants_and_earning_with_referral" : data, "redeem_table" : redemption_data, "purchase_product":product_data})
+
+
 # ------------Error Table
 
 def error_table():
-    errors = Errors.objects()
+    try:
+        logger.info("Create error table API called.")
+        data = request.get_json()
+        errors = Errors.objects()
 
-    all_errors = []
-    for error in errors:
-        error_dict = error.to_mongo().to_dict()
-        error_dict.pop('_id', None)
-        all_errors.append(error_dict)
+        all_errors = []
+        for error in errors:
+            error_dict = error.to_mongo().to_dict()
+            error_dict.pop('_id', None)
+            response = error_dict
+            all_errors.append(error_dict)
 
-    return jsonify({
-        "message": "Data retrieved successfully",
-        "data": all_errors
-    }), 200
+        return jsonify({
+            "message": "Data retrieved successfully",
+            "data": all_errors
+        }), 200
+    except Exception as e:
+        logger.error("Internal Server Error while saving email.")
+        return jsonify({"error": "Internal server error"})
+
+# ---------------------------------------------------------------------------------
+
+# -------- Push up Notification
+# def create_notification():
+#     try: 
+#         data = 
+#         return jsonify({"message": ""})
+#     except Exception as e:
+#         return jsonify({"error": "Internal server error"})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# def error_table():
+#     data = request.get_json()
+#     user_id = data.get("user_id")
+
+#     if not user_id:
+#         return jsonify({"message": "User ID is required"}), 400
+
+#     user = User.objects(user_id=user_id).first()
+#     if not user:
+#         return jsonify({"message": "User not found"}), 400
+
+#     user_dict = user.to_mongo().to_dict()
+#     user_dict.pop('_id', None)  # Remove MongoDB internal ID
+
+#     return jsonify({
+#         "message": "User data retrieved successfully",
+#         "data": user_dict
+#     }), 200

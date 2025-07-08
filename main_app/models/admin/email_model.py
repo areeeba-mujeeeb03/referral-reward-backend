@@ -10,4 +10,6 @@ class EmailTemplate(Document):
     button_text = StringField()
     button_url = StringField()
     image_type = StringField(choices=["header", "logo"])
-    image_path = StringField()  # store path or URL
+    image_path = StringField() 
+
+    meta = {"db_alias" : "admin-db", "collection" : "emails"}

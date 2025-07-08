@@ -28,6 +28,9 @@ def create_email():
             logger.warning("email_type is missing in request.")
             return jsonify({"message": "email_type is required"}), 400
         
+        if not all([name, email, subject, reply_to, content, button_text]):
+            return jsonify({"message": "All feilds are required"}), 400
+        
         image_path = None
         if "image" in request.files:
             image = request.files["image"]

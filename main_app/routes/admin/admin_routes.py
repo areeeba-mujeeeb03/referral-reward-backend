@@ -145,7 +145,7 @@ def admin_update_offer():
 # ===========================
 
 @admin_bp.route("/admin/prizes", methods = ["POST"])
-def admin_exciting_offer():
+def admin_exciting_prizes():
     """
     Adds exciting prizes.
     Expects: form-data body with prize details such as title, image, term and conditions
@@ -332,4 +332,12 @@ def update_sharing_apps():
 
     return
 
+@admin_bp.route('/admin/fetch_custom_data', methods=['POST'])
+def fetch_custom_data():
 
+    return fetch_data_from_admin()
+
+
+@admin_bp.route('/admin/fetch_prize_data', methods=['POST'])
+def fetch_all_prize_data():
+    return get_admin_prize_list()

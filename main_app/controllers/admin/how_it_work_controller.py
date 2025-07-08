@@ -3,7 +3,7 @@ import os
 import logging
 from werkzeug.utils import secure_filename
 from main_app.models.admin.how_it_work_model import HowItWork 
-from main_app.models.admin.advertisment_card_model import AdvertisementCard
+from main_app.models.admin.advertisment_card_model import AdvertisementCardItem, AdminAdvertisementCard
 from main_app.models.admin.admin_model import Admin
 
 logging.basicConfig(level=logging.INFO)
@@ -124,55 +124,80 @@ def advertisement_card():
         image_path = os.path.join(UPLOAD_FOLDER, filename)
         image.save(image_path)
         image_url = f"/{image_path}"    
-      
-       # Check if document exists
-      existing = AdvertisementCard.objects(admin_uid=admin_uid).first()
-      if existing:
-           fields_changed =False
-          
-           if title != existing.title:
-               fields_changed = True
-          
-           if description != existing.description:
-               fields_changed = True  
-          
-           if button_txt != existing.button_txt:
-               fields_changed = True
-          
-           if button_txt != existing.button_txt:
-               fields_changed = True    
-          
-           if not fields_changed:
-               logger.info("No fields were updated.")
-               return jsonify({"message": "No fields updated."}), 200
 
-         # Perform update
-           update_data = {
-                "title": title,
-                "description":description,
-                "button_txt": button_txt,
-                "image_url": image_url
-                }
+         # Prepare embedded ad card
+        ad_card = AdvertisementCardItem(
+            title=title,
+            description=description,
+            button_txt=button_txt,
+            image_url=image_url
+        )
 
-           if image_url:
-                update_data["image_url"] = image_url
-
-           existing.update(**update_data)
-           logger.info(f"Advertisement card updated for admin UID: {admin_uid}")
-           msg = "Updated advertisement card successfully"
-      else:
-            AdvertisementCard( 
-                title=title,
-                description=description,
-                button_txt=button_txt,
+        # Insert or update (append to array)
+        record = AdminAdvertisementCard.objects(admin_uid=admin_uid).first()
+        if record:
+            record.advertisement_cards.append(ad_card)
+            record.save()
+            msg = "Advertisement card added to existing admin"
+        else:
+            AdminAdvertisementCard(
                 admin_uid=admin_uid,
-                image_url=image_url  
+                advertisement_cards=[ad_card]
             ).save()
-            logger.info(f"New advertisement card added for admin UID: {admin_uid}")
-            msg = "Added advertisement card successfully"
+            msg = "Advertisement card document created for admin"
+
+        logger.info(f"Ad card added for admin UID: {admin_uid}")
+        return jsonify({"success": True, "message": msg}), 200
+  
+      
+    #    # Check if document exists
+    #   existing = AdvertisementCard.objects(admin_uid=admin_uid).first()
+    #   if existing:
+    #        fields_changed =False
+          
+    #        if title != existing.title:
+    #            fields_changed = True
+          
+    #        if description != existing.description:
+    #            fields_changed = True  
+          
+    #        if button_txt != existing.button_txt:
+    #            fields_changed = True
+          
+    #        if button_txt != existing.button_txt:
+    #            fields_changed = True    
+          
+    #        if not fields_changed:
+    #            logger.info("No fields were updated.")
+    #            return jsonify({"message": "No fields updated."}), 200
+
+    #      # Perform update
+    #        update_data = {
+    #             "title": title,
+    #             "description":description,
+    #             "button_txt": button_txt,
+    #             "image_url": image_url
+    #             }
+
+    #        if image_url:
+    #             update_data["image_url"] = image_url
+
+    #        existing.update(**update_data)
+    #        logger.info(f"Advertisement card updated for admin UID: {admin_uid}")
+    #        msg = "Updated advertisement card successfully"
+    #   else:
+    #         AdvertisementCard( 
+    #             title=title,
+    #             description=description,
+    #             button_txt=button_txt,
+    #             admin_uid=admin_uid,
+    #             image_url=image_url  
+    #         ).save()
+    #         logger.info(f"New advertisement card added for admin UID: {admin_uid}")
+    #         msg = "Added advertisement card successfully"
       
 
-      return jsonify({"message": msg, "success": "true"}), 200
+    #   return jsonify({"message": msg, "success": "true"}), 200
     
     except Exception as e:
        logger.error(f"Add advertisment card failed : {str(e)}")
