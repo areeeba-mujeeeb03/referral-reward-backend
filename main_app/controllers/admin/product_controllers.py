@@ -5,7 +5,8 @@ import os, datetime
 import logging
 from main_app.models.admin.product_model import Product
 from main_app.utils.admin.helpers import generate_product_uid
-# from main_app.models.admin.product_offer_model import Offer
+from main_app.models.admin.admin_model import Admin
+
 
 # Configure logging for better debugging and monitoring
 logging.basicConfig(level=logging.INFO)
@@ -40,10 +41,11 @@ def add_product():
          status = data.get("status", "Live")
          visibility_till = data.get("visibility_till")
          apply_offer = data.get("apply_offer", "").lower() == "true"
+         admin_uid = data.get("admin_uid")
 
-         if not all([product_name, original_amt, discounted_amt, short_desc]):
+         if not all([product_name, original_amt, discounted_amt, short_desc, admin_uid]):
              return jsonify({"message": "Missing required fields"}), 400
-      
+
          try:
             original_amt = float(original_amt)
             discounted_amt = float(discounted_amt)
@@ -60,15 +62,11 @@ def add_product():
           # Image upload
          image = request.files.get("image")
          image_url = None
-        #  if not image:
-        #     return jsonify({"message": "No image uploaded"}), 400
          if image:
             filename = secure_filename(image.filename)
             image_path = os.path.join(UPLOAD_FOLDER, filename)
             image.save(image_path)
-            image_url = f"/{image_path}"            
-            
-
+            image_url = f"/{image_path}"                  
          offer_data = {}
          if apply_offer:
             offer_name = data.get("offer_name")
@@ -127,6 +125,7 @@ def add_product():
             status = status,
             visibility_till = visibility_date,
             apply_offer=apply_offer,
+            admin_uid=admin_uid,
             **offer_data
         )
          product.save()

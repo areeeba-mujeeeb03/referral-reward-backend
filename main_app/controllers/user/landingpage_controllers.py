@@ -292,11 +292,17 @@ def fetch_data_from_admin():
         prize_data = prize_dict
 
       # --- Fetch advertisement cards
-    ad_record = AdminAdvertisementCard.objects(admin_uid=admin_uid).first()
     ad_data = []
+    ad_record = AdminAdvertisementCard.objects(admin_uid=admin_uid).first()
     if ad_record:
         for ad in ad_record.advertisement_cards:
-            ad_dict = ad.to_mongo().to_dict()
+            ad_dict = {
+                "title": ad.title,
+                "description": ad.description,
+                "button_txt": ad.button_txt,
+                "image_url": ad.image_url
+            }
+            # ad_dict = ad.to_mongo().to_dict()
             ad_data.append(ad_dict)    
 
       # --- Merge both

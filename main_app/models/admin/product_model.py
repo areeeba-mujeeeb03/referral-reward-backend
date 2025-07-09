@@ -12,6 +12,7 @@ class Product(Document):
     status = StringField(default="Live")  # Options: Live, Paused
     visibility_till = DateTimeField()
     apply_offer = BooleanField()
+    admin_uid = StringField(required=True)
 
      # Offer-related fields
     offer_name = StringField()

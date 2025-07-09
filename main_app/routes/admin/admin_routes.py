@@ -12,6 +12,7 @@ from main_app.controllers.admin.rewards_controllers import add_new_galaxy, add_n
 from main_app.controllers.admin.dashboard_controllers import error_table, dashboard_participants
 from main_app.controllers.admin.email_controller import create_email
 from main_app.controllers.user.landingpage_controllers import fetch_data_from_admin
+from main_app.controllers.admin.notification_controller import create_push_notification, list_push_notifications, update_push_notification, delete_push_notification
 
 admin_bp = Blueprint("admin_routes", __name__)
 
@@ -338,6 +339,42 @@ def fetch_custom_data():
     return fetch_data_from_admin()
 
 
-@admin_bp.route('/admin/fetch_prize_data', methods=['POST'])
-def fetch_all_prize_data():
-    return get_admin_prize_list()
+
+# ====================
+
+# Push Notification
+
+# =========================
+@admin_bp.route('/admin/push_notification', methods=['POST'])
+def admin_push_notification():
+    return create_push_notification()
+
+# =========
+
+# List of Notification
+
+# ==========
+@admin_bp.route('/admin/table_push_notifications', methods=['POST'])
+def admin_list_push_notification():
+    return list_push_notifications()
+
+# =================
+
+# Update Notification
+
+# ================
+
+@admin_bp.route('/admin/update_push_notifications/<notification_id>', methods=['PUT'])
+def admin_update_push_notification(notification_id):
+    return update_push_notification(notification_id)
+
+
+# =================
+
+# Delete Notification
+
+# ================
+
+@admin_bp.route('/admin/update_push_notifications/<notification_id>', methods=['DELETE'])
+def admin_delete_push_notification(notification_id):
+    return delete_push_notification(notification_id)
