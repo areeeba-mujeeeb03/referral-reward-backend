@@ -13,6 +13,8 @@ from main_app.controllers.admin.dashboard_controllers import error_table, dashbo
 from main_app.controllers.admin.email_controller import create_email
 from main_app.controllers.user.landingpage_controllers import fetch_data_from_admin
 from main_app.controllers.admin.notification_controller import create_push_notification, list_push_notifications, update_push_notification, delete_push_notification
+from main_app.controllers.admin.perks_controller import create_exclusive_perks
+
 
 admin_bp = Blueprint("admin_routes", __name__)
 
@@ -340,20 +342,23 @@ def fetch_custom_data():
 
 
 
-# ====================
+# =======================
 
 # Push Notification
 
-# =========================
+# ========================
+
 @admin_bp.route('/admin/push_notification', methods=['POST'])
 def admin_push_notification():
     return create_push_notification()
 
-# =========
+
+# ===========================
 
 # List of Notification
 
-# ==========
+# ============================
+
 @admin_bp.route('/admin/table_push_notifications', methods=['POST'])
 def admin_list_push_notification():
     return list_push_notifications()
@@ -378,3 +383,15 @@ def admin_update_push_notification(notification_id):
 @admin_bp.route('/admin/update_push_notifications/<notification_id>', methods=['DELETE'])
 def admin_delete_push_notification(notification_id):
     return delete_push_notification(notification_id)
+
+
+# ===================
+
+#  Exclusive Perks
+
+# ====================
+
+@admin_bp.route("/admin/exclusive_perks", methods= ["POST"])
+def admin_create_exclusive_perks():
+    return create_exclusive_perks()
+

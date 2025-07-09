@@ -28,8 +28,8 @@ def add_how_it_work():
 
         # Validaiton
         if not all([admin_uid, title1, desc1, title2, desc2, title3, desc3 ]):
-         logger.warning("Missing required fields")
-         return jsonify({"message": " All fields are required."}), 400
+           logger.warning("Missing required fields")
+           return jsonify({"message": " All fields are required."}), 400
         
         # Check user found or not 
         if not Admin.objects(admin_uid=admin_uid).first():

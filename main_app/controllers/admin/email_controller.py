@@ -7,6 +7,8 @@ from main_app.models.admin.email_model import EmailTemplate
 UPLOAD_FOLDER = "uploads/email_templates"
 
 logging.basicConfig(level=logging.INFO)
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
 logger = logging.getLogger(__name__)
 
 def create_email():
@@ -35,7 +37,6 @@ def create_email():
         if "image" in request.files:
             image = request.files["image"]
             filename=secure_filename(image.filename)
-            os.makedirs(UPLOAD_FOLDER, exist_ok=True)
             filepath = os.path.join(UPLOAD_FOLDER, filename)
             image.save(filepath)
             image_path = filepath
@@ -47,8 +48,8 @@ def create_email():
 
         template.name = name
         template.email = email
-        template.reply_to = reply_to
         template.subject = subject
+        template.reply_to = reply_to
         template.content = content
         template.button_text = button_text
         template.button_url = button_url

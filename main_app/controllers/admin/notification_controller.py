@@ -97,6 +97,11 @@ def update_push_notification(notification_id):
         notification = PushNotification.objects(id=notification_id).first()
         if not notification:
             return jsonify({"error": "Notification not found"}), 404
+        
+        
+        if not data and not request.files:
+            logger.warning("No fields or files provided in request")
+            return jsonify({"message": "No fields provided for update"}), 400
 
         for field in ["title", "message", "button_text", "button_url", "segment", "specific_users"]:
             if field in data:

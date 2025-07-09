@@ -110,15 +110,6 @@ def error_table():
         logger.error("Internal Server Error while saving email.")
         return jsonify({"error": "Internal server error"})
 
-# ---------------------------------------------------------------------------------
-
-# -------- Push up Notification
-# def create_notification():
-#     try: 
-#         data = 
-#         return jsonify({"message": ""})
-#     except Exception as e:
-#         return jsonify({"error": "Internal server error"})
 
 
 
