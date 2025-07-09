@@ -21,7 +21,7 @@ admin_bp = Blueprint("admin_routes", __name__)
 #--------------------------------------------------------------------------------
 # =================
 
-# Admin Register
+# 1. Admin Register
 
 # ================
 
@@ -36,7 +36,7 @@ def register_admin():
 
 # ============
 
-# User Login
+# 2. User Login
 
 # ============
 
@@ -52,7 +52,7 @@ def login_email():
 
 # ==============
 
-# User Forgot Password with reset password
+# 3. User Forgot Password with reset password
 
 # ==============
 
@@ -67,7 +67,7 @@ def user_forgot_password():
 
 # ========================
 
-# Verify OTP (card)
+# 4. Verify OTP (card)
 
 # =========================
 
@@ -82,7 +82,7 @@ def forget_otp_verify():
 
 # =========================
 
-# Reset Password
+# 5. Reset Password
 
 # =========================
 
@@ -97,7 +97,7 @@ def user_reset_password():
 
 # =============================
 
-# Add Products
+# 6. Add Products
 
 # =============================
 
@@ -112,7 +112,7 @@ def admin_add_product():
 
 # =======================
 
-# Update Product
+# 7. Update Product
 
 # ========================
 
@@ -127,7 +127,7 @@ def update_add_product(uid):
 
 # ==========================
 
-# Update Offers
+# 8. Update Offers
 
 # ==========================
 
@@ -143,7 +143,7 @@ def admin_update_offer():
 
 # ===========================
 
-# Exciting Prizes
+# 9. Exciting Prizes
 
 # ===========================
 
@@ -156,6 +156,11 @@ def admin_exciting_prizes():
     """
     return add_exciting_prizes()
 
+# ===============
+
+# 10. Check user prize eligibility meteores
+
+# ===============
 
 @admin_bp.route('/admin/check_prize_eligibility', methods=["POST"])
 def prize_check_eligibility():
@@ -168,7 +173,7 @@ def prize_check_eligibility():
 
 # ========================
 
-# How It Work
+# 11. How It Work
 
 # ========================
 
@@ -182,7 +187,7 @@ def admin_how_it_work():
 
 # ==========================
 
-# Advertisement Card
+# 12. Advertisement Card
 
 # ==========================
 
@@ -197,7 +202,7 @@ def admin_advertisement_card():
 
 # =======================================
 
-# Participant table
+# 13. Participant table
 
 # =======================================
 
@@ -205,10 +210,10 @@ def admin_advertisement_card():
 def admin_reward_participant_table():
      return dashboard_participants()
 
-
-
 # ===============
-# Error
+
+# 14. Error
+
 # ===============
 
 @admin_bp.route("/admin/error_table", methods = ["POST"])
@@ -217,7 +222,9 @@ def admin_error_table():
 
 
 # =============
-# Email save
+
+# 15. Email save
+
 # =============
 @admin_bp.route("/admin/send_email", methods = ["POST"])
 def admin_send_email():
@@ -226,7 +233,7 @@ def admin_send_email():
 
 # ==============
 
-# Profile update of ADMIN
+# 16. Profile update of ADMIN
 
 # ==============
 
@@ -240,13 +247,13 @@ def edit_profile():
 
 # ==============
 
-# View all FAQs
+# 17. View all FAQs
 
 # ==============
 
 # ==============
 
-# Add new FAQ
+# 18. Add new FAQ
 
 # ==============
 
@@ -256,7 +263,7 @@ def add_new_faq():
 
 # ==============
 
-# Update existing FAQ
+# 19. Update existing FAQ
 
 # ==============
 
@@ -266,7 +273,7 @@ def update_faqs(faq_id):
 
 # ==============
 
-# Delete Existing FAQ
+# 20. Delete Existing FAQ
 
 # ==============
 
@@ -277,7 +284,7 @@ def remove_faq(faq_id):
 
 # ==============
 
-# View messages sent by users
+# 21. View messages sent by users
 
 # ==============
 
@@ -287,7 +294,7 @@ def view_msgs():
 
 # ==============
 
-# Generate invitation link with expiry
+# 22. Generate invitation link with expiry
 
 # ==============
 
@@ -298,7 +305,7 @@ def generate_link():
 
 # ==============
 
-# Generate invitation link with expiry
+# 23. Generate invitation link with expiry
 
 # ==============
 
@@ -309,7 +316,7 @@ def add_galaxy():
 
 # ==============
 
-# Generate invitation link with expiry
+# 24. Generate invitation link with expiry
 
 # ==============
 
@@ -318,7 +325,11 @@ def add_milestone():
 
     return add_new_milestones()
 
+# ==================
 
+# 25. Delete milestone
+
+# ===================
 @admin_bp.route('/admin/delete-milestone', methods = ['POST'])
 def delete_milestone():
 
@@ -326,7 +337,7 @@ def delete_milestone():
 
 # ==============
 
-# Generate invitation link with expiry
+# 26. Generate invitation link with expiry
 
 # ==============
 
@@ -334,6 +345,12 @@ def delete_milestone():
 def update_sharing_apps():
 
     return
+
+# ========
+
+# 27. Fetch All data
+
+# =========
 
 @admin_bp.route('/admin/fetch_custom_data', methods=['POST'])
 def fetch_custom_data():
@@ -344,7 +361,7 @@ def fetch_custom_data():
 
 # =======================
 
-# Push Notification
+# 28. Push Notification
 
 # ========================
 
@@ -355,7 +372,7 @@ def admin_push_notification():
 
 # ===========================
 
-# List of Notification
+# 29. List of Notification
 
 # ============================
 
@@ -365,7 +382,7 @@ def admin_list_push_notification():
 
 # =================
 
-# Update Notification
+# 30. Update Notification
 
 # ================
 
@@ -376,7 +393,7 @@ def admin_update_push_notification(notification_id):
 
 # =================
 
-# Delete Notification
+# 31. Delete Notification
 
 # ================
 
@@ -387,7 +404,7 @@ def admin_delete_push_notification(notification_id):
 
 # ===================
 
-#  Exclusive Perks
+# 32. Exclusive Perks
 
 # ====================
 

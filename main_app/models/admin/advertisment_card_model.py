@@ -1,7 +1,6 @@
 from mongoengine import Document , EmbeddedDocument
 from mongoengine.fields import StringField, ListField, EmbeddedDocumentField
 
-# class AdvertisementCard(Document):
 class AdvertisementCardItem(EmbeddedDocument):
     title = StringField()
     description = StringField()

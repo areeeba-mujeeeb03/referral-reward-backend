@@ -55,13 +55,14 @@ def edit_profile_data():
 
 
         files = request.files.get("image")
-        if not files:
-            return jsonify({"error": "Image not found"}), 400
-
-        filename = secure_filename(files.filename)
-        image_path = os.path.join(UPLOAD_FOLDER, filename)
-        files.save(image_path)
-        img_file = f"/{image_path}"
+        img_file = None
+        # if not files:
+        #     return jsonify({"error": "Image not found"}), 400
+        if files:
+            filename = secure_filename(files.filename)
+            image_path = os.path.join(UPLOAD_FOLDER, filename)
+            files.save(image_path)
+            img_file = f"/{image_path}"
 
         if "image" in data:
             update_fields["profile_picture"] = img_file

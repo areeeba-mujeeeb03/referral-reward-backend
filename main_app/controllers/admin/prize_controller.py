@@ -117,16 +117,33 @@ def check_eligibility():
         user_meteors = data.get("meteors")
         admin_uid = data.get("admin_uid")
 
-        prize = PrizeDetail.objects(admin_uid=admin_uid).first()
-        if not prize:
+        record = AdminPrizes.objects(admin_uid=admin_uid).first()
+        if not record:
             logger.warning(f"Prize not found")
             return jsonify({"message": "Prize not found"}), 404
+        
+        # Check if any prize in the list is eligible
+        eligible_prizes = []
+        for prize in record.prizes:
+            if user_meteors >= prize.required_meteors:
+                eligible_prizes.append({
+                    "title": prize.title,
+                    "required_meteors": prize.required_meteors,
+                    "image_url": prize.image_url,
+                    "term_conditions": prize.term_conditions,
+                    "product_id": prize.product_id,
+                    "created_at": str(prize.created_at),
+                })
 
-        if user_meteors >= prize.required_meteors:
-            return jsonify({"eligible": True, "message": "User is eligible for this prize"}), 200
+        if eligible_prizes:
+            return jsonify({
+                "eligible": True,
+                "message": "User is eligible for some prizes",
+                "eligible_prizes": eligible_prizes
+            }), 200
         else:
             return jsonify({"eligible": False, "message": "Not enough meteors"}), 200
-
+ 
     except Exception as e:
         logger.error(f"Check meteors failed:{str(e)}")
         return jsonify({"error": "Internal server error"}), 500
