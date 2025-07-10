@@ -27,7 +27,7 @@ class Contact(Document):
     username = StringField(required=True)
     email = EmailField(required=True)
     message = StringField(required=True)
-    file_url = StringField()
+    file_url = ListField(StringField())
 
     date = DateTimeField(default=datetime.datetime.now())
 

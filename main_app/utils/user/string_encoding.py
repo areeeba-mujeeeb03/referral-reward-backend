@@ -25,12 +25,15 @@ def custom_decode(encoded_string):
 def generate_encoded_string(info: dict, fields_to_encode: list):
     # Step 1: Extract values
     values = [str(info.get(field, "")) for field in fields_to_encode]
+    # print(values)
 
     # Step 2: Add special characters before each value
     original_string = "".join([f"#$" + val for val in values])
+    # print(original_string)
 
     # Step 3: Reverse the string
     reversed_string = original_string[::-1]
+    # print(reversed_string)
 
     # Step 4: Hash with bcrypt
     charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#*%!$"
@@ -49,9 +52,11 @@ def generate_encoded_string(info: dict, fields_to_encode: list):
         else:
             encoded += ch
     encrypted_string = encoded
+    # print(encrypted_string)
 
     # Step 5: Reverse the encrypted string again
     final_string = encrypted_string[::-1]
+    # print(final_string)
 
     # Step 6: Map each encoded field to R1, R2
     length = len(final_string)

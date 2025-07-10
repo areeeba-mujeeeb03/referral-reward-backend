@@ -6,6 +6,7 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from main_app.models.admin.galaxy_model import Galaxy
+from main_app.models.admin.links import ReferralReward
 from main_app.models.user.reward import Reward
 from main_app.models.admin.product_model import Product
 import datetime
@@ -17,6 +18,42 @@ from main_app.models.user.user import User
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+def set_reward_settings():
+    try:
+        # Check if user is admin (you should replace this with real role logic)
+
+        data = request.get_json()
+
+        # Validate input fields
+        required_fields = ['referrer_reward', 'invitee_reward', 'conversion_rates']
+        if not all(field in data for field in required_fields):
+            return jsonify({"error": "Missing required fields"}), 400
+
+        # Optional: validate conversion_rates structure
+        cr = data['conversion_rates']
+        if not all(k in cr for k in ['meteor_to_star', 'star_to_reward', 'reward_to_currency']):
+            return jsonify({"error": "Invalid conversion rates format"}), 400
+
+        # Upsert settings (only one document in this collection)
+        ReferralReward.objects().update_one(
+            set__referrer_reward=data['referrer_reward'],
+            set__invitee_reward=data['invitee_reward'],
+            set__conversion_rates=data['conversion_rates'],
+            set__updated_at=datetime.datetime.now(),
+            upsert=True
+        )
+
+        return jsonify({
+            "message": "Reward settings updated successfully",
+            "data": {
+                "referrer_reward": data['referrer_reward'],
+                "invitee_reward": data['invitee_reward'],
+                "conversion_rates": data['conversion_rates']
+            }
+        }), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 def send_milestone_email(email, email_template_type):
     try:

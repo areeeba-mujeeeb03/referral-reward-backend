@@ -8,7 +8,7 @@ from main_app.controllers.admin.product_controllers import add_product, update_p
 from main_app.controllers.admin.prize_controller import add_exciting_prizes, check_eligibility
 from main_app.controllers.admin.how_it_work_controller import add_how_it_work, advertisement_card
 from main_app.controllers.admin.referral_controllers import generate_invite_link_with_expiry
-from main_app.controllers.admin.rewards_controllers import  add_new_milestones,remove_milestone
+from main_app.controllers.admin.rewards_controllers import  create_galaxy,remove_milestone
 from main_app.controllers.admin.dashboard_controllers import error_table, dashboard_participants
 from main_app.controllers.admin.email_controller import create_email
 
@@ -236,12 +236,6 @@ def edit_profile():
 
 # ==============
 
-# View all FAQs
-
-# ==============
-
-# ==============
-
 # Add new FAQ
 
 # ==============
@@ -253,16 +247,6 @@ def add_new_faq():
 # ==============
 
 # Update existing FAQ
-
-# ==============
-
-@admin_bp.route('/admin/update-faqs/<faq_id>', methods=['PUT'])
-def update_faqs(faq_id):
-    return update_faq(faq_id)
-
-# ==============
-
-# Delete Existing FAQ
 
 # ==============
 
@@ -312,7 +296,7 @@ def generate_link():
 @admin_bp.route('/admin/add-new-milestones', methods = ['POST'])
 def add_milestone():
 
-    return add_new_milestones()
+    return create_galaxy()
 
 
 @admin_bp.route('/admin/delete-milestone', methods = ['POST'])

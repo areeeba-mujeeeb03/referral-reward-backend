@@ -22,6 +22,7 @@ class User(Document):
     otp_requested_at = DateTimeField()
     login_count = IntField()
     generation_time = IntField()
+    profile_picture = StringField()
     link_expiry_time = IntField()
     admin_uid = StringField()
     is_member = BooleanField(default= False)

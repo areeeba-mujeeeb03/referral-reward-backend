@@ -298,19 +298,43 @@ def change_invite_link():
         tag_id (str): ID of the user referring
     """
     data = request.get_json()
-    user_id = data.get("user_id")
     link = data.get("link")
+    user_id = data.get("user_id")
+    access_token = data.get("mode")
+    session_id = data.get("log_alt")
 
     user = User.objects(user_id=user_id).first()
+
     if not user:
-        return jsonify({"message": "User not found"}), 404
+        return jsonify({"success" : False, "message" : "User does not exist"})
+
+    if not access_token or not session_id:
+        return jsonify({"message": "Missing token or session", "success": False}), 400
+
+    if user.access_token != access_token:
+        return ({"success": False,
+                 "message": "Invalid access token"}), 401
+
+    if user.session_id != session_id:
+        return ({"success": False,
+                 "message": "Session mismatch or invalid session"}), 403
+
+
+    if hasattr(user, 'expiry_time') and user.expiry_time:
+        if datetime.datetime.now() > user.expiry_time:
+            return ({"success": False,
+                     "message": "Access token has expired"}), 401
 
     tag_id = user.tag_id
 
     default_invitation_link = user.invitation_link
 
-    link = Link.objects(invitation_link = link).first()
-    print(Link)
+    link = Link.objects(invitation_link = link)
+
+
+    if not link:
+        return jsonify({"message": "No special link generated yet", "success" : False}), 404
+
     user_link = link.invitation_link + f"/{tag_id}"
 
     user.update(
@@ -322,8 +346,9 @@ def change_invite_link():
         user.update(
             set__invitation_link =f"{base_url}/{tag_id}"
         )
-    return jsonify({"success" : True, "message" : "Invitation Link generated"})
+        return jsonify({"message": "No special link generated yet", "success": False}), 404
 
+    return jsonify({"success" : True, "message" : "Invitation Link Changed"})
 
 def update_meteors_and_stars():
 
@@ -340,8 +365,32 @@ def update_meteors_and_stars():
 def reward_referrer_by_tag(tag_id):
     user = User.objects(tag_id=tag_id).first()
     try:
-        # if not user:
-        #     return False, "Invalid tag ID"
+        data = request.get_json()
+        user_id = data.get("user_id")
+        access_token = data.get("mode")
+        session_id = data.get("log_alt")
+
+        user = User.objects(user_id=user_id).first()
+
+        if not user:
+            return jsonify({"success": False, "message": "User does not exist"})
+
+        if not access_token or not session_id:
+            return jsonify({"message": "Missing token or session", "success": False}), 400
+
+        if user.access_token != access_token:
+            return ({"success": False,
+                     "message": "Invalid access token"}), 401
+
+        if user.session_id != session_id:
+            return ({"success": False,
+                     "message": "Session mismatch or invalid session"}), 403
+
+        if hasattr(user, 'expiry_time') and user.expiry_time:
+            if datetime.datetime.now() > user.expiry_time:
+                return ({"success": False,
+                         "message": "Access token has expired"}), 401
+
         referral = Referral.objects(user_id = user.user_id).first()
         referrer_id = user.user_id
 

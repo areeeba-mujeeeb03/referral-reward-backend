@@ -1,7 +1,9 @@
 from datetime import datetime, timedelta
 from flask import jsonify, request
-from main_app.models.admin.links import Link
 
+from main_app.models.admin.admin_model import Admin
+from main_app.models.admin.links import Link
+from dateutil import parser as date_parser
 
 # ==================
 
@@ -41,12 +43,9 @@ def parse_date_flexible(date_str):
         return None
 
     try:
-        return datetime.fromisoformat(date_str)
-    except ValueError:
-        try:
-            return datetime.strptime("%dd/%mm/%YYYY", "%dd-%mm-%YYYY", )
-        except ValueError:
-            return None
+        return date_parser.parse(date_str)
+    except (ValueError, TypeError):
+        return None
 
 def generate_invite_link_with_expiry():
     data = request.get_json()
@@ -56,8 +55,19 @@ def generate_invite_link_with_expiry():
     referrer_reward = data.get("referrer_reward")
     referee_reward = data.get("referee_reward")
 
-    if not start_date or not expiry_date:
-        return jsonify({"error": "Start date and expiry date are required"}), 400
+    if not admin_uid:
+        return jsonify({"error": "admin_uid is required", "success" : False}), 400
+
+    admin = Admin.objects(admin_uid = admin_uid).first()
+
+    if not admin:
+        return jsonify({"error" : "User not found", "success" : False}), 404
+
+    if not start_date and not expiry_date:
+        return jsonify({"error": "Start date and expiry date are required", "success" : False}), 400
+
+    if not referrer_reward and not referee_reward:
+        return jsonify({"error": "Referrer Reward and Referee Reward are required", "success" : False}), 400
 
     gen_str = int(start_date.strftime("%Y%m%d%H%M%S"))
     expiry_time = expiry_date + timedelta(hours=5)
@@ -67,9 +77,11 @@ def generate_invite_link_with_expiry():
     encoded_exp_str = encode_timestamp(exp_str)
 
     base_url = "http://127.0.0.1:5000/wealth-elite/referral-program/invite_link"
+
     invitation_link = f"{base_url}/{encoded_gen_str}/{encoded_exp_str}"
 
     link =Link(
+        admin_uid = admin_uid,
         invitation_link=invitation_link,
         start_date=start_date,
         expiry_date=expiry_date,
@@ -79,5 +91,9 @@ def generate_invite_link_with_expiry():
     )
     link.save()
 
-    return jsonify({"link": invitation_link}), 200
+    is_active = gen_str <= int(datetime.now().strftime("%Y%m%d%H%M%S"))
+    link.update(active=is_active)
+
+
+    return jsonify({"link": invitation_link, "success" : True, "message" : "Link generated"}), 200
 

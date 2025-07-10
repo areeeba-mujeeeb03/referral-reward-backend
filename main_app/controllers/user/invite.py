@@ -43,6 +43,10 @@ def send_whatsapp_invite():
             return jsonify({"success": False, "message": "Invalid access token"}), 401
         if user_exist.session_id != session_id:
             return jsonify({"success": False, "message": "Session mismatch or invalid session"}), 403
+        if hasattr(user_exist, 'expiry_time') and user_exist.expiry_time:
+            if datetime.datetime.now() > user_exist.expiry_time:
+                return ({"success": False,
+                         "message": "Access token has expired"}), 401
         if not user_exist.invitation_link:
             return jsonify({"success": False, "message": "Invitation link not found"}), 404
 
@@ -101,6 +105,11 @@ def send_twitter_invite():
             return ({"success": False,
                      "message": "Session mismatch or invalid session"}), 403
 
+        if hasattr(user_exist, 'expiry_time') and user_exist.expiry_time:
+            if datetime.datetime.now() > user_exist.expiry_time:
+                return ({"success": False,
+                         "message": "Access token has expired"}), 401
+
         if not user_exist or not user_exist.invitation_link:
             return jsonify({"success": False, "message": "User or invitation link not found"}), 404
 
@@ -156,6 +165,11 @@ def send_telegram_invite():
             return ({"success": False,
                      "message": "Session mismatch or invalid session"}), 403
 
+        if hasattr(user_exist, 'expiry_time') and user_exist.expiry_time:
+            if datetime.datetime.now() > user_exist.expiry_time:
+                return ({"success": False,
+                         "message": "Access token has expired"}), 401
+
         if not user_exist or not user_exist.invitation_link:
             return jsonify({"success": False, "message": "User or invitation link not found"}), 404
 
@@ -209,6 +223,11 @@ def send_facebook_invite():
         if user_exist.session_id != session_id:
             return ({"success": False,
                      "message": "Session mismatch or invalid session"}), 403
+
+        if hasattr(user_exist, 'expiry_time') and user_exist.expiry_time:
+            if datetime.datetime.now() > user_exist.expiry_time:
+                return ({"success": False,
+                         "message": "Access token has expired"}), 401
 
         if not user_exist or not user_exist.invitation_link:
             return jsonify({"success": False, "message": "User or invitation link not found"}), 404

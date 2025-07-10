@@ -101,6 +101,7 @@ def handle_registration():
             username=data["username"],
             email=data["email"],
             mobile_number=data["mobile_number"],
+            admin_uid = "AD_UID_2",
             password=hashed_password,
             created_at=datetime.datetime.now(),
             is_active=True

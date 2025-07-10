@@ -1,5 +1,10 @@
 import random
-import datetime 
+import datetime
+from cryptography.fernet import Fernet
+
+# FERNET_SECRET_KEY = 'awpo[oiufttttttttttttttttttttcfbbbbgggggxb'
+# fernet = Fernet(FERNET_SECRET_KEY)
+
 from main_app.models.admin.product_model import Product
 # from main_app.models.admin.product_offer_model import Offer
 
@@ -10,6 +15,12 @@ def generate_otp(length=6):
 def get_expiry_time(minutes=5):
     return datetime.datetime.now() + datetime.timedelta(minutes=minutes)
 
+
+# def encrypt_admin_uid(admin_uid: str) -> str:
+#     return fernet.encrypt(admin_uid.encode()).decode()
+#
+# def decrypt_admin_uid(encrypted_uid: str) -> str:
+#     return fernet.decrypt(encrypted_uid.encode()).decode()
 # -----------------------------------------------------------------------------------------
 
 # Generate product uid

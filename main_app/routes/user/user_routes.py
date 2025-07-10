@@ -10,7 +10,7 @@ from main_app.controllers.user.landingpage_controllers import my_rewards, my_ref
     fetch_data_from_admin
 from main_app.controllers.user.referral_controllers import change_invite_link
 from main_app.controllers.user.invite import send_whatsapp_invite, send_telegram_invite, send_twitter_invite, send_facebook_invite
-from main_app.controllers.user.user_profile_controllers import update_profile, help_faq, submit_msg
+from main_app.controllers.user.user_profile_controllers import update_profile, submit_msg
 from main_app.models.admin.galaxy_model import Galaxy
 from main_app.models.user.reward import Reward
 
@@ -267,15 +267,6 @@ def send_link_on_facebook():
     Redirects : on facebook with invite-link NO pre-typed message
     """
     return send_facebook_invite()
-
-@user_bp.route("/help-request", methods=["POST"])
-def help_request():
-    """
-    handles sending invitation link on facebook
-    Accepts: POST request
-    Redirects : on facebook with invite-link NO pre-typed message
-    """
-    return help_faq()
 
 @user_bp.route("/redeem-voucher", methods=["POST"])
 def redeem_voucher():
