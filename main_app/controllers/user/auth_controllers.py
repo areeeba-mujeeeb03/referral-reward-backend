@@ -1,15 +1,12 @@
-import datetime
 import logging
 import re
-from flask import request, jsonify, session
+import datetime
+from flask import request, jsonify
 from main_app.models.admin.error_model import Errors
 from main_app.models.user.user import User
-from main_app.controllers.user.referral_controllers import (process_referral_code_and_reward, initialize_user_records,
-                                                            process_tag_id_and_reward)
+from main_app.controllers.user.referral_controllers import (process_referral_code_and_reward, initialize_user_records, process_tag_id_and_reward)
 from main_app.utils.user.helpers import hash_password
 from main_app.utils.user.error_handling import get_error
-
-
 
 # ================
 
@@ -138,7 +135,7 @@ def handle_registration():
 
         except Exception as e:
             Errors(username=data['username'], email=data["email"], error_source="Sign Up Form",
-                  error_type=get_error("failed_to_update")).save()
+                  error_type=get_error(f"failed_to_update{str(e)}")).save()
             return jsonify({"error" : get_error("failed_to_update")})
 
         logger.info(f"User account created successfully with ID: {user.user_id}")
@@ -301,11 +298,6 @@ def _check_user_conflicts(username, email, mobile_number):
 
 # ==================
 
-
-import datetime
-
-
-import datetime
 
 def validate_session_token(user, access_token, session_id):
     """

@@ -16,7 +16,7 @@ from main_app.utils.user.helpers import check_password, hash_password
 UPLOAD_FOLDER ="uploads/profile"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 UPLOAD_FOLDER = 'uploads/support_files'
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf'}
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf', 'svg'}
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 
@@ -142,7 +142,8 @@ def redeem():
 
         return jsonify({
             "success": True,
-            "message": "Voucher Redeemed successfully!"}), 200
+            "message": "Voucher Redeemed successfully!"
+        }), 200
 
     except Exception as e:
         return jsonify({"success": False, "message": "Server error", "error": str(e)}), 500
@@ -153,12 +154,10 @@ UPLOAD_FOLDER = "static/uploads/contact"
 def submit_msg():
     data = request.get_json()
 
-    # Required fields
     username = data.get('username')
     email = data.get('email')
     message = data.get('message')
 
-    # Optional fields
     user_id = data.get("user_id")
     access_token = data.get("mode")
     session_id = data.get("log_alt")
@@ -170,13 +169,16 @@ def submit_msg():
         data.get("file4"),
         data.get("file5")
     ]
+
     files = [f for f in files if f]
 
-    # Basic validation
-    if not all([username, email, message]):
-        return jsonify({"error": "All fields are required"}), 400
+    print(data)
+
+    # if not all([username, email, message]):
+    #     return jsonify({"error": "All fields are required"}), 400
 
     user = User.objects(user_id=user_id).first()
+
     if not user:
         return jsonify({"success": False, "message": "User does not exist"}), 404
 
@@ -206,34 +208,17 @@ def submit_msg():
 
     file_urls = []
     if files:
-        try:
-            os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-            for i, file_data in enumerate(files):
-                base64_str = file_data.get("base64")
-                original_filename = file_data.get("filename")
 
-                if not base64_str or not original_filename:
-                    continue
 
-                safe_filename = secure_filename(f"{user_id}_{i+1}_{original_filename}")
-                file_path = os.path.join(UPLOAD_FOLDER, safe_filename)
-
-                with open(file_path, "wb") as f:
-                    f.write(base64.b64decode(base64_str))
-
-                file_urls.append(f"/{file_path}")
-        except Exception as e:
-            Errors(
-                username=user.username,
-                email=user.email,
-                error_source="send contact message",
-                error_type=f"Failed to save attachments {str(e)}"
-            ).save()
-            return jsonify({
-                "error": "Failed to save attachments",
-                "details": str(e)
-            }), 400
-
+    # Errors(
+    #     username=user.username,
+    #     email=user.email,
+    #     error_source="send contact message",
+    #     error_type=f"Failed to save attachments {str(e)}"
+    # ).save()
+    # return jsonify({
+    #     "error": "Failed to save attachments"
+    # }), 400
         send.update(file_urls=file_urls)
         print(file_urls)
     return jsonify({"message": "Your query has been sent!"}), 201

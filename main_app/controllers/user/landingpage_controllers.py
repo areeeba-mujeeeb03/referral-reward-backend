@@ -290,7 +290,6 @@ def fetch_data_from_admin():
         prize_dict.pop('created_at', None)
         prize_data.append(prize_dict)
 
-<<<<<<< HEAD
     reward = Reward.objects(user_id=user_id).first()
     if not reward or not reward.galaxy_name:
         return jsonify({"message": "User has no galaxy assigned yet"}), 404
@@ -318,18 +317,7 @@ def fetch_data_from_admin():
         }
         galaxy_data["milestones"].append(milestones)
 
-    if user:
-        return jsonify({
-            "success" : True ,
-            "how_it_works" : data,
-            "exciting_prizes" : prize_data,
-            "home_faqs" : home_faqs,
-            "rewards_faqs" : rewards_faqs,
-            "referrals_faqs" : referrals_faqs,
-            "help_and_support" : help_faqs,
-            "galaxy_data" : galaxy_data
-            })
-=======
+
       # --- Fetch advertisement cards
     ad_data = []
     ad_record = AdminAdvertisementCard.objects(admin_uid=admin_uid).first()
@@ -341,27 +329,22 @@ def fetch_data_from_admin():
                 "button_txt": ad.button_txt,
                 "image_url": ad.image_url
             }
-            # ad_dict = ad.to_mongo().to_dict()
             ad_data.append(ad_dict)    
 
       # --- Merge both
-    info = {
-        "how_it_works": how_text,
-        "exciting_prize": prize_data,
-        "advertisement_cards": ad_data
-    }    
 
     if user:
-        # info = {"how_it_works": data}
-        fields_to_encode = ["how_it_works", "exciting_prize", "advertisement_cards"]
-        encoded_str = generate_encoded_string(info, fields_to_encode)
-        return encoded_str, 200
-    return "An Unexpected error occurred", 400
-
-
-# ------------------------------------------------------------------------
-
->>>>>>> e4dc20c46f00cba5fed002e8afda916fe5cdb3aa
+        return jsonify({
+            "success" : True ,
+            "how_it_works" : data,
+            "exciting_prizes" : prize_data,
+            "home_faqs" : home_faqs,
+            "rewards_faqs" : rewards_faqs,
+            "referrals_faqs" : referrals_faqs,
+            "help_and_support" : help_faqs,
+            "galaxy_data" : galaxy_data,
+            "advertisement_cards" : ad_data
+            })
 
     return ({"message": "An Unexpected error occurred",
              "success" : False,

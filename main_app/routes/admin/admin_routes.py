@@ -11,13 +11,10 @@ from main_app.controllers.admin.referral_controllers import generate_invite_link
 from main_app.controllers.admin.rewards_controllers import create_galaxy, remove_milestone, add_new_milestone
 from main_app.controllers.admin.dashboard_controllers import error_table, dashboard_participants
 from main_app.controllers.admin.email_controller import create_email
-<<<<<<< HEAD
-=======
 from main_app.controllers.user.landingpage_controllers import fetch_data_from_admin
 from main_app.controllers.admin.notification_controller import create_push_notification, list_push_notifications, update_push_notification, delete_push_notification
 from main_app.controllers.admin.perks_controller import create_exclusive_perks
 
->>>>>>> e4dc20c46f00cba5fed002e8afda916fe5cdb3aa
 
 admin_bp = Blueprint("admin_routes", __name__)
 
@@ -250,9 +247,9 @@ def edit_profile():
 
 # ==============
 
-<<<<<<< HEAD
+
 # Add new FAQ
-=======
+
 # 17. View all FAQs
 
 # ==============
@@ -260,8 +257,6 @@ def edit_profile():
 # ==============
 
 # 18. Add new FAQ
->>>>>>> e4dc20c46f00cba5fed002e8afda916fe5cdb3aa
-
 # ==============
 
 @admin_bp.route('/admin/add-faqs', methods=['POST'])
@@ -274,11 +269,10 @@ def add_new_faq():
 
 # ==============
 
-<<<<<<< HEAD
-=======
-@admin_bp.route('/admin/update-faqs/<faq_id>', methods=['PUT'])
-def update_faqs(faq_id):
-    return update_faq(faq_id)
+
+# @admin_bp.route('/admin/update-faqs/<faq_id>', methods=['PUT'])
+# def update_faqs(faq_id):
+#     return update_faq(faq_id)
 
 # ==============
 
@@ -286,7 +280,6 @@ def update_faqs(faq_id):
 
 # ==============
 
->>>>>>> e4dc20c46f00cba5fed002e8afda916fe5cdb3aa
 @admin_bp.route('/admin/delete-faqs/<faq_id>', methods=['DELETE'])
 def remove_faq(faq_id):
 
@@ -361,7 +354,7 @@ def update_sharing_apps():
 
     return
 
-<<<<<<< HEAD
+
 # @admin_bp.route('/admin/fetch_custom_data', methods=['POST'])
 # def fetch_custom_data():
 #
@@ -369,7 +362,7 @@ def update_sharing_apps():
 # @admin_bp.route('/admin/fetch_prize_data', methods=['POST'])
 # def fetch_all_prize_data():
 #     return get_admin_prize_list()
-=======
+
 # ========
 
 # 27. Fetch All data
@@ -436,4 +429,3 @@ def admin_delete_push_notification(notification_id):
 def admin_create_exclusive_perks():
     return create_exclusive_perks()
 
->>>>>>> e4dc20c46f00cba5fed002e8afda916fe5cdb3aa

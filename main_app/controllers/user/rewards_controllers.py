@@ -88,53 +88,93 @@ def send_milestone_email(email, email_template_type):
         print(f"Error sending email: {str(e)}")
         return False
 
-def update_user_milestone(user_id, galaxy_name, meteors_earned):
-    reward = Reward.objects(user_id=user_id).first()
-    galaxy = Galaxy.objects(galaxy_name=galaxy_name).first()
-    if not reward or not galaxy:
-        return {"success": False, "message": "User or galaxy not found"}
+# def update_user_milestone(user_id, galaxy_name, meteors_earned):
+#     reward = Reward.objects(user_id=user_id).first()
+#     galaxy = Galaxy.objects(galaxy_name=galaxy_name).first()
+#     if not reward or not galaxy:
+#         return {"success": False, "message": "User or galaxy not found"}
+#
+#     reward.total_meteors += meteors_earned
+#
+#     progress = None
+#     for galaxy in reward.galaxy_progress:
+#         if galaxy["galaxy_name"] == galaxy_name:
+#             progress = galaxy
+#             break
+#
+#     if not progress:
+#         progress = {
+#             "galaxy_name": galaxy_name,
+#             "earned_meteors": meteors_earned,
+#             "milestones_completed": 0
+#         }
+#         reward.galaxy_progress.append(progress)
+#     else:
+#         progress["earned_meteors"] += meteors_earned
+#
+#     completed = progress["milestones_completed"]
+#
+#     if completed < len(galaxy.all_milestones):
+#         milestone = galaxy.all_milestones[completed]
+#         if progress["earned_meteors"] >= milestone.meteors_required_to_unlock:
+#             reward.total_stars += milestone.milestone_reward
+#             progress["milestones_completed"] += 1
+#
+#             reward.galaxy_name.append(galaxy_name)
+#             reward.current_planet.append(milestone.milestone_name)
+#
+#             reward.reward_history.append({
+#                 "milestone_id": milestone.milestone_id,
+#                 "milestone_name": milestone.milestone_name,
+#                 "galaxy": galaxy_name,
+#                 "reward": milestone.milestone_reward
+#             })
+#
+#             send_milestone_email(user_id, milestone.email_config)
+#
+#     reward.save()
+#     return {"success": True, "message": "Milestone updated"}
 
-    reward.total_meteors += meteors_earned
 
-    progress = None
-    for galaxy in reward.galaxy_progress:
-        if galaxy["galaxy_name"] == galaxy_name:
-            progress = galaxy
-            break
+def update_planet_and_galaxy(user_id):
+    try:
+        reward = Reward.objects(user_id=user_id).first()
+        if not reward:
+            return jsonify({"message": "Reward entry not found"}), 404
 
-    if not progress:
-        progress = {
-            "galaxy_name": galaxy_name,
-            "earned_meteors": meteors_earned,
-            "milestones_completed": 0
-        }
-        reward.galaxy_progress.append(progress)
-    else:
-        progress["earned_meteors"] += meteors_earned
+        all_galaxies = reward.galaxy_name
+        if not all_galaxies:
+            return jsonify({"message": "No galaxy assigned yet"}), 400
 
-    completed = progress["milestones_completed"]
+        current_galaxy_name = all_galaxies[-1]
+        current_galaxy = Galaxy.objects(galaxy_name=current_galaxy_name).first()
 
-    if completed < len(galaxy.all_milestones):
-        milestone = galaxy.all_milestones[completed]
-        if progress["earned_meteors"] >= milestone.meteors_required_to_unlock:
-            reward.total_stars += milestone.milestone_reward
-            progress["milestones_completed"] += 1
+        if not current_galaxy:
+            return jsonify({"message": "This galaxy does not exist"}), 404
 
-            reward.galaxy_name.append(galaxy_name)
-            reward.current_planet.append(milestone.milestone_name)
+        total_meteors = reward.total_meteors
+        milestone_unlocked = False
 
-            reward.reward_history.append({
-                "milestone_id": milestone.milestone_id,
-                "milestone_name": milestone.milestone_name,
-                "galaxy": galaxy_name,
-                "reward": milestone.milestone_reward
-            })
+        for milestone in current_galaxy.all_milestones:
+            if milestone.milestone_name not in reward.current_planet:
+                if total_meteors >= milestone.meteors_required_to_unlock:
+                    reward.update(push__current_planet=milestone.milestone_name)
+                    milestone_unlocked = True
+                    return jsonify({"message": f"New planet unlocked: {milestone.milestone_name}", "success": True}), 200
 
-            send_milestone_email(user_id, milestone.email_config)  # explained below
+        if total_meteors >= current_galaxy.total_meteors_required:
+            next_galaxy = Galaxy.objects(galaxy_name__nin=all_galaxies).first()
+            if next_galaxy:
+                reward.update(push__galaxy_name=next_galaxy.galaxy_name)
+                return jsonify({"message": "New Galaxy Unlocked", "success": True}), 200
+            else:
+                return jsonify({"message": "No more galaxies available"}), 200
 
-    reward.save()
-    return {"success": True, "message": "Milestone updated"}
+        if not milestone_unlocked:
+            return jsonify({"message": "No new planet or galaxy unlocked yet"}), 200
 
+    except Exception as e:
+        return jsonify({"message": f"Failed to update progress: {str(e)}"}), 500
 
 def win_voucher(user_id):
     user = User.objects(user_id = user_id).first()
