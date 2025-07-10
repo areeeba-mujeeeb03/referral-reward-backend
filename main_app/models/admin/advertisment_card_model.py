@@ -1,8 +1,7 @@
-from mongoengine import Document , StringField, DateTimeField, EmbeddedDocument, EmbeddedDocumentField, ListField
+from mongoengine import Document , EmbeddedDocument
+from mongoengine.fields import StringField, ListField, EmbeddedDocumentField
 
-# class AdvertisementCard(Document):
 class AdvertisementCardItem(EmbeddedDocument):
-    admin_uid = StringField(required=True)
     title = StringField()
     description = StringField()
     button_txt = StringField()

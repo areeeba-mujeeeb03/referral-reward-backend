@@ -1,4 +1,3 @@
-# ----------- Exciting Prizes
 
 from flask import request, jsonify
 from werkzeug.utils import secure_filename
@@ -6,11 +5,13 @@ import os
 import logging
 from main_app.models.admin.prize_model import PrizeDetail, AdminPrizes
 from main_app.models.admin.admin_model import Admin
-
+from main_app.models.admin.product_model import Product
 
 # Configure logging for better debugging and monitoring
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# ----------- Exciting Prizes
 
 UPLOAD_FOLDER ="uploads/prizes"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -24,96 +25,82 @@ def add_exciting_prizes():
         term_conditions = data.get("term_conditions")
         admin_uid = data.get("admin_uid")
         required_meteors = data.get("required_meteors")
+        product_id = data.get("product_id")
 
         #  Validation fields
         if not all ([title , term_conditions, admin_uid, required_meteors]):
           logger.warning("Missing required fields.")
-          return jsonify({"error": "All fields are required"}), 400
+          return jsonify({"message": "All fields are required"}), 400
         
           # Validate meteors is numeric
         try:
             required_meteors = int(required_meteors)
         except ValueError:
             logger.warning("Invalid required_meteors: must be an integer.")
-            return jsonify({"error": "required_meteors must be a number"}), 400
+            return jsonify({"message": "required_meteors must be a number"}), 400
 
          # Check user found or not 
         if not Admin.objects(admin_uid=admin_uid).first():
             logger.warning(f"Admin not found for UID: {admin_uid}")
-            return jsonify({"error": "Admin not found" }), 400
+            return jsonify({"message": "Admin not found" }), 400
+        
+        if not Product.objects(uid=product_id).first():
+            return jsonify({"message": "Product Id not found"}), 400
       
 
         files = request.files.get("image")
         image_url = None
-        # if not files:
-        #     return jsonify({"error": "Image not found"}), 400
         if files:
             filename = secure_filename(files.filename)
             image_path = os.path.join(UPLOAD_FOLDER, filename)
             files.save(image_path)
             image_url = f"/{image_path}"
 
-        
-        prize = PrizeDetail(
-            title=title,
-            term_conditions=term_conditions,
-            image_url=image_url,
-            required_meteors=required_meteors
-        )
-
+          # Fetch existing admin prizes
         admin_prize = AdminPrizes.objects(admin_uid=admin_uid).first()
+        updated = False
+
         if admin_prize:
-            admin_prize.prizes.append(prize)
-            admin_prize.save()
-            msg = "Prize added to existing admin"
+            # Check if a prize with same title exists → update it
+            for prize in admin_prize.prizes:
+                if prize.title == title:
+                    prize.term_conditions = term_conditions
+                    prize.required_meteors = required_meteors
+                    prize.product_id = product_id 
+                    if image_url:
+                        prize.image_url = image_url
+                    updated = True
+                    break
+
+            if updated:
+                admin_prize.save()
+                msg = "Prize updated successfully"
+            else:
+                # Add new prize
+                new_prize = PrizeDetail(
+                    title=title,
+                    term_conditions=term_conditions,
+                    image_url=image_url,
+                    required_meteors=required_meteors,
+                    product_id = product_id 
+                )
+                admin_prize.prizes.append(new_prize)
+                admin_prize.save()
+                msg = "New prize added to existing admin"
         else:
-            AdminPrizes(admin_uid=admin_uid, prizes=[prize]).save()
+            # First time prize creation for admin
+            new_prize = PrizeDetail(
+                title=title,
+                term_conditions=term_conditions,
+                image_url=image_url,
+                required_meteors=required_meteors,
+                product_id=product_id
+            )
+            AdminPrizes(admin_uid=admin_uid, prizes=[new_prize]).save()
             msg = "Prize list created for new admin"
 
         logger.info(f"Prize added for admin_uid: {admin_uid}")
         return jsonify({"success": True, "message": msg}), 200
-
-        # prize = ExcitingPrize.objects(admin_uid=admin_uid).first()
-        # if prize:
-        #     fields_changed = False
-
-        #     if title != prize.title:
-        #          fields_changed = True
-
-        #     if term_conditions != prize.term_conditions:
-        #          fields_changed = True  
-            
-        #     if required_meteors != prize.required_meteors:
-        #          fields_changed = True 
-
-        #     if not fields_changed:
-        #         return jsonify({"message": "No fields updated"})                      
-
-        #     update_data = {
-        #        "title":title,
-        #        "term_conditions":term_conditions,
-        #        "image_url":image_url,
-        #        "required_meteors":required_meteors
-        #     }
-           
-        #     if image_url:
-        #         update_data["image_url"] = image_url
-            
-        #     prize.update(**update_data)
-        #     msg = "Updated prize successfully"
-        # else:
-        #      ExcitingPrize(
-        #          title=title,
-        #          term_conditions=term_conditions,
-        #          admin_uid=admin_uid,
-        #          image_url=image_url,
-        #          required_meteors=required_meteors
-        #         ).save()
-        #      msg = "Added prize successfully"  
-            
-        
-        # logger.info(f"Prize processed successfully for admin_uid: {admin_uid}")
-        # return jsonify({"success": "true" , "message": msg }), 200
 
     except Exception as e:
         logger.error(f"Add exciting prize failed:{str(e)}")
@@ -130,16 +117,33 @@ def check_eligibility():
         user_meteors = data.get("meteors")
         admin_uid = data.get("admin_uid")
 
-        prize = ExcitingPrize.objects(admin_uid=admin_uid).first()
-        if not prize:
+        record = AdminPrizes.objects(admin_uid=admin_uid).first()
+        if not record:
             logger.warning(f"Prize not found")
             return jsonify({"message": "Prize not found"}), 404
+        
+        # Check if any prize in the list is eligible
+        eligible_prizes = []
+        for prize in record.prizes:
+            if user_meteors >= prize.required_meteors:
+                eligible_prizes.append({
+                    "title": prize.title,
+                    "required_meteors": prize.required_meteors,
+                    "image_url": prize.image_url,
+                    "term_conditions": prize.term_conditions,
+                    "product_id": prize.product_id,
+                    "created_at": str(prize.created_at),
+                })
 
-        if user_meteors >= prize.required_meteors:
-            return jsonify({"eligible": True, "message": "User is eligible for this prize"}), 200
+        if eligible_prizes:
+            return jsonify({
+                "eligible": True,
+                "message": "User is eligible for some prizes",
+                "eligible_prizes": eligible_prizes
+            }), 200
         else:
             return jsonify({"eligible": False, "message": "Not enough meteors"}), 200
-
+ 
     except Exception as e:
         logger.error(f"Check meteors failed:{str(e)}")
         return jsonify({"error": "Internal server error"}), 500

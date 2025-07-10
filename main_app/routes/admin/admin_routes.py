@@ -11,13 +11,20 @@ from main_app.controllers.admin.referral_controllers import generate_invite_link
 from main_app.controllers.admin.rewards_controllers import create_galaxy, remove_milestone, add_new_milestone
 from main_app.controllers.admin.dashboard_controllers import error_table, dashboard_participants
 from main_app.controllers.admin.email_controller import create_email
+<<<<<<< HEAD
+=======
+from main_app.controllers.user.landingpage_controllers import fetch_data_from_admin
+from main_app.controllers.admin.notification_controller import create_push_notification, list_push_notifications, update_push_notification, delete_push_notification
+from main_app.controllers.admin.perks_controller import create_exclusive_perks
+
+>>>>>>> e4dc20c46f00cba5fed002e8afda916fe5cdb3aa
 
 admin_bp = Blueprint("admin_routes", __name__)
 
 #--------------------------------------------------------------------------------
 # =================
 
-# Admin Register
+# 1. Admin Register
 
 # ================
 
@@ -32,7 +39,7 @@ def register_admin():
 
 # ============
 
-# User Login
+# 2. User Login
 
 # ============
 
@@ -48,7 +55,7 @@ def login_email():
 
 # ==============
 
-# User Forgot Password with reset password
+# 3. User Forgot Password with reset password
 
 # ==============
 
@@ -63,7 +70,7 @@ def user_forgot_password():
 
 # ========================
 
-# Verify OTP (card)
+# 4. Verify OTP (card)
 
 # =========================
 
@@ -78,7 +85,7 @@ def forget_otp_verify():
 
 # =========================
 
-# Reset Password
+# 5. Reset Password
 
 # =========================
 
@@ -93,7 +100,7 @@ def user_reset_password():
 
 # =============================
 
-# Add Products
+# 6. Add Products
 
 # =============================
 
@@ -108,7 +115,7 @@ def admin_add_product():
 
 # =======================
 
-# Update Product
+# 7. Update Product
 
 # ========================
 
@@ -123,7 +130,7 @@ def update_add_product(uid):
 
 # ==========================
 
-# Update Offers
+# 8. Update Offers
 
 # ==========================
 
@@ -139,7 +146,7 @@ def admin_update_offer():
 
 # ===========================
 
-# Exciting Prizes
+# 9. Exciting Prizes
 
 # ===========================
 
@@ -152,6 +159,11 @@ def admin_exciting_prizes():
     """
     return add_exciting_prizes()
 
+# ===============
+
+# 10. Check user prize eligibility meteores
+
+# ===============
 
 @admin_bp.route('/admin/check_prize_eligibility', methods=["POST"])
 def prize_check_eligibility():
@@ -164,7 +176,7 @@ def prize_check_eligibility():
 
 # ========================
 
-# How It Work
+# 11. How It Work
 
 # ========================
 
@@ -178,7 +190,7 @@ def admin_how_it_work():
 
 # ==========================
 
-# Advertisement Card
+# 12. Advertisement Card
 
 # ==========================
 
@@ -193,7 +205,7 @@ def admin_advertisement_card():
 
 # =======================================
 
-# Participant table
+# 13. Participant table
 
 # =======================================
 
@@ -201,10 +213,10 @@ def admin_advertisement_card():
 def admin_reward_participant_table():
      return dashboard_participants()
 
-
-
 # ===============
-# Error
+
+# 14. Error
+
 # ===============
 
 @admin_bp.route("/admin/error_table", methods = ["POST"])
@@ -213,7 +225,9 @@ def admin_error_table():
 
 
 # =============
-# Email save
+
+# 15. Email save
+
 # =============
 @admin_bp.route("/admin/send_email", methods = ["POST"])
 def admin_send_email():
@@ -222,7 +236,7 @@ def admin_send_email():
 
 # ==============
 
-# Profile update of ADMIN
+# 16. Profile update of ADMIN
 
 # ==============
 
@@ -236,7 +250,17 @@ def edit_profile():
 
 # ==============
 
+<<<<<<< HEAD
 # Add new FAQ
+=======
+# 17. View all FAQs
+
+# ==============
+
+# ==============
+
+# 18. Add new FAQ
+>>>>>>> e4dc20c46f00cba5fed002e8afda916fe5cdb3aa
 
 # ==============
 
@@ -246,10 +270,23 @@ def add_new_faq():
 
 # ==============
 
-# Update existing FAQ
+# 19. Update existing FAQ
 
 # ==============
 
+<<<<<<< HEAD
+=======
+@admin_bp.route('/admin/update-faqs/<faq_id>', methods=['PUT'])
+def update_faqs(faq_id):
+    return update_faq(faq_id)
+
+# ==============
+
+# 20. Delete Existing FAQ
+
+# ==============
+
+>>>>>>> e4dc20c46f00cba5fed002e8afda916fe5cdb3aa
 @admin_bp.route('/admin/delete-faqs/<faq_id>', methods=['DELETE'])
 def remove_faq(faq_id):
 
@@ -257,7 +294,7 @@ def remove_faq(faq_id):
 
 # ==============
 
-# View messages sent by users
+# 21. View messages sent by users
 
 # ==============
 
@@ -267,7 +304,7 @@ def view_msgs():
 
 # ==============
 
-# Generate invitation link with expiry
+# 22. Generate invitation link with expiry
 
 # ==============
 
@@ -278,7 +315,7 @@ def generate_link():
 
 # ==============
 
-# Generate invitation link with expiry
+# 23. Generate invitation link with expiry
 
 # ==============
 
@@ -289,7 +326,7 @@ def generate_link():
 
 # ==============
 
-# Generate invitation link with expiry
+# 24. Generate invitation link with expiry
 
 # ==============
 
@@ -303,7 +340,11 @@ def add_milestone():
 
     return add_new_milestone()
 
+# ==================
 
+# 25. Delete milestone
+
+# ===================
 @admin_bp.route('/admin/delete-milestone', methods = ['POST'])
 def delete_milestone():
 
@@ -311,7 +352,7 @@ def delete_milestone():
 
 # ==============
 
-# Generate invitation link with expiry
+# 26. Generate invitation link with expiry
 
 # ==============
 
@@ -320,6 +361,7 @@ def update_sharing_apps():
 
     return
 
+<<<<<<< HEAD
 # @admin_bp.route('/admin/fetch_custom_data', methods=['POST'])
 # def fetch_custom_data():
 #
@@ -327,3 +369,71 @@ def update_sharing_apps():
 # @admin_bp.route('/admin/fetch_prize_data', methods=['POST'])
 # def fetch_all_prize_data():
 #     return get_admin_prize_list()
+=======
+# ========
+
+# 27. Fetch All data
+
+# =========
+
+@admin_bp.route('/admin/fetch_custom_data', methods=['POST'])
+def fetch_custom_data():
+
+    return fetch_data_from_admin()
+
+
+
+# =======================
+
+# 28. Push Notification
+
+# ========================
+
+@admin_bp.route('/admin/push_notification', methods=['POST'])
+def admin_push_notification():
+    return create_push_notification()
+
+
+# ===========================
+
+# 29. List of Notification
+
+# ============================
+
+@admin_bp.route('/admin/table_push_notifications', methods=['POST'])
+def admin_list_push_notification():
+    return list_push_notifications()
+
+# =================
+
+# 30. Update Notification
+
+# ================
+
+@admin_bp.route('/admin/update_push_notifications/<notification_id>', methods=['PUT'])
+def admin_update_push_notification(notification_id):
+    return update_push_notification(notification_id)
+
+
+# =================
+
+# 31. Delete Notification
+
+# ================
+
+@admin_bp.route('/admin/update_push_notifications/<notification_id>', methods=['DELETE'])
+def admin_delete_push_notification(notification_id):
+    return delete_push_notification(notification_id)
+
+
+# ===================
+
+# 32. Exclusive Perks
+
+# ====================
+
+@admin_bp.route("/admin/exclusive_perks", methods= ["POST"])
+def admin_create_exclusive_perks():
+    return create_exclusive_perks()
+
+>>>>>>> e4dc20c46f00cba5fed002e8afda916fe5cdb3aa

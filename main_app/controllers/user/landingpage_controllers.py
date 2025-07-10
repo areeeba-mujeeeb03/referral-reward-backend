@@ -12,6 +12,8 @@ from flask import request, jsonify
 from main_app.utils.user.string_encoding import generate_encoded_string
 from main_app.models.admin.product_model import Product
 from main_app.models.admin.prize_model import PrizeDetail, AdminPrizes
+from main_app.models.admin.advertisment_card_model import AdvertisementCardItem, AdminAdvertisementCard
+
 
 # Configure logging for better debugging and monitoring
 logging.basicConfig(level=logging.INFO)
@@ -250,6 +252,9 @@ def my_profile():
         logger.error(f"Server Error: {str(e)}")
         return jsonify({"error": get_error("server_error")}), 500
 
+
+# -------------------------------------------------------------------------
+
 def fetch_data_from_admin():
     data = request.get_json()
     user_id = data.get("user_id")
@@ -285,6 +290,7 @@ def fetch_data_from_admin():
         prize_dict.pop('created_at', None)
         prize_data.append(prize_dict)
 
+<<<<<<< HEAD
     reward = Reward.objects(user_id=user_id).first()
     if not reward or not reward.galaxy_name:
         return jsonify({"message": "User has no galaxy assigned yet"}), 404
@@ -323,6 +329,39 @@ def fetch_data_from_admin():
             "help_and_support" : help_faqs,
             "galaxy_data" : galaxy_data
             })
+=======
+      # --- Fetch advertisement cards
+    ad_data = []
+    ad_record = AdminAdvertisementCard.objects(admin_uid=admin_uid).first()
+    if ad_record:
+        for ad in ad_record.advertisement_cards:
+            ad_dict = {
+                "title": ad.title,
+                "description": ad.description,
+                "button_txt": ad.button_txt,
+                "image_url": ad.image_url
+            }
+            # ad_dict = ad.to_mongo().to_dict()
+            ad_data.append(ad_dict)    
+
+      # --- Merge both
+    info = {
+        "how_it_works": how_text,
+        "exciting_prize": prize_data,
+        "advertisement_cards": ad_data
+    }    
+
+    if user:
+        # info = {"how_it_works": data}
+        fields_to_encode = ["how_it_works", "exciting_prize", "advertisement_cards"]
+        encoded_str = generate_encoded_string(info, fields_to_encode)
+        return encoded_str, 200
+    return "An Unexpected error occurred", 400
+
+
+# ------------------------------------------------------------------------
+
+>>>>>>> e4dc20c46f00cba5fed002e8afda916fe5cdb3aa
 
     return ({"message": "An Unexpected error occurred",
              "success" : False,

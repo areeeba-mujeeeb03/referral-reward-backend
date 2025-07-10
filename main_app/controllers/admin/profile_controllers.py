@@ -80,12 +80,27 @@ def edit_profile_data():
                 filename = f"{admin_uid}_profile.jpg"
                 image_path = os.path.join(UPLOAD_FOLDER, secure_filename(filename))
 
+<<<<<<< HEAD
                 with open(image_path, "wb") as f:
                     f.write(base64.b64decode(image_data))
 
                 update_fields["profile_picture"] = f"/{image_path}"
             except Exception as e:
                 return jsonify({"error": "Invalid image format or failed to save image", "details": str(e)}), 400
+=======
+        files = request.files.get("image")
+        img_file = None
+        # if not files:
+        #     return jsonify({"error": "Image not found"}), 400
+        if files:
+            filename = secure_filename(files.filename)
+            image_path = os.path.join(UPLOAD_FOLDER, filename)
+            files.save(image_path)
+            img_file = f"/{image_path}"
+
+        if "image" in data:
+            update_fields["profile_picture"] = img_file
+>>>>>>> e4dc20c46f00cba5fed002e8afda916fe5cdb3aa
 
         if not update_fields:
             return jsonify({"success": False, "message": "No fields to update"}), 400
