@@ -1,6 +1,7 @@
 import datetime
 from main_app.controllers.admin.help_request_controllers import get_faqs_by_category_name
 from main_app.models.admin.error_model import Errors
+from main_app.models.admin.galaxy_model import Galaxy
 from main_app.models.admin.how_it_work_model import HowItWork
 from main_app.models.user.user import User
 from main_app.models.user.reward import Reward
@@ -284,6 +285,33 @@ def fetch_data_from_admin():
         prize_dict.pop('created_at', None)
         prize_data.append(prize_dict)
 
+    reward = Reward.objects(user_id=user_id).first()
+    if not reward or not reward.galaxy_name:
+        return jsonify({"message": "User has no galaxy assigned yet"}), 404
+
+    current_galaxy_name = reward.galaxy_name[-1]  # Last in list is current
+    galaxy = Galaxy.objects(galaxy_name=current_galaxy_name).first()
+
+    if not galaxy:
+        return jsonify({"message": "Current galaxy not found"}), 404
+
+    galaxy_data = {
+        "galaxy_name": galaxy.galaxy_name,
+        "total_meteors_required_in_this_galaxy": galaxy.total_meteors_required,
+        "total_milestones": galaxy.total_milestones,
+        "milestones": []
+    }
+
+    for m in galaxy.all_milestones:
+        milestones = {
+            "milestone_id": m.milestone_id,
+            "milestone_name": m.milestone_name,
+            "milestone_reward": m.milestone_reward,
+            "meteors_required_to_unlock": m.meteors_required_to_unlock,
+            "milestone_description": m.milestone_description
+        }
+        galaxy_data["milestones"].append(milestones)
+
     if user:
         return jsonify({
             "success" : True ,
@@ -292,7 +320,8 @@ def fetch_data_from_admin():
             "home_faqs" : home_faqs,
             "rewards_faqs" : rewards_faqs,
             "referrals_faqs" : referrals_faqs,
-            "help_and_support" : help_faqs
+            "help_and_support" : help_faqs,
+            "galaxy_data" : galaxy_data
             })
 
     return ({"message": "An Unexpected error occurred",

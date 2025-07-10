@@ -235,4 +235,5 @@ def submit_msg():
             }), 400
 
         send.update(file_urls=file_urls)
+        print(file_urls)
     return jsonify({"message": "Your query has been sent!"}), 201

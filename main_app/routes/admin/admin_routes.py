@@ -2,13 +2,13 @@ from flask import Blueprint
 from main_app.controllers.admin.admin_auth_controller import admin_register
 from main_app.controllers.admin.admin_auth_controller import handle_admin_login
 from main_app.controllers.admin.forgotpassword_controllers import forgot_otp_email, verify_otp, reset_password
-from main_app.controllers.admin.help_request_controllers import add_faq, update_faq, delete_faq, list_contact_messages
+from main_app.controllers.admin.help_request_controllers import add_faq, delete_faq, list_contact_messages
 from main_app.controllers.admin.profile_controllers import edit_profile_data
 from main_app.controllers.admin.product_controllers import add_product, update_product, update_offer
 from main_app.controllers.admin.prize_controller import add_exciting_prizes, check_eligibility
 from main_app.controllers.admin.how_it_work_controller import add_how_it_work, advertisement_card
 from main_app.controllers.admin.referral_controllers import generate_invite_link_with_expiry
-from main_app.controllers.admin.rewards_controllers import  create_galaxy,remove_milestone
+from main_app.controllers.admin.rewards_controllers import create_galaxy, remove_milestone, add_new_milestone
 from main_app.controllers.admin.dashboard_controllers import error_table, dashboard_participants
 from main_app.controllers.admin.email_controller import create_email
 
@@ -293,10 +293,15 @@ def generate_link():
 
 # ==============
 
+@admin_bp.route('/admin/add-new-galaxy', methods = ['POST'])
+def add_galaxy():
+
+    return create_galaxy()
+
 @admin_bp.route('/admin/add-new-milestones', methods = ['POST'])
 def add_milestone():
 
-    return create_galaxy()
+    return add_new_milestone()
 
 
 @admin_bp.route('/admin/delete-milestone', methods = ['POST'])

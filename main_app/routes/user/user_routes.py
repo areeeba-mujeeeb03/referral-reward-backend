@@ -1,5 +1,5 @@
 from itertools import product
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 from pymongo import DESCENDING
 
 from main_app.controllers.user.auth_controllers import handle_registration
@@ -13,6 +13,7 @@ from main_app.controllers.user.invite import send_whatsapp_invite, send_telegram
 from main_app.controllers.user.user_profile_controllers import update_profile, submit_msg
 from main_app.models.admin.galaxy_model import Galaxy
 from main_app.models.user.reward import Reward
+from main_app.models.user.user import User
 
 user_bp = Blueprint("user_routes", __name__)
 
@@ -301,36 +302,103 @@ def fetch_custom_data():
 
     return fetch_data_from_admin()
 
-@user_bp.route('/<user_id>' , methods = ['POST'])
-def update_planet_and_galaxy(user_id):
-    reward = Reward.objects(user_id = user_id).first()
-    all_galaxies = reward.galaxy_name
-    current_galaxy = all_galaxies[-1]
-    find_galaxy = Galaxy.objects(galaxy_name = current_galaxy).first()
+@user_bp.route('/update-user-progress', methods=['POST'])
+def update_user_progress():
+    try:
+        data = request.get_json()
+        user_id = data.get("user_id")
+        current_meteors = Reward.objects(user_id = user_id).first()
+        earned_meteors = current_meteors.total_meteors
 
-    if not find_galaxy:
-        return jsonify({"message" : "This galaxy does not exist"})
+        if not user_id or earned_meteors is None:
+            return jsonify({"message": "user_id and earned_meteors are required"}), 400
 
-    target = find_galaxy.total_meteors_required
-    if reward.total_meteors <= target:
-        check = Galaxy.objects(galaxy_name = current_galaxy).first()
-        milestones = find_galaxy.all_milestones
+        user = User.objects(user_id=user_id).first()
+        if not user:
+            return jsonify({"message": "User not found"}), 404
+
+        # Update total meteors earned
+        user.total_meteors_earned += earned_meteors
+
+        current_galaxy = user.current_galaxy
+        if not current_galaxy:
+            return jsonify({"message": "User is not assigned to a galaxy"}), 400
+
+        # Unlock next milestone if eligible
+        next_milestone = None
+        milestones = current_galaxy.all_milestones
+
+        milestones = sorted(milestones, key=lambda m: m.meteors_required_to_unlock)
+
         for milestone in milestones:
-            required_meteors = milestones['required_to_unlock', 'milestone_name']
-            points = required_meteors['meteors_required_to_unlock']
-            user_milestone = reward.current_planet
-            find_milestone = check.all_milestones.objects(milestone_name__nin = user_milestone)
+            if milestone.meteors_required_to_unlock <= user.total_meteors_earned:
+                next_milestone = milestone
+            else:
+                break
 
-            if find_milestone and reward.total_meteors >= points:
-                user_milestone.append = find_milestone['milestone_name']
-                return jsonify({"message" : "new planet unlocked"})
+        if next_milestone:
+            user.current_milestone_id = next_milestone.milestone_id
 
-    if reward.total_meteors >= target:
-        next_planet = Galaxy.objects(galaxy_name__nin = all_galaxies).first()
-        reward.update(
-            push__galaxy_name = next_planet.galaxy_name
-        )
-        print(reward.galaxy_name)
-        return jsonify({"message" : "New Galaxy Unlocked", "success" : True})
+        if user.total_meteors_earned >= current_galaxy.total_meteors_required:
+            next_galaxy = Galaxy.objects(galaxy_name__ne=current_galaxy.galaxy_name).first()
+            if next_galaxy:
+                user.current_galaxy = next_galaxy
+                user.current_milestone_id = None  # Reset milestone
+
+        user.save()
+
+        return jsonify({
+            "message": "User progress updated",
+            "total_meteors_earned": user.total_meteors_earned,
+            "current_milestone_id": user.current_milestone_id,
+            "current_galaxy": user.current_galaxy.galaxy_name if user.current_galaxy else None
+        }), 200
+
+    except Exception as e:
+        return jsonify({"message": f"Failed to update user progress: {str(e)}"}), 500
+
+
+
+@user_bp.route('/update-user-progress/<user_id>', methods=['POST'])
+def update_planet_and_galaxy(user_id):
+    try:
+        reward = Reward.objects(user_id=user_id).first()
+        if not reward:
+            return jsonify({"message": "Reward entry not found"}), 404
+
+        all_galaxies = reward.galaxy_name
+        if not all_galaxies:
+            return jsonify({"message": "No galaxy assigned yet"}), 400
+
+        current_galaxy_name = all_galaxies[-1]
+        current_galaxy = Galaxy.objects(galaxy_name=current_galaxy_name).first()
+
+        if not current_galaxy:
+            return jsonify({"message": "This galaxy does not exist"}), 404
+
+        total_meteors = reward.total_meteors
+        milestone_unlocked = False
+
+        for milestone in current_galaxy.all_milestones:
+            if milestone.milestone_name not in reward.current_planet:
+                if total_meteors >= milestone.meteors_required_to_unlock:
+                    reward.update(push__current_planet=milestone.milestone_name)
+                    milestone_unlocked = True
+                    return jsonify({"message": f"New planet unlocked: {milestone.milestone_name}", "success": True}), 200
+
+        if total_meteors >= current_galaxy.total_meteors_required:
+            next_galaxy = Galaxy.objects(galaxy_name__nin=all_galaxies).first()
+            if next_galaxy:
+                reward.update(push__galaxy_name=next_galaxy.galaxy_name)
+                return jsonify({"message": "New Galaxy Unlocked", "success": True}), 200
+            else:
+                return jsonify({"message": "No more galaxies available"}), 200
+
+        if not milestone_unlocked:
+            return jsonify({"message": "No new planet or galaxy unlocked yet"}), 200
+
+    except Exception as e:
+        return jsonify({"message": f"Failed to update progress: {str(e)}"}), 500
+
 
 

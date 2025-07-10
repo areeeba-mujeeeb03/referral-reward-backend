@@ -43,7 +43,7 @@ def create_galaxy():
 
 def add_new_milestone():
     try:
-        data = request.form.to_dict()
+        data = request.get_json()
         admin_uid = data.get("admin_uid")
         galaxy_name = data.get("galaxy_name")
         milestone_name = data.get("milestone_name")
@@ -51,18 +51,10 @@ def add_new_milestone():
         meteors_required_to_unlock = int(data.get("meteors_required_to_unlock", 0))
         milestone_description = data.get("milestone_description")
 
-        image = request.files.get("image")
-
         if not all([milestone_name, milestone_reward, milestone_description, meteors_required_to_unlock]):
             return jsonify({"message": "All milestone fields are required"}), 400
 
-        # Save image if provided
-        image_url = None
-        if image:
-            filename = secure_filename(image.filename)
-            image_path = os.path.join(UPLOAD_FOLDER, filename)
-            image.save(image_path)
-            image_url = f"/{image_path}"
+
 
         galaxy = Galaxy.objects(admin_uid=admin_uid, galaxy_name=galaxy_name).first()
         if not galaxy:
@@ -79,13 +71,12 @@ def add_new_milestone():
             "milestone_name": milestone_name,
             "milestone_reward": milestone_reward,
             "meteors_required_to_unlock": meteors_required_to_unlock,
-            "milestone_description": milestone_description,
-            "image": image_url
+            "milestone_description": milestone_description
         }
 
         galaxy.update(push__all_milestones=new_milestone)
         galaxy.update(
-            inc__total_meteors_required=meteors_required_to_unlock,
+            total_meteors_required=meteors_required_to_unlock,
             set__total_milestones=len(galaxy.all_milestones) + 1
         )
 
@@ -101,12 +92,10 @@ def update_milestone():
         admin_uid = data.get("admin_uid")
         galaxy_name = data.get("galaxy_name")
         milestone_id = data.get("milestone_id")
-
         milestone_name = data.get("milestone_name")
         milestone_reward = data.get("milestone_reward")
         meteors_required_to_unlock = int(data.get("meteors_required_to_unlock", 0))
         milestone_description = data.get("milestone_description")
-        image = request.files.get("image")
 
         galaxy = Galaxy.objects(admin_uid=admin_uid, galaxy_name=galaxy_name).first()
         if not galaxy:
@@ -115,25 +104,15 @@ def update_milestone():
         updated = False
         for i, milestone in enumerate(galaxy.all_milestones):
             if milestone.milestone_id == milestone_id:
-                if image:
-                    filename = secure_filename(image.filename)
-                    image_path = os.path.join(UPLOAD_FOLDER, filename)
-                    image.save(image_path)
-                    image_url = f"/{image_path}"
-                else:
-                    image_url = milestone.image
-
                 galaxy.all_milestones[i] = {
                     "milestone_id": milestone_id,
                     "milestone_name": milestone_name,
                     "milestone_reward": milestone_reward,
                     "meteors_required_to_unlock": meteors_required_to_unlock,
-                    "milestone_description": milestone_description,
-                    "image": image_url
+                    "milestone_description": milestone_description
                 }
                 updated = True
                 break
-
         if updated:
             galaxy.save()
             return jsonify({"message": "Milestone updated successfully"}), 200

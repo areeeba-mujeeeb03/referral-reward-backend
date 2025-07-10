@@ -5,7 +5,7 @@ import datetime
 class Milestone(EmbeddedDocument):
     milestone_id = StringField(required=True)
     milestone_name = StringField()
-    milestone_reward = IntField()
+    milestone_reward = StringField()
     meteors_required_to_unlock = IntField()
     milestone_description = StringField()
     image = StringField()
