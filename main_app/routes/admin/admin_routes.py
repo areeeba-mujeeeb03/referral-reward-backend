@@ -13,7 +13,7 @@ from main_app.controllers.admin.dashboard_controllers import error_table, dashbo
 from main_app.controllers.admin.email_controller import create_email
 from main_app.controllers.user.landingpage_controllers import fetch_data_from_admin
 from main_app.controllers.admin.notification_controller import create_push_notification, list_push_notifications, update_push_notification, delete_push_notification
-from main_app.controllers.admin.perks_controller import create_exclusive_perks
+from main_app.controllers.admin.perks_controller import create_exclusive_perks, edit_footer
 
 
 admin_bp = Blueprint("admin_routes", __name__)
@@ -228,6 +228,8 @@ def admin_error_table():
 # =============
 @admin_bp.route("/admin/send_email", methods = ["POST"])
 def admin_send_email():
+    ""
+    ""
     return create_email()
 
 
@@ -367,6 +369,8 @@ def fetch_custom_data():
 
 @admin_bp.route('/admin/push_notification', methods=['POST'])
 def admin_push_notification():
+    """
+    """
     return create_push_notification()
 
 
@@ -378,6 +382,8 @@ def admin_push_notification():
 
 @admin_bp.route('/admin/table_push_notifications', methods=['POST'])
 def admin_list_push_notification():
+    """
+    """
     return list_push_notifications()
 
 # =================
@@ -388,6 +394,8 @@ def admin_list_push_notification():
 
 @admin_bp.route('/admin/update_push_notifications/<notification_id>', methods=['PUT'])
 def admin_update_push_notification(notification_id):
+    """
+    """
     return update_push_notification(notification_id)
 
 
@@ -399,6 +407,8 @@ def admin_update_push_notification(notification_id):
 
 @admin_bp.route('/admin/update_push_notifications/<notification_id>', methods=['DELETE'])
 def admin_delete_push_notification(notification_id):
+    """
+    """
     return delete_push_notification(notification_id)
 
 
@@ -410,5 +420,17 @@ def admin_delete_push_notification(notification_id):
 
 @admin_bp.route("/admin/exclusive_perks", methods= ["POST"])
 def admin_create_exclusive_perks():
+    """
+    """
     return create_exclusive_perks()
 
+
+# ===================
+ 
+#  Footer section
+
+# ==================
+
+@admin_bp.route("/admin/update_footer", methods=["POST"])
+def admin_create_footer():
+    return edit_footer()
