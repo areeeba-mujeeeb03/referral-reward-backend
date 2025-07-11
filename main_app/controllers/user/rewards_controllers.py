@@ -20,8 +20,6 @@ logger = logging.getLogger(__name__)
 
 def set_reward_settings():
     try:
-        # Check if user is admin (you should replace this with real role logic)
-
         data = request.get_json()
 
         # Validate input fields
@@ -29,9 +27,8 @@ def set_reward_settings():
         if not all(field in data for field in required_fields):
             return jsonify({"error": "Missing required fields"}), 400
 
-        # Optional: validate conversion_rates structure
         cr = data['conversion_rates']
-        if not all(k in cr for k in ['meteor_to_star', 'star_to_reward', 'reward_to_currency']):
+        if not all(k in cr for k in ['meteor_to_star', 'star_to_meteor', 'reward_to_currency']):
             return jsonify({"error": "Invalid conversion rates format"}), 400
 
         # Upsert settings (only one document in this collection)

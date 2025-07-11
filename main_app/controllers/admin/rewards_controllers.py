@@ -5,16 +5,6 @@ from main_app.controllers.admin.how_it_work_controller import UPLOAD_FOLDER
 from main_app.models.admin.galaxy_model import Galaxy, Milestone
 
 
-def rewards():
-    try:
-        data = request.get_json()
-        referrer_reward = data.get("referrer_reward")
-        referee_reward = data.get("referee_reward")
-        image = request.files.get("image")
-
-    except Exception as e:
-        return
-
 def create_galaxy():
     try:
         data = request.get_json()

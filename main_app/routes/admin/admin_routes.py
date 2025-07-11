@@ -14,7 +14,7 @@ from main_app.controllers.admin.email_controller import create_email
 from main_app.controllers.user.landingpage_controllers import fetch_data_from_admin
 from main_app.controllers.admin.notification_controller import create_push_notification, list_push_notifications, update_push_notification, delete_push_notification
 from main_app.controllers.admin.perks_controller import create_exclusive_perks
-
+from main_app.controllers.user.rewards_controllers import set_reward_settings
 
 admin_bp = Blueprint("admin_routes", __name__)
 
@@ -312,10 +312,10 @@ def generate_link():
 
 # ==============
 
-# @admin_bp.route('/admin/add-galaxy', methods = ['POST'])
-# def add_galaxy():
-#
-#     return add_new_galaxy()
+@admin_bp.route('/admin/set-referral-rewards', methods = ['POST'])
+def set_referral_rewards():
+
+    return set_reward_settings()
 
 # ==============
 

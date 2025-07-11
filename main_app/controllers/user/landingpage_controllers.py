@@ -3,6 +3,7 @@ from main_app.controllers.admin.help_request_controllers import get_faqs_by_cate
 from main_app.models.admin.error_model import Errors
 from main_app.models.admin.galaxy_model import Galaxy
 from main_app.models.admin.how_it_work_model import HowItWork
+from main_app.models.admin.links import ReferralReward
 from main_app.models.user.user import User
 from main_app.models.user.reward import Reward
 from main_app.models.user.referral import Referral
@@ -26,6 +27,7 @@ def home_page():
     session_id = data.get("log_alt")
 
     user = User.objects(user_id=user_id).first()
+    print(user.email)
     try:
         if not user:
             return jsonify({"success" : False, "message" : "User does not exist"})
@@ -53,7 +55,7 @@ def home_page():
 
         info = {
             "total_stars": reward.total_stars,
-            "total_meteors": reward.total_meteors,
+            "total_meteors": reward.current_meteors,
             "galaxy_name": reward.galaxy_name,
             "current_planet": reward.current_planet,
             "invitation_link": user.invitation_link,
@@ -111,10 +113,11 @@ def my_rewards():
             info = {
                 "invitation_link": user.invitation_link,
                 "total_stars": user_reward.total_stars,
-                "total_meteors": user_reward.total_meteors,
+                "total_meteors": user_reward.current_meteors,
                 "total_vouchers": user_reward.total_vouchers,
                 "invite_code": user.invitation_code,
-                "reward_history": list(user_reward.reward_history)
+                "reward_history": list(user_reward.reward_history),
+                 "redeemed_meteors" : reward.redeemed_meteors,
             }
 
             fields_to_encode = ["total_stars",
@@ -122,7 +125,8 @@ def my_rewards():
                                 "total_vouchers",
                                 "invite_code",
                                 "reward_history",
-                                "invitation_link"
+                                "invitation_link",
+                                "redeemed_meteors"
                                 ]
 
             encoded_str = generate_encoded_string(info, fields_to_encode)
@@ -242,6 +246,7 @@ def my_profile():
                                 "invitation_link",
                                 "invite_code"
                                 ]
+            conversion_rate = []
 
             encoded_str = generate_encoded_string(info, fields_to_encode)
             return encoded_str, 200
@@ -329,9 +334,20 @@ def fetch_data_from_admin():
                 "button_txt": ad.button_txt,
                 "image_url": ad.image_url
             }
-            ad_data.append(ad_dict)    
+            ad_data.append(ad_dict)
+
+    conversion_rate = []
+    rates = ReferralReward.objects(admin_uid = admin_uid).first()
+    conversion_data = {
+        "conversion_rates" : rates.conversion_rates,
+        "referrer_reward" : rates.referrer_reward,
+        "invitee_reward" : rates.invitee_reward,
+    }
+    conversion_rate.append(conversion_data)
+
 
       # --- Merge both
+    exclusive_perks = {}
 
     if user:
         return jsonify({
@@ -343,7 +359,10 @@ def fetch_data_from_admin():
             "referrals_faqs" : referrals_faqs,
             "help_and_support" : help_faqs,
             "galaxy_data" : galaxy_data,
-            "advertisement_cards" : ad_data
+            "advertisement_cards" : ad_data,
+            "exclusive_perks" : exclusive_perks,
+            "conversion_data"  :conversion_rate
+
             })
 
     return ({"message": "An Unexpected error occurred",

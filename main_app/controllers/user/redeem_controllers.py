@@ -3,7 +3,6 @@ from main_app.models.user.reward import Reward
 import datetime
 import logging
 
-
 # Configure logging for OTP operations
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

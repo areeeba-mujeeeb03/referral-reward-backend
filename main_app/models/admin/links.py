@@ -22,10 +22,12 @@ class AppStats(Document):
 
 class ReferralReward(Document):
     admin_uid = StringField()
-    referrer_reward  = StringField(required=True)
-    referee_reward = StringField(required=True)
+    referrer_reward  = IntField(required=True)
+    invitee_reward = IntField(required=True)
     conversion_rates = DictField(required=True)
-    updated_on = DateTimeField()
+    signup_reward = IntField(required=True)
+    login_reward =IntField(required=True)
+    updated_at = DateTimeField()
 
     meta = {"db_alias": "admin-db", "collection": "ReferralRewards"}
 

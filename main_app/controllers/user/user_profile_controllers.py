@@ -1,37 +1,18 @@
-import datetime
 import os
-from werkzeug.utils import secure_filename
-
 from main_app.models.admin.error_model import Errors
 from main_app.models.admin.help_model import FAQ, Contact
-from flask import request, jsonify
 from main_app.models.user.user import User
 from main_app.controllers.user.auth_controllers import validate_session_token
 from main_app.models.admin.product_model import Product
 from main_app.utils.user.error_handling import get_error
 import logging
-
+import datetime
+from flask import request, jsonify
 from main_app.utils.user.helpers import check_password, hash_password
-
-UPLOAD_FOLDER ="uploads/profile"
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-UPLOAD_FOLDER = 'uploads/support_files'
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf', 'svg'}
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-
 
 # Configure logging for better debugging and monitoring
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-import base64
-import os
-import datetime
-from flask import request, jsonify
-from werkzeug.utils import secure_filename
 
 def update_profile():
     try:
@@ -98,13 +79,7 @@ def update_profile():
         if data.get("image"):
             try:
                 image_data = data["image"]
-                filename = f"{user_id}_profile.jpg"
-                image_path = os.path.join(UPLOAD_FOLDER, secure_filename(filename))
-
-                with open(image_path, "wb") as f:
-                    f.write(base64.b64decode(image_data))
-
-                update_fields["profile_picture"] = f"/{image_path}"
+                update_fields["profile_picture"] = image_data
             except Exception as e:
                 return jsonify({"error": "Invalid image format or failed to save image", "details": str(e)}), 400
 
@@ -121,7 +96,6 @@ def update_profile():
 
     except Exception as e:
         return jsonify({"success": False, "message": "Server error", "error": str(e)}), 500
-
 
 def redeem():
     try:
@@ -153,72 +127,59 @@ UPLOAD_FOLDER = "static/uploads/contact"
 
 def submit_msg():
     data = request.get_json()
-
-    username = data.get('username')
-    email = data.get('email')
-    message = data.get('message')
-
     user_id = data.get("user_id")
-    access_token = data.get("mode")
-    session_id = data.get("log_alt")
-
-    files = [
-        data.get("file1"),
-        data.get("file2"),
-        data.get("file3"),
-        data.get("file4"),
-        data.get("file5")
-    ]
-
-    files = [f for f in files if f]
-
-    print(data)
-
-    # if not all([username, email, message]):
-    #     return jsonify({"error": "All fields are required"}), 400
-
     user = User.objects(user_id=user_id).first()
-
-    if not user:
-        return jsonify({"success": False, "message": "User does not exist"}), 404
-
-    if not access_token or not session_id:
-        return jsonify({"message": "Missing token or session", "success": False}), 400
-
-    if user.access_token != access_token:
-        return jsonify({"success": False, "message": "Invalid access token"}), 401
-
-    if user.session_id != session_id:
-        return jsonify({"success": False, "message": "Session mismatch"}), 403
-
-    if user.username != username:
-        return jsonify({"message": "You are not registered with this username"}), 400
-
-    if user.email != email:
-        return jsonify({"message": "You are not registered with this email"}), 400
-
-    send = Contact(
-        admin_uid=user.admin_uid,
-        user_id=user_id,
-        email=email,
-        username=username,
-        message=message,
-        date=datetime.datetime.utcnow()
-    ).save()
-
-    file_urls = []
-    if files:
+    try:
 
 
-    # Errors(
-    #     username=user.username,
-    #     email=user.email,
-    #     error_source="send contact message",
-    #     error_type=f"Failed to save attachments {str(e)}"
-    # ).save()
-    # return jsonify({
-    #     "error": "Failed to save attachments"
-    # }), 400
-        send.update(file_urls=file_urls)
-        print(file_urls)
-    return jsonify({"message": "Your query has been sent!"}), 201
+        username = data.get('username')
+        email = data.get('email')
+        message = data.get('message')
+
+        access_token = data.get("mode")
+        session_id = data.get("log_alt")
+
+        files = [
+            data.get("file1"),
+            data.get("file2"),
+            data.get("file3"),
+            data.get("file4"),
+            data.get("file5")
+        ]
+        print(data)
+        if not user:
+            return jsonify({"success": False, "message": "User does not exist"}), 404
+
+        if not access_token or not session_id:
+            return jsonify({"message": "Missing token or session", "success": False}), 400
+
+        if user.access_token != access_token:
+            return jsonify({"success": False, "message": "Invalid access token"}), 401
+
+        if user.session_id != session_id:
+            return jsonify({"success": False, "message": "Session mismatch"}), 403
+
+        if user.username != username:
+            return jsonify({"message": "You are not registered with this username"}), 400
+
+        if user.email != email:
+            return jsonify({"message": "You are not registered with this email"}), 400
+
+        send = Contact(
+            admin_uid=user.admin_uid,
+            user_id=user_id,
+            email=email,
+            username=username,
+            message=message,
+            date=datetime.datetime.now(),
+            file_url = files
+        ).save()
+    except Exception as e:
+        Errors(
+            username=user.username,
+            email=user.email,
+            error_source="send contact message",
+            error_type=f"Failed to save attachments {str(e)}"
+        ).save()
+
+        return jsonify({"message": "Your query has been sent!" , "success" : True}), 201

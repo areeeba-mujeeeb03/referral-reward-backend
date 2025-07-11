@@ -224,32 +224,35 @@ def initialize_user_records(user_id):
     Args:
         user_id (str): ID of the newly registered user
     """
-    user = Reward.objects(user_id=user_id).first()
+    user_rewards = Reward.objects(user_id=user_id).first()
+    user_referrals = Referral.objects(user_id=user_id).first()
+    user = User.objects(user_id=user_id).first()
+    print(user_id)
     try:
+        if user_referrals and user_rewards :
+            return "The rewards for this user is already initialized", False
 
-        if user :
-            return "The rewards for this user is already initialized"
         user_reward = Reward(
             user_id=user_id,
             reward_history=[],
         )
         user_reward.save()
-
-        Reward.objects(user_id = user_id).update(
+        user_referral = Referral(user_id = user_id,
+                                 all_referrals=[])
+        user_referral.save()
+        reward = Reward.objects(user_id = user_id).first()
+        reward.update(
             inc__total_meteors = SIGN_UP_REWARD,
             redeemed_meteors = 0,
             push__galaxy_name= 'Milky Way Galaxy',
             push__current_planet='Planet A'
         )
-        user_referral = Referral(
-            user_id=user_id,
+        user_referral.update(
             total_referrals=0,
             referral_earning=0,
             pending_referrals=0,
-            successful_referrals=0,
-            all_referrals=[]
-        )
-        user_referral.save()
+            successful_referrals=0
+        ).save()
 
         logger.info(f"Initialized reward and referral records for user: {user_id}")
 

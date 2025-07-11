@@ -4,6 +4,7 @@ from pymongo import DESCENDING
 
 from main_app.controllers.user.auth_controllers import handle_registration
 from main_app.controllers.user.OTP_controllers import generate_and_send_otp, verify_user_otp
+from main_app.controllers.user.conversion_controllers import meteors_to_stars, stars_to_currency
 from main_app.controllers.user.login_controllers import handle_email_login, logout_user, product_purchase
 from main_app.controllers.user.forgotpassword_controllers import reset_password,send_verification_code, verify_code
 from main_app.controllers.user.landingpage_controllers import my_rewards, my_referrals, my_profile, home_page, \
@@ -303,10 +304,22 @@ def fetch_custom_data():
 
     return fetch_data_from_admin()
 
-@user_bp.route('/update-user-progress/<user_id>', methods=['POST'])
-def update_data(user_id):
-    return update_planet_and_galaxy(user_id)
+# @user_bp.route('/update-user-progress/<user_id>', methods=['POST'])
+# def update_data(user_id):
+#     return update_planet_and_galaxy(user_id)
 
+@user_bp.route('/meteors-to-stars', methods=['POST'])
+def meteors_and_stars():
+    return meteors_to_stars()
 
+@user_bp.route('/stars-to-currency', methods=['POST'])
+def stars_and_currency():
+    return stars_to_currency()
 
-
+# @user_bp.route('/stars-to-meteors', methods=['POST'])
+# def update_data():
+#     return
+#
+# @user_bp.route('/stars-to-currency', methods=['POST'])
+# def update_data():
+#     return

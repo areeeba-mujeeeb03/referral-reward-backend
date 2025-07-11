@@ -3,6 +3,7 @@ import re
 import datetime
 from flask import request, jsonify
 from main_app.models.admin.error_model import Errors
+from main_app.models.admin.links import ReferralReward
 from main_app.models.user.user import User
 from main_app.controllers.user.referral_controllers import (process_referral_code_and_reward, initialize_user_records, process_tag_id_and_reward)
 from main_app.utils.user.helpers import hash_password
@@ -110,8 +111,6 @@ def handle_registration():
                 return jsonify({"message": "referral link is not valid"}),400
             user.save()
             process_tag_id_and_reward(user_exist.tag_id, user.user_id)
-
-        user.save()
         # Step 6: Process referral code if provided
         try:
             referral_code = data.get("referral_code")
@@ -138,17 +137,29 @@ def handle_registration():
                   error_type=get_error(f"failed_to_update{str(e)}")).save()
             return jsonify({"error" : get_error("failed_to_update")})
 
-        logger.info(f"User account created successfully with ID: {user.user_id}")
         user.save()
         # Step 7: Initialize user's reward and referral tracking records
+        print("start")
         initialize_user_records(user.user_id)
+        print("working")
+        print(user.user_id)
+        logger.info(f"User account created successfully with ID: {user.user_id}")
 
+
+        conversion_rate = []
+        rates = ReferralReward.objects(admin_uid=user.admin_uid).first()
+        reward_data = {
+            "signup_reward": rates.signup_reward,
+            "login_reward": rates.login_reward,
+        }
+        conversion_rate.append(reward_data)
         # Step 8: Return successful registration response
         logger.info(f"User registration completed successfully for: {user.user_id}")
         return jsonify({
             "message": "User registered successfully",
             "user_id": user.user_id,
-            "registration_date": user.created_at.isoformat() if hasattr(user, 'created_at') else None
+            "registration_date": user.created_at.isoformat() if hasattr(user, 'created_at') else None,
+            "rewards" : conversion_rate
         }), 200
         
     except Exception as e:
