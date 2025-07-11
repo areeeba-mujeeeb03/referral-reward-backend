@@ -1,6 +1,6 @@
 from flask import request, jsonify
 from werkzeug.utils import secure_filename
-from main_app.models.admin.perks_model import ExclusivePerks
+from main_app.models.admin.perks_model import ExclusivePerks, FooterSection, FooterItem
 import os , logging
 from main_app.models.admin.admin_model import Admin
 
@@ -110,3 +110,54 @@ def create_exclusive_perks():
      except Exception as e:
             logger.error(f"Add exclusive perks failed:{str(e)}")
             return jsonify({"error": "Internal server error"}), 500
+            return jsonify({"error": "Internal server error"}), 500
+
+
+
+#----------------------------------------------------------------------------------------
+
+#-------- Footer Section
+
+
+def edit_footer():
+    try:
+        logger.info("Update footer API called")
+        data = request.get_json()
+        admin_uid = data.get("admin_uid")
+        content = data.get("content")
+
+        if not admin_uid or not content:
+            logger.warning("Missing admin_uid or content")
+            return jsonify({"message": "Admin uid and content are required"}), 400
+
+        # content = content.strip()
+        # if not content:
+        #     logger.warning("Empty content after stripping")
+        #     return jsonify({"message": "Content cannot be empty"}), 400
+
+        footer_section = FooterSection.objects(admin_uid=admin_uid).first()
+
+        if footer_section:
+            # Check for duplicate
+            if any(item.content == content for item in footer_section.footer):
+                logger.info("Duplicate footer content not added.")
+                return jsonify({"message": "Footer already exists"}), 200
+
+            # Append new content
+            footer_section.footer.append(FooterItem(content=content))
+            footer_section.save()
+        else:
+            # Create new footer section
+            new_footer = FooterSection(
+                admin_uid=admin_uid,
+                footer=[FooterItem(content=content)]
+            )
+            new_footer.save()
+
+        logger.info("Footer updated successfully.")
+        return jsonify({"message": "Footer updated successfully"}), 200
+
+    except Exception as e:
+        logger.exception(f"Update footer failed: {str(e)}")
+        return jsonify({"error": "Internal server error"}), 500
+

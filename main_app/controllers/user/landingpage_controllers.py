@@ -299,13 +299,15 @@ def fetch_data_from_admin():
     if not reward or not reward.galaxy_name:
         return jsonify({"message": "User has no galaxy assigned yet"}), 404
 
-    current_galaxy_name = reward.galaxy_name[-1]  # Last in list is current
+    current_galaxy_name = reward.galaxy_name[-1]
     galaxy = Galaxy.objects(galaxy_name=current_galaxy_name).first()
 
     if not galaxy:
         return jsonify({"message": "Current galaxy not found"}), 404
 
-    galaxy_data = {
+    galaxy_data = {}
+
+    user_galaxy_data = {
         "galaxy_name": galaxy.galaxy_name,
         "total_meteors_required_in_this_galaxy": galaxy.total_meteors_required,
         "total_milestones": galaxy.total_milestones,

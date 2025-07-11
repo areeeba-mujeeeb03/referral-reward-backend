@@ -304,9 +304,9 @@ def fetch_custom_data():
 
     return fetch_data_from_admin()
 
-# @user_bp.route('/update-user-progress/<user_id>', methods=['POST'])
-# def update_data(user_id):
-#     return update_planet_and_galaxy(user_id)
+@user_bp.route('/update-user-progress/<user_id>', methods=['POST'])
+def update_planets(user_id):
+    return update_planet_and_galaxy(user_id)
 
 @user_bp.route('/meteors-to-stars', methods=['POST'])
 def meteors_and_stars():
@@ -315,11 +315,3 @@ def meteors_and_stars():
 @user_bp.route('/stars-to-currency', methods=['POST'])
 def stars_and_currency():
     return stars_to_currency()
-
-# @user_bp.route('/stars-to-meteors', methods=['POST'])
-# def update_data():
-#     return
-#
-# @user_bp.route('/stars-to-currency', methods=['POST'])
-# def update_data():
-#     return

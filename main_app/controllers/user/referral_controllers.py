@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 PENDING_REFERRAL_REWARD_POINTS = 400
 SUCCESS_REFERRAL_REWARD_POINTS = 600
 SESSION_EXPIRY_MINUTES = 30
-SIGN_UP_REWARD = 200
+SIGN_UP_REWARD = 500
 
 # ==================
 
@@ -186,6 +186,11 @@ def update_referral_status_and_reward(referrer_id, user_id):
 
     # Now update the referrer’s reward
     reward_record = Reward.objects(user_id=referrer_id).first()
+    new_user_reward = Reward.objects(user_id=user_id).first()
+    new_user_reward.update(
+        inc__current_meteors = 500,
+        inc__total_meteors_earned = 500
+    )
     if not reward_record:
         logger.warning(f"No reward record found for user: {referrer_id}")
         return
