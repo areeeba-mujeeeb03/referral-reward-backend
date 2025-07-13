@@ -1,3 +1,5 @@
+import datetime
+
 from flask import request , jsonify
 import os
 import logging
@@ -13,15 +15,38 @@ def add_how_it_work():
     try:
         logger.info(f"Add and update how it work API called for uid:")
         data = request.get_json()
-        
+        admin_uid = data.get("admin_uid")
+        access_token = data.get("mode")
+        session_id = data.get("log_alt")
         title1 = data.get("title1")
         desc1 = data.get("desc1")
         title2 = data.get("title2")
         desc2 = data.get("desc2")
         title3 = data.get("title3")
         desc3 = data.get("desc3")
-        admin_uid = data.get("admin_uid")
-        
+
+        exist = Admin.objects(admin_uid=admin_uid).first()
+
+        if not exist:
+            return jsonify({"success": False, "message": "User does not exist"})
+
+        if not access_token or not session_id:
+            return jsonify({"message": "Missing token or session", "success": False}), 400
+
+        if exist.access_token != access_token:
+            return ({"success": False,
+                     "message": "Invalid access token"}), 401
+
+        if exist.session_id != session_id:
+            return ({"success": False,
+                     "message": "Session mismatch or invalid session"}), 403
+
+        if hasattr(exist, 'expiry_time') and exist.expiry_time:
+            if datetime.datetime.now() > exist.expiry_time:
+                return ({"success": False,
+                         "message": "Access token has expired",
+                         "token": "expired"}), 401
+
         if not data:
             logger.warning("No data received in request")
             return jsonify({"message": "No fields provided"}), 400
@@ -98,12 +123,35 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 def advertisement_card():
     try:
       logger.warning(f"Advertisment API called:")
-      data = request.form
-      
+      data = request.get_json()
+      admin_uid = data.get("admin_uid")
+      access_token = data.get("mode")
+      session_id = data.get("log_alt")
       title = data.get("title")
       description = data.get("description")
       button_txt = data.get("button_txt")
-      admin_uid = data.get("admin_uid")
+
+      exist = Admin.objects(admin_uid=admin_uid).first()
+
+      if not exist:
+          return jsonify({"success": False, "message": "User does not exist"})
+
+      if not access_token or not session_id:
+          return jsonify({"message": "Missing token or session", "success": False}), 400
+
+      if exist.access_token != access_token:
+          return ({"success": False,
+                   "message": "Invalid access token"}), 401
+
+      if exist.session_id != session_id:
+          return ({"success": False,
+                   "message": "Session mismatch or invalid session"}), 403
+
+      if hasattr(exist, 'expiry_time') and exist.expiry_time:
+          if datetime.datetime.now() > exist.expiry_time:
+              return ({"success": False,
+                       "message": "Access token has expired",
+                       "token": "expired"}), 401
       
       if not all([title, description, button_txt, admin_uid]):
          logger.warning("Missing required fields")

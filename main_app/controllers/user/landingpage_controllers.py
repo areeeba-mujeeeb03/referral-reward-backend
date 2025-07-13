@@ -134,8 +134,8 @@ def my_rewards():
                                 "reward_history",
                                 "invitation_link",
                                 "redeemed_meteors",
-                                "total_meteors_earned",
                                 "redeemed_vouchers"
+                                "total_meteors_earned",
                                 ]
 
             encoded_str = generate_encoded_string(info, fields_to_encode)
@@ -238,16 +238,16 @@ def my_profile():
         update_planet_and_galaxy(user_id)
 
         reward = Reward.objects(user_id = user_id).first()
-
+        referral = Referral.objects(user_id = user.user_id).first()
 
         # validate_session_token(user, access_token, session_id)
         if user:
             info = {"username" : user.username,
                     "email" : user.email,
                     "mobile_number" : user.mobile_number,
-                    "total_vouchers" : reward.total_vouchers,
-                    "redeemed_vouchers" : reward.used_vouchers,
-                    "pending_rewards" : reward.unused_vouchers,
+                    "current_meteors" : reward.current_meteors,
+                    "referral_earnings" : referral.referral_earning,
+                    "redeemed_meteors" : reward.redeemed_meteors,
                     "invitation_link" : user.invitation_link,
                     "invite_code" : user.invitation_code,
                     "total_meteors_earned" : reward.total_meteors_earned
@@ -256,14 +256,13 @@ def my_profile():
             fields_to_encode = ["username",
                                 "email",
                                 "mobile_number",
-                                "total_vouchers",
-                                "redeemed_vouchers",
-                                "pending_rewards",
+                                "current_meteors",
+                                "referral_earnings",
+                                "redeemed_meteors",
                                 "invitation_link",
                                 "invite_code",
                                 "total_meteors_earned"
                                 ]
-            conversion_rate = []
 
             encoded_str = generate_encoded_string(info, fields_to_encode)
             return encoded_str, 200

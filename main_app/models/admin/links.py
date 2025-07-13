@@ -4,18 +4,21 @@ from datetime import datetime
 
 class Link(Document):
     admin_uid = StringField(required=True)
-    invitation_link = StringField()
-    active = BooleanField(default=True)
-    created_at = DateTimeField(default=datetime.now)
-    start_date = DateTimeField()
-    expiry_date = DateTimeField()
-    referrer_reward = IntField()
-    referee_reward = IntField()
+    start_date = DateTimeField(required=True)
+    end_date = DateTimeField(required=True)
+    referrer_reward_type = StringField()
+    referrer_reward_value = StringField()
+    referee_reward_type = StringField()
+    referee_reward_value = StringField()
+    reward_condition = StringField()
+    success_reward = StringField()
+    created_at = DateTimeField(default=datetime.now())
 
     meta = {"db_alias" : "admin-db", "collection" : "links"}
 
 class AppStats(Document):
     admin_uid = StringField(required=True)
+    primary_platform = StringField()
     apps = ListField(DictField())
 
     meta = {"db_alias": "admin-db", "collection": "SharingApps"}

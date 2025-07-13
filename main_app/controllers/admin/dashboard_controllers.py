@@ -1,3 +1,5 @@
+import datetime
+
 from flask import request, jsonify
 import logging
 from main_app.models.admin.admin_model import Admin
@@ -8,6 +10,7 @@ from main_app.models.user.referral import Referral
 from main_app.models.user.reward import Reward
 from main_app.models.admin.error_model import Errors
 from main_app.models.admin.product_model import Product
+from main_app.utils.user.string_encoding import generate_encoded_string
 
 # Configure logging for better debugging and monitoring
 logging.basicConfig(level=logging.INFO)
@@ -16,7 +19,31 @@ logger = logging.getLogger(__name__)
 def dashboard_stats():
     data = request.get_json()
     admin_uid = data.get("admin_uid")
-    exist = Admin.objects(admin_uid = admin_uid).first()
+    access_token = data.get("mode")
+    session_id = data.get("log_alt")
+
+    exist = Admin.objects(admin_uid=admin_uid).first()
+
+    if not exist:
+        return jsonify({"success": False, "message": "User does not exist"})
+
+    if not access_token or not session_id:
+        return jsonify({"message": "Missing token or session", "success": False}), 400
+
+    if exist.access_token != access_token:
+        return ({"success": False,
+                 "message": "Invalid access token"}), 401
+
+    if exist.session_id != session_id:
+        return ({"success": False,
+                 "message": "Session mismatch or invalid session"}), 403
+
+    if hasattr(exist, 'expiry_time') and exist.expiry_time:
+        if datetime.datetime.now() > exist.expiry_time:
+            return ({"success": False,
+                     "message": "Access token has expired",
+                     "token": "expired"}), 401
+
     if exist:
         all_user_data = UserData.objects(admin_uid = admin_uid).first()
         apps_data = AppStats.objects(admin_uid = admin_uid).first()
@@ -30,15 +57,58 @@ def dashboard_stats():
                 }
                 sharing_apps_data.append(userdata)
 
-        return jsonify({"total_participants" : all_user_data.total_participants,
-                        "total_referrals" : all_user_data.succesful_referrals,
-                        "completed_referrals" : all_user_data.completed_referrals,
-                        "sharing_apps_data" : sharing_apps_data})
-    if not exist:
-        return jsonify({"success": False, "message" : "Admin id not found"})
+        info = {"total_participants" : all_user_data.total_participants,
+                "total_referrals" : all_user_data.total_referrals,
+                "referral_leads" : all_user_data.referral_leads,
+                "completed_referrals" : all_user_data.successful_referrals,
+                "currencies_converted" : all_user_data.currencies_converted,
+                "vouchers_won" : all_user_data.vouchers_won,
+                "coupons_used" : all_user_data.used_coupons,
+                "sharing_apps_data" : sharing_apps_data,
+                "games_earnings" : all_user_data.game_earnings,
+                "referral_earning": all_user_data.referral_earnings,
+                "purchases_earnings" : all_user_data.purchases_earnings,
+                "milestones_earnings" : all_user_data.milestones_earnings}
+
+        fields_to_encode = ["total_participants","total_referrals","completed_referrals",
+                            "currencies_converted","vouchers_won","coupons_used",
+                            "sharing_apps_data","games_earnings","referral_earning",
+                            "purchases_earnings","milestones_earnings"
+                            ]
+
+        res = generate_encoded_string(info, fields_to_encode)
+        return ({"success": True,
+                 "data": res}), 403
+
 
 # ---------------------------------------------------------------------------------
 def dashboard_participants():
+    data = request.get_json()
+    admin_uid = data.get("admin_uid")
+    access_token = data.get("mode")
+    session_id = data.get("log_alt")
+
+    exist = Admin.objects(admin_uid=admin_uid).first()
+
+    if not exist:
+        return jsonify({"success": False, "message": "User does not exist"})
+
+    if not access_token or not session_id:
+        return jsonify({"message": "Missing token or session", "success": False}), 400
+
+    if exist.access_token != access_token:
+        return ({"success": False,
+                 "message": "Invalid access token"}), 401
+
+    if exist.session_id != session_id:
+        return ({"success": False,
+                 "message": "Session mismatch or invalid session"}), 403
+
+    if hasattr(exist, 'expiry_time') and exist.expiry_time:
+        if datetime.datetime.now() > exist.expiry_time:
+            return ({"success": False,
+                     "message": "Access token has expired",
+                     "token": "expired"}), 401
     users = User.objects()
 
     data = []
@@ -83,7 +153,9 @@ def dashboard_participants():
         # userdata['referral_code'] = user['invitation_code']
         product_data.append(userdata)
 
-    return jsonify({"Partcipants_and_earning_with_referral" : data, "redeem_table" : redemption_data, "purchase_product":product_data})
+    return jsonify({"Participants_and_earning_with_referral" : data,
+                    "redeem_table" : redemption_data,
+                    "purchase_product":product_data}),200
 
 
 # ------------Error Table
@@ -93,6 +165,32 @@ def error_table():
         logger.info("Create error table API called.")
         data = request.get_json()
         errors = Errors.objects()
+
+        admin_uid = data.get("admin_uid")
+        access_token = data.get("mode")
+        session_id = data.get("log_alt")
+
+        exist = Admin.objects(admin_uid=admin_uid).first()
+
+        if not exist:
+            return jsonify({"success": False, "message": "User does not exist"})
+
+        if not access_token or not session_id:
+            return jsonify({"message": "Missing token or session", "success": False}), 400
+
+        if exist.access_token != access_token:
+            return ({"success": False,
+                     "message": "Invalid access token"}), 401
+
+        if exist.session_id != session_id:
+            return ({"success": False,
+                     "message": "Session mismatch or invalid session"}), 403
+
+        if hasattr(exist, 'expiry_time') and exist.expiry_time:
+            if datetime.datetime.now() > exist.expiry_time:
+                return ({"success": False,
+                         "message": "Access token has expired",
+                         "token": "expired"}), 401
 
         all_errors = []
         for error in errors:
@@ -105,51 +203,7 @@ def error_table():
             "message": "Data retrieved successfully",
             "data": all_errors
         }), 200
+
     except Exception as e:
-        logger.error("Internal Server Error while saving email.")
+        logger.error(f"Internal Server Error while saving email.{str(e)}")
         return jsonify({"error": "Internal server error"})
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# def error_table():
-#     data = request.get_json()
-#     user_id = data.get("user_id")
-
-#     if not user_id:
-#         return jsonify({"message": "User ID is required"}), 400
-
-#     user = User.objects(user_id=user_id).first()
-#     if not user:
-#         return jsonify({"message": "User not found"}), 400
-
-#     user_dict = user.to_mongo().to_dict()
-#     user_dict.pop('_id', None)  # Remove MongoDB internal ID
-
-#     return jsonify({
-#         "message": "User data retrieved successfully",
-#         "data": user_dict
-#     }), 200

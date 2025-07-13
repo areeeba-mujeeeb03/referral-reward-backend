@@ -1,4 +1,4 @@
-from mongoengine import StringField, Document, DateTimeField ,FloatField, BooleanField
+from mongoengine import StringField, Document, DateTimeField, FloatField, BooleanField, IntField
 import datetime
 
 class Product(Document):
@@ -9,6 +9,7 @@ class Product(Document):
     short_desc = StringField(required=True)
     image_url = StringField()
     reward_type = StringField()
+    purchase_number = IntField(default=0)
     status = StringField(default="Live")  # Options: Live, Paused
     visibility_till = DateTimeField()
     apply_offer = BooleanField()

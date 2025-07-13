@@ -13,7 +13,7 @@ from main_app.controllers.user.auth_controllers import validate_password_strengt
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
+SESSION_EXPIRY_MINUTES = 30
 #------- Register 
 
 def admin_register():
@@ -109,10 +109,12 @@ def handle_admin_login():
         #  Generate tokens
         access_token = generate_access_token(user.admin_uid)
         session_id = create_user_session(user.admin_uid)
+        expiry_time = datetime.datetime.now() + datetime.timedelta(minutes=SESSION_EXPIRY_MINUTES)
 
         #  Update user session info in DB
         user.access_token = access_token
         user.session_id = session_id
+        user.expiry_time = expiry_time
         user.last_login = datetime.datetime.now()
         user.save()
 

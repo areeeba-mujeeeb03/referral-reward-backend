@@ -1,20 +1,22 @@
 from flask import Blueprint
 from main_app.controllers.admin.admin_auth_controller import admin_register
 from main_app.controllers.admin.admin_auth_controller import handle_admin_login
+from main_app.controllers.admin.discount_coupons_controllers import create_discount_coupons, update_discount_coupon, \
+    delete_discount_coupon
 from main_app.controllers.admin.forgotpassword_controllers import forgot_otp_email, verify_otp, reset_password
-from main_app.controllers.admin.help_request_controllers import add_faq, delete_faq, list_contact_messages
+from main_app.controllers.admin.help_request_controllers import add_faqs, delete_faq, list_contact_messages, update_faqs
 from main_app.controllers.admin.profile_controllers import edit_profile_data
 from main_app.controllers.admin.product_controllers import add_product, update_product, update_offer
 from main_app.controllers.admin.prize_controller import add_exciting_prizes, check_eligibility
 from main_app.controllers.admin.how_it_work_controller import add_how_it_work, advertisement_card
-from main_app.controllers.admin.referral_controllers import generate_invite_link_with_expiry
+from main_app.controllers.admin.referral_controllers import generate_invite_link_with_expiry, sharing_app_stats, \
+    save_referral_data
 from main_app.controllers.admin.rewards_controllers import create_galaxy, remove_milestone, add_new_milestone
-from main_app.controllers.admin.dashboard_controllers import error_table, dashboard_participants
+from main_app.controllers.admin.dashboard_controllers import error_table, dashboard_participants, dashboard_stats
 from main_app.controllers.admin.email_controller import create_email
 from main_app.controllers.user.landingpage_controllers import fetch_data_from_admin
 from main_app.controllers.admin.notification_controller import create_push_notification, list_push_notifications, update_push_notification, delete_push_notification
 from main_app.controllers.admin.perks_controller import create_exclusive_perks, edit_footer
-
 from main_app.controllers.admin.perks_controller import create_exclusive_perks
 from main_app.controllers.user.rewards_controllers import set_reward_settings
 
@@ -171,8 +173,6 @@ def prize_check_eligibility():
     """
     return check_eligibility()
 
-
-
 # ========================
 
 # 11. How It Work
@@ -182,7 +182,7 @@ def prize_check_eligibility():
 @admin_bp.route("/admin/how_it_work", methods = ["POST"])
 def admin_how_it_work():
     """
-    Add or update 'How It Work' content based on admin_uid.
+    Add or update 'How It Works' content based on admin_uid.
     """
     return  add_how_it_work()
 
@@ -208,8 +208,9 @@ def admin_advertisement_card():
 
 # =======================================
 
-@admin_bp.route("/admin/participant_table", methods =["POST"])
+@admin_bp.route("/admin/dashboard/participant_table", methods =["POST"])
 def admin_reward_participant_table():
+
      return dashboard_participants()
 
 # ===============
@@ -218,14 +219,22 @@ def admin_reward_participant_table():
 
 # ===============
 
-@admin_bp.route("/admin/error_table", methods = ["POST"])
+@admin_bp.route("/admin/dashboard/error_table", methods = ["POST"])
 def admin_error_table():
     return error_table()
 
+# =============
+
+# 16. Dashboard Statistics
 
 # =============
 
-# 15. Email save
+@admin_bp.route('/admin/dashboard/stats', methods = ['POST'])
+def fetch_stats():
+    return dashboard_stats()
+# =============
+
+# 16. Email save
 
 # =============
 @admin_bp.route("/admin/send_email", methods = ["POST"])
@@ -237,7 +246,7 @@ def admin_send_email():
 
 # ==============
 
-# 16. Profile update of ADMIN
+# 17. Profile update of ADMIN
 
 # ==============
 
@@ -251,22 +260,14 @@ def edit_profile():
 
 # ==============
 
-
-# Add new FAQ
-
-# 17. View all FAQs
-
-# ==============
-
-# ==============
-
 # 18. Add new FAQ
 
 # ==============
 
 @admin_bp.route('/admin/add-faqs', methods=['POST'])
 def add_new_faq():
-    return add_faq()
+
+    return add_faqs()
 
 # ==============
 
@@ -275,9 +276,10 @@ def add_new_faq():
 # ==============
 
 
-# @admin_bp.route('/admin/update-faqs/<faq_id>', methods=['PUT'])
-# def update_faqs(faq_id):
-#     return update_faq(faq_id)
+@admin_bp.route('/admin/update-faqs', methods=['PUT'])
+def update_faq():
+
+    return update_faqs()
 
 # ==============
 
@@ -285,10 +287,10 @@ def add_new_faq():
 
 # ==============
 
-# @admin_bp.route('/admin/delete-faqs/<faq_id>/<category>', methods=['DELETE'])
-# def remove_faq(faq_id, category):
-#
-#     return delete_faq(faq_id, category)
+@admin_bp.route('/admin/delete-faqs', methods=['DELETE'])
+def remove_faq():
+
+    return delete_faq()
 
 # ==============
 
@@ -298,6 +300,7 @@ def add_new_faq():
 
 @admin_bp.route('/admin/messages', methods=['GET'])
 def view_msgs():
+
     return list_contact_messages()
 
 # ==============
@@ -317,6 +320,28 @@ def generate_link():
 
 # ==============
 
+@admin_bp.route('/special-link-referral-', methods = ['POST'])
+def special_link_referral():
+
+    return save_referral_data()
+
+# ==============
+
+# 24. Sharing platforms
+
+# ==============
+
+@admin_bp.route('/admin/sharing_apps', methods=['POST'])
+def sharing_apps():
+
+    return sharing_app_stats()
+
+# ==============
+
+# 25. Referral reward
+
+# ==============
+
 @admin_bp.route('/admin/set-referral-rewards', methods = ['POST'])
 def set_referral_rewards():
 
@@ -324,7 +349,7 @@ def set_referral_rewards():
 
 # ==============
 
-# 24. Generate invitation link with expiry
+# 26. Add New Galaxy
 
 # ==============
 
@@ -333,6 +358,12 @@ def add_galaxy():
 
     return create_galaxy()
 
+# ==============
+
+# 27. Add New Milestone
+
+# ==============
+
 @admin_bp.route('/admin/add-new-milestones', methods = ['POST'])
 def add_milestone():
 
@@ -340,41 +371,18 @@ def add_milestone():
 
 # ==================
 
-# 25. Delete milestone
+# 28. Delete milestone
 
 # ===================
+
 @admin_bp.route('/admin/delete-milestone', methods = ['POST'])
 def delete_milestone():
 
     return remove_milestone()
 
-# ==============
-
-# 26. Generate invitation link with expiry
-
-# ==============
-
-@admin_bp.route('/admin/sharing_apps', methods=['POST'])
-def update_sharing_apps():
-
-    return
-
-# ========
-
-# 27. Fetch All data
-
-# =========
-
-@admin_bp.route('/admin/fetch_custom_data', methods=['POST'])
-def fetch_custom_data():
-
-    return fetch_data_from_admin()
-
-
-
 # =======================
 
-# 28. Push Notification
+# 29. Push Notification
 
 # ========================
 
@@ -384,10 +392,9 @@ def admin_push_notification():
     """
     return create_push_notification()
 
-
 # ===========================
 
-# 29. List of Notification
+# 30. List of Notification
 
 # ============================
 
@@ -399,7 +406,7 @@ def admin_list_push_notification():
 
 # =================
 
-# 30. Update Notification
+# 31. Update Notification
 
 # ================
 
@@ -412,7 +419,7 @@ def admin_update_push_notification(notification_id):
 
 # =================
 
-# 31. Delete Notification
+# 32. Delete Notification
 
 # ================
 
@@ -422,10 +429,45 @@ def admin_delete_push_notification(notification_id):
     """
     return delete_push_notification(notification_id)
 
+# ==============
+
+# 33. Discount Coupons Generation
+
+# ==============
+
+@admin_bp.route("/admin/create-discount-coupon", methods= ["POST"])
+def admin_create_discount_coupons():
+    """
+    """
+    return create_discount_coupons()
+
+# ==============
+
+# 34. Discount Coupons Generation
+
+# ==============
+
+@admin_bp.route("/admin/update-discount-coupon", methods= ["POST"])
+def update_coupons():
+    """
+    """
+    return update_discount_coupon()
+
+# ==============
+
+# 35. Discount Coupons Generation
+
+# ==============
+
+@admin_bp.route("/admin/delete-discount-coupon", methods= ["POST"])
+def remove_discount_coupons():
+    """
+    """
+    return delete_discount_coupon()
 
 # ===================
 
-# 32. Exclusive Perks
+# 36. Exclusive Perks
 
 # ====================
 
@@ -438,7 +480,7 @@ def admin_create_exclusive_perks():
 
 # ===================
 
-#  33. Footer section
+#  37. Footer section
 
 # ==================
 
@@ -446,14 +488,3 @@ def admin_create_exclusive_perks():
 def admin_create_footer():
 
     return edit_footer()
-
-# # ===================
-#
-# #  34. Footer section
-#
-# # ==================
-#
-# @admin_bp.route("/admin/update_footer", methods=["POST"])
-# def admin_create_footer():
-#
-#     return edit_footer()

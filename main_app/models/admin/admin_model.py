@@ -9,6 +9,7 @@ class Admin(Document):
     access_token = StringField()
     session_id = StringField()
     expiry_time = DateTimeField()
+    profile_picture = StringField()
     # OTP Fields
     code = StringField()
     code_expiry = DateTimeField()

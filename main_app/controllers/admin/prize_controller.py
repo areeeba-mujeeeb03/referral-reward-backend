@@ -1,3 +1,4 @@
+import datetime
 
 from flask import request, jsonify
 from werkzeug.utils import secure_filename
@@ -20,12 +21,35 @@ def add_exciting_prizes():
     try:
         logger.info("Add Exciting Prizes API called")
         data = request.form
-
+        access_token = data.get("mode")
+        session_id = data.get("log_alt")
         title = data.get("title")
         term_conditions = data.get("term_conditions")
         admin_uid = data.get("admin_uid")
         required_meteors = data.get("required_meteors")
         product_id = data.get("product_id")
+
+        exist = Admin.objects(admin_uid=admin_uid).first()
+
+        if not exist:
+            return jsonify({"success": False, "message": "User does not exist"})
+
+        if not access_token or not session_id:
+            return jsonify({"message": "Missing token or session", "success": False}), 400
+
+        if exist.access_token != access_token:
+            return ({"success": False,
+                     "message": "Invalid access token"}), 401
+
+        if exist.session_id != session_id:
+            return ({"success": False,
+                     "message": "Session mismatch or invalid session"}), 403
+
+        if hasattr(exist, 'expiry_time') and exist.expiry_time:
+            if datetime.datetime.now() > exist.expiry_time:
+                return ({"success": False,
+                         "message": "Access token has expired",
+                         "token": "expired"}), 401
 
         #  Validation fields
         if not all ([title , term_conditions, admin_uid, required_meteors]):
@@ -113,9 +137,32 @@ def check_eligibility():
     try:
         logger.warning(f"Check meteors for user:")
         data = request.get_json()
-
         user_meteors = data.get("meteors")
         admin_uid = data.get("admin_uid")
+        access_token = data.get("mode")
+        session_id = data.get("log_alt")
+
+        exist = Admin.objects(admin_uid=admin_uid).first()
+
+        if not exist:
+            return jsonify({"success": False, "message": "User does not exist"})
+
+        if not access_token or not session_id:
+            return jsonify({"message": "Missing token or session", "success": False}), 400
+
+        if exist.access_token != access_token:
+            return ({"success": False,
+                     "message": "Invalid access token"}), 401
+
+        if exist.session_id != session_id:
+            return ({"success": False,
+                     "message": "Session mismatch or invalid session"}), 403
+
+        if hasattr(exist, 'expiry_time') and exist.expiry_time:
+            if datetime.datetime.now() > exist.expiry_time:
+                return ({"success": False,
+                         "message": "Access token has expired",
+                         "token": "expired"}), 401
 
         record = AdminPrizes.objects(admin_uid=admin_uid).first()
         if not record:

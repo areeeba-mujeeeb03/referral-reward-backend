@@ -18,26 +18,27 @@ def edit_profile_data():
         admin_uid = data.get("admin_uid")
         access_token = data.get("mode")
         session_id = data.get("log_alt")
+        password = data.get('password')
 
         admin = Admin.objects(admin_uid=admin_uid).first()
 
-        # if not admin_uid or not access_token or not session_id:
-        #     return jsonify({"message": "Missing required fields", "success": False}), 400
-        #
-        # if not admin:
-        #     return jsonify({"success": False, "message": "User does not exist"}), 404
-        #
-        # if hasattr(admin, 'expiry_time') and admin.expiry_time:
-        #     if datetime.datetime.now() > admin.expiry_time:
-        #         return jsonify({"success": False, "message": "Access token has expired"}), 401
-        #
-        # if admin.access_token != access_token:
-        #     return jsonify({"success": False, "message": "Invalid access token"}), 401
-        #
-        # if admin.session_id != session_id:
-        #     return jsonify({"success": False, "message": "Session mismatch or invalid session"}), 403
+        if not admin_uid or not access_token or not session_id:
+            return jsonify({"message": "Missing required fields", "success": False}), 400
 
-        password = data.get('password')
+        if not admin:
+            return jsonify({"success": False, "message": "User does not exist"}), 404
+
+        if hasattr(admin, 'expiry_time') and admin.expiry_time:
+            if datetime.datetime.now() > admin.expiry_time:
+                return jsonify({"success": False, "message": "Access token has expired"}), 401
+
+        if admin.access_token != access_token:
+            return jsonify({"success": False, "message": "Invalid access token"}), 401
+
+        if admin.session_id != session_id:
+            return jsonify({"success": False, "message": "Session mismatch or invalid session"}), 403
+
+
         if not password:
             return jsonify({"error": "Password is required to update profile"}), 400
 
@@ -74,31 +75,10 @@ def edit_profile_data():
         if data.get("new_password"):
             update_fields["password"] = hash_password(data["new_password"])
 
-        if data.get("image"):
-            try:
-                image_data = data["image"]
-                filename = f"{admin_uid}_profile.jpg"
-                image_path = os.path.join(UPLOAD_FOLDER, secure_filename(filename))
-
-                with open(image_path, "wb") as f:
-                    f.write(base64.b64decode(image_data))
-
-                update_fields["profile_picture"] = f"/{image_path}"
-            except Exception as e:
-                return jsonify({"error": "Invalid image format or failed to save image", "details": str(e)}), 400
-
-        files = request.files.get("image")
-        img_file = None
-        # if not files:
-        #     return jsonify({"error": "Image not found"}), 400
-        if files:
-            filename = secure_filename(files.filename)
-            image_path = os.path.join(UPLOAD_FOLDER, filename)
-            files.save(image_path)
-            img_file = f"/{image_path}"
+        image = data.get("image")
 
         if "image" in data:
-            update_fields["profile_picture"] = img_file
+            update_fields["profile_picture"] = image
 
         if not update_fields:
             return jsonify({"success": False, "message": "No fields to update"}), 400

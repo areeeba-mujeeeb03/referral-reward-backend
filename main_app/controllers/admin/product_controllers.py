@@ -42,6 +42,30 @@ def add_product():
          visibility_till = data.get("visibility_till")
          apply_offer = data.get("apply_offer", "").lower() == "true"
          admin_uid = data.get("admin_uid")
+         access_token = data.get("mode")
+         session_id = data.get("log_alt")
+
+         exist = Admin.objects(admin_uid=admin_uid).first()
+
+         if not exist:
+             return jsonify({"success": False, "message": "User does not exist"})
+
+         if not access_token or not session_id:
+             return jsonify({"message": "Missing token or session", "success": False}), 400
+
+         if exist.access_token != access_token:
+             return ({"success": False,
+                      "message": "Invalid access token"}), 401
+
+         if exist.session_id != session_id:
+             return ({"success": False,
+                      "message": "Session mismatch or invalid session"}), 403
+
+         if hasattr(exist, 'expiry_time') and exist.expiry_time:
+             if datetime.datetime.now() > exist.expiry_time:
+                 return ({"success": False,
+                          "message": "Access token has expired",
+                          "token": "expired"}), 401
 
          if not all([product_name, original_amt, discounted_amt, short_desc, admin_uid]):
              return jsonify({"message": "Missing required fields"}), 400
@@ -151,6 +175,31 @@ def update_product(uid):
   try:
      logger.info(f"Update Product API called for UID: {uid}")
      data = request.form
+     admin_uid = data.get("admin_uid")
+     access_token = data.get("mode")
+     session_id = data.get("log_alt")
+
+     exist = Admin.objects(admin_uid=admin_uid).first()
+
+     if not exist:
+         return jsonify({"success": False, "message": "User does not exist"})
+
+     if not access_token or not session_id:
+         return jsonify({"message": "Missing token or session", "success": False}), 400
+
+     if exist.access_token != access_token:
+         return ({"success": False,
+                  "message": "Invalid access token"}), 401
+
+     if exist.session_id != session_id:
+         return ({"success": False,
+                  "message": "Session mismatch or invalid session"}), 403
+
+     if hasattr(exist, 'expiry_time') and exist.expiry_time:
+         if datetime.datetime.now() > exist.expiry_time:
+             return ({"success": False,
+                      "message": "Access token has expired",
+                      "token": "expired"}), 401
 
      if not data and not request.files:
             logger.warning("No fields or files provided in request")
@@ -210,8 +259,33 @@ def update_offer():
     try:
         logger.info("Update Offer API called")
         data = request.form
-
+        admin_uid = data.get("admin_uid")
+        access_token = data.get("mode")
+        session_id = data.get("log_alt")
         uid = data.get("uid")
+
+        exist = Admin.objects(admin_uid=admin_uid).first()
+
+        if not exist:
+            return jsonify({"success": False, "message": "User does not exist"})
+
+        if not access_token or not session_id:
+            return jsonify({"message": "Missing token or session", "success": False}), 400
+
+        if exist.access_token != access_token:
+            return ({"success": False,
+                     "message": "Invalid access token"}), 401
+
+        if exist.session_id != session_id:
+            return ({"success": False,
+                     "message": "Session mismatch or invalid session"}), 403
+
+        if hasattr(exist, 'expiry_time') and exist.expiry_time:
+            if datetime.datetime.now() > exist.expiry_time:
+                return ({"success": False,
+                         "message": "Access token has expired",
+                         "token": "expired"}), 401
+
         if not data and not request.files:
             logger.warning("No data or files provided")
             return jsonify({"message": "No fields provided for update"}), 400

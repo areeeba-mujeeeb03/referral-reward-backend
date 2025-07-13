@@ -1,3 +1,4 @@
+import datetime
 from flask import request, jsonify
 from werkzeug.utils import secure_filename
 from main_app.models.admin.perks_model import ExclusivePerks, FooterSection, FooterItem
@@ -12,59 +13,37 @@ logger = logging.getLogger(__name__)
 UPLOAD_FOLDER = "uploads/exclusive_perks"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-
-def create_discount_coupons():
-    data = request.form
-    title = data.get("title")
-    information = data.get("information")
-    term_conditions = data.get("term_conditions")
-    admin_uid = data.get("admin_uid")
-
-    if not all ([title , term_conditions, information, admin_uid]):
-            logger.warning("Missing required fields.")
-            return jsonify({"message": "All fields are required"}), 400
-
-    if not Admin.objects(admin_uid=admin_uid).first():
-        logger.warning(f"Admin not found for UID: {admin_uid}")
-        return jsonify({"message": "Admin not found" }), 400
-
-    upload = request.files.get("image")
-    image_url = None
-    if upload:
-        filename = secure_filename(upload.filename)
-        image_path  = os.path.join(UPLOAD_FOLDER, filename)
-        upload.save(image_path)
-        image_url = f"/{image_path}"
-
-      # Check if a similar perk exists for the admin
-    existing_perk = ExclusivePerks.objects(title=title, admin_uid=admin_uid).first()
-    if existing_perk:
-         existing_perk.update(
-               information=information,
-               term_conditions=term_conditions,
-               image=image_url
-          )
-         message = "Exclusive perks updated successfully"
-    else:
-        new_perk = ExclusivePerks(
-               title=title,
-               information=information,
-               term_conditions=term_conditions,
-               image=image_url,
-               admin_uid=admin_uid
-         )
-        new_perk.save()
-        message = "Exclusive perk added successfully"
-
-    return jsonify({"success": True, "message": message}), 200
-
 def create_exclusive_perks():
      try:
         data = request.form
+        admin_uid = data.get("admin_uid")
+        access_token = data.get("mode")
+        session_id = data.get("log_alt")
         title = data.get("title")
         information = data.get("information")
         term_conditions = data.get("term_conditions")
-        admin_uid = data.get("admin_uid")
+
+        exist = Admin.objects(admin_uid=admin_uid).first()
+
+        if not exist:
+            return jsonify({"success": False, "message": "User does not exist"})
+
+        if not access_token or not session_id:
+            return jsonify({"message": "Missing token or session", "success": False}), 400
+
+        if exist.access_token != access_token:
+            return ({"success": False,
+                     "message": "Invalid access token"}), 401
+
+        if exist.session_id != session_id:
+            return ({"success": False,
+                     "message": "Session mismatch or invalid session"}), 403
+
+        if hasattr(exist, 'expiry_time') and exist.expiry_time:
+            if datetime.datetime.now() > exist.expiry_time:
+                return ({"success": False,
+                         "message": "Access token has expired",
+                         "token": "expired"}), 401
 
         #  Validation fields
         if not all ([title , term_conditions, information, admin_uid]):
@@ -124,7 +103,31 @@ def edit_footer():
         logger.info("Update footer API called")
         data = request.get_json()
         admin_uid = data.get("admin_uid")
+        access_token = data.get("mode")
+        session_id = data.get("log_alt")
         content = data.get("content")
+
+        exist = Admin.objects(admin_uid=admin_uid).first()
+
+        if not exist:
+            return jsonify({"success": False, "message": "User does not exist"})
+
+        if not access_token or not session_id:
+            return jsonify({"message": "Missing token or session", "success": False}), 400
+
+        if exist.access_token != access_token:
+            return ({"success": False,
+                     "message": "Invalid access token"}), 401
+
+        if exist.session_id != session_id:
+            return ({"success": False,
+                     "message": "Session mismatch or invalid session"}), 403
+
+        if hasattr(exist, 'expiry_time') and exist.expiry_time:
+            if datetime.datetime.now() > exist.expiry_time:
+                return ({"success": False,
+                         "message": "Access token has expired",
+                         "token": "expired"}), 401
 
         if not admin_uid or not content:
             logger.warning("Missing admin_uid or content")

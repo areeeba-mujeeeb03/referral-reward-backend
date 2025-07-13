@@ -62,7 +62,7 @@ def purchase():
 
 # =============
  
-# 4. User Login Email Id
+# 4. User Login Email-Id
 
 # =============
 
@@ -128,7 +128,7 @@ def user_forgot_password():
 
 # ==============
 
-# 7. Verify code sent through forgot password API
+# 8. Verify code sent through forgot password API
 
 # ==============
 
@@ -139,7 +139,7 @@ def verify_sent_code():
 
 # ==============
 
-# 7. reset password
+# 9. reset password
 
 # ==============
 @user_bp.route("/login/reset-password", methods = ["POST"])
@@ -154,7 +154,7 @@ def user_reset_password():
 
 # ====================
 
-# 8. Logout
+# 10. Logout
 
 # ====================
 
@@ -175,7 +175,7 @@ def logout():
 # ====================
 # ==============
 
-# 9. User Forgot Password with reset password
+# 11. User Forgot Password with reset password
 
 # ==============
 
@@ -191,7 +191,7 @@ def home():
 
 # ==============
 
-# 9. Fetch customized data from admin
+# 12. Fetch customized data from admin
 
 # ==============
 
@@ -206,7 +206,7 @@ def fetch_custom_data():
 
 # ====================
 
-# 10. User Referrals
+# 13. User Referrals
 
 # ====================
 
@@ -222,7 +222,7 @@ def referrals():
 
 # ====================
 
-# 11. User Rewards
+# 14. User Rewards
 
 # ====================
 
@@ -240,7 +240,7 @@ def rewards():
 
 # ====================
 
-# 12. User Profile
+# 15. User Profile
 
 # ====================
 
@@ -257,7 +257,7 @@ def profile():
 
 # ==============
 
-# 13. Update profile data
+# 16. Update profile data
 
 # ==============
 @user_bp.route("/update-profile", methods = ["POST"])
@@ -277,7 +277,7 @@ def update_user_profile():
 # ====================
 # ==============
 
-# 14. WhatsAPP
+# 17. WhatsAPP
 
 # ==============
 @user_bp.route("/send-whatsapp-invite", methods=["POST"])
@@ -290,7 +290,7 @@ def send_link_on_whatsapp():
     return send_whatsapp_invite()
 # ==============
 
-# 14. Twitter
+# 18. Twitter
 
 # ==============
 @user_bp.route("/send-twitter-invite", methods=["POST"])
@@ -304,7 +304,7 @@ def send_link_on_twitter():
 
 # ==============
 
-# 15. Telegram
+# 19. Telegram
 
 # ==============
 
@@ -319,7 +319,7 @@ def send_link_on_telegram():
 
 # ==============
 
-# 16. Facebook
+# 20. Facebook
 
 # ==============
 @user_bp.route("/send-facebook-invite", methods=["POST"])
@@ -333,7 +333,7 @@ def send_link_on_facebook():
 
 # ==============
 
-# 17. LinkedIn
+# 21. LinkedIn
 
 # ==============
 
@@ -347,7 +347,7 @@ def send_invite_linkedin():
     return send_linkedin_invite()
 # ==============
 
-# 18. Redeem Discount Voucher
+# 22. Redeem Discount Voucher
 
 # ==============
 @user_bp.route("/redeem-voucher", methods=["POST"])
@@ -361,7 +361,7 @@ def redeem_voucher():
 
 # ==============
 
-# 19. Help Contact Message
+# 23. Help Contact Message
 
 # ==============
 @user_bp.route('/contact', methods=['POST'])
@@ -375,7 +375,7 @@ def submit():
 
 # ==============
 
-# 20. Change Invitation link of user for special offer
+# 24. Change Invitation link of user for special offer
 
 # ==============
 @user_bp.route('/invite-link', methods=['POST'])
@@ -390,7 +390,7 @@ def invite_link():
 
 # ==============
 
-# 21. Convert Meteors to Stars
+# 25. Convert Meteors to Stars
 
 # ==============
 @user_bp.route('/meteors-to-stars', methods=['POST'])
@@ -404,7 +404,7 @@ def meteors_and_stars():
 
 # ==============
 
-# 22. Convert Stars to currency
+# 26. Convert Stars to currency
 
 # ==============
 @user_bp.route('/stars-to-currency', methods=['POST'])
@@ -418,7 +418,7 @@ def stars_and_currency():
 
 # ==============
 
-# 23. update User's planets and galaxy
+# 27. update User's planets and galaxy
 
 # ==============
 @user_bp.route('/update-user-rewards/<user_id>', methods = ['POST'])
@@ -429,4 +429,3 @@ def update(user_id):
     Returns and Saves :
     """
     return update_planet_and_galaxy(user_id)
-

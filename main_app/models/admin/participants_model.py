@@ -11,6 +11,8 @@ class UserData(Document):
     purchases_earnings = IntField(default=0)
     milestones_earnings = IntField(default=0)
     signup_earnings = IntField(default=0)
+    vouchers_won = IntField(default=0)
+    used_coupons = IntField(default=0)
     currencies_converted = IntField(default=0)
 
     meta = {"db_alias": "admin-db", "collection": "participants"}
