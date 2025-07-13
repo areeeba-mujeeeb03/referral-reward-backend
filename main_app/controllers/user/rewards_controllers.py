@@ -149,7 +149,7 @@ def update_planet_and_galaxy(user_id):
         if not current_galaxy:
             return jsonify({"message": "This galaxy does not exist"}), 404
 
-        total_meteors = reward.total_meteors
+        total_meteors = reward.current_meteors
         milestone_unlocked = False
 
         for milestone in current_galaxy.all_milestones:

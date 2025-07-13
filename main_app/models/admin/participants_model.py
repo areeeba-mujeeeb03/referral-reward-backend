@@ -2,15 +2,15 @@ from mongoengine import Document, IntField, StringField
 
 class UserData(Document):
     admin_uid = StringField(required=True,unique=True)
-    total_participants  = IntField()
-    total_referrals = IntField()
-    successful_referrals = IntField()
-    referral_leads = IntField()
-    referral_earnings = IntField()
-    game_earnings = IntField()
-    purchases_earnings = IntField()
-    milestones_earnings = IntField()
-    signup_earnings = IntField()
-    currencies_converted = IntField()
+    total_participants  = IntField(default=0)
+    total_referrals = IntField(default=0)
+    successful_referrals = IntField(default=0)
+    referral_leads = IntField(default=0)
+    referral_earnings = IntField(default=0)
+    game_earnings = IntField(default=0)
+    purchases_earnings = IntField(default=0)
+    milestones_earnings = IntField(default=0)
+    signup_earnings = IntField(default=0)
+    currencies_converted = IntField(default=0)
 
     meta = {"db_alias": "admin-db", "collection": "participants"}

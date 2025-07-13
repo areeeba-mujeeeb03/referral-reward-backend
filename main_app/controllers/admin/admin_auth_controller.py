@@ -1,5 +1,7 @@
 from flask import request, jsonify
 from main_app.models.admin.admin_model import Admin
+from main_app.models.admin.links import AppStats, ReferralReward
+from main_app.models.admin.participants_model import UserData
 from main_app.utils.user.helpers import hash_password, check_password,generate_access_token,create_user_session
 from main_app.utils.user.error_handling import get_error
 import logging
@@ -63,7 +65,7 @@ def admin_register():
         password=hashed_password
       )
       user.save()
-
+      initialize_admin_data(user.admin_uid)
       return jsonify({"success": "true" , "message": "User registered successfully"}), 200
  
  except Exception as e:
@@ -129,3 +131,15 @@ def handle_admin_login():
     except Exception as e:
         logger.error(f"Login failed for email with error: {str(e)}")
         return jsonify({"error": get_error("login_failed")}), 500
+
+def initialize_admin_data(admin_uid):
+    UserData(
+        admin_uid = admin_uid
+    ).save()
+    AppStats(
+        admin_uid=admin_uid
+    ).save()
+    ReferralReward(
+        admin_uid=admin_uid
+    ).save()
+    return "done"

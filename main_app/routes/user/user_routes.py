@@ -1,7 +1,4 @@
-from itertools import product
-from flask import Blueprint, jsonify, request
-from pymongo import DESCENDING
-
+from flask import Blueprint
 from main_app.controllers.user.auth_controllers import handle_registration
 from main_app.controllers.user.OTP_controllers import generate_and_send_otp, verify_user_otp
 from main_app.controllers.user.conversion_controllers import meteors_to_stars, stars_to_currency
@@ -10,18 +7,16 @@ from main_app.controllers.user.forgotpassword_controllers import reset_password,
 from main_app.controllers.user.landingpage_controllers import my_rewards, my_referrals, my_profile, home_page, \
     fetch_data_from_admin
 from main_app.controllers.user.referral_controllers import change_invite_link
-from main_app.controllers.user.invite import send_whatsapp_invite, send_telegram_invite, send_twitter_invite, send_facebook_invite
+from main_app.controllers.user.invite import send_whatsapp_invite, send_telegram_invite, send_twitter_invite, \
+    send_facebook_invite, send_linkedin_invite
 from main_app.controllers.user.rewards_controllers import update_planet_and_galaxy
 from main_app.controllers.user.user_profile_controllers import update_profile, submit_msg
-from main_app.models.admin.galaxy_model import Galaxy
-from main_app.models.user.reward import Reward
-from main_app.models.user.user import User
 
 user_bp = Blueprint("user_routes", __name__)
 
 # ============
 
-# User Registration
+# 1. User Registration
 
 # ============
 
@@ -34,6 +29,12 @@ def register():
     """
     return handle_registration()
 
+# ============
+
+# 2. User Registration
+
+# ============
+
 @user_bp.route("/wealthelite.com/invite-link/<tag_id>", methods = ["POST"])
 def referral_register(tag_id):
     """
@@ -44,7 +45,7 @@ def referral_register(tag_id):
     return
 # =============
 
-# Purchase product
+# 3. Purchase product
 
 # =============
 
@@ -61,7 +62,7 @@ def purchase():
 
 # =============
  
-# User Login Email Id 
+# 4. User Login Email Id
 
 # =============
 
@@ -79,7 +80,7 @@ def login_email():
 
 # =============
  
-# User Login Mobile Otp with Verify Otp
+# 5. User Login Mobile Otp with Verify Otp
 
 # =============
 
@@ -93,6 +94,13 @@ def login_send_otp():
     """
     return generate_and_send_otp()
 
+
+# =============
+
+# 6. User Login Mobile Otp with Verify Otp
+
+# =============
+
 @user_bp.route("/login/mobile-verify-otp", methods = ["POST"])
 def login_verify_otp():
     """
@@ -105,10 +113,9 @@ def login_verify_otp():
 
 # ============== 
 
-# User Forgot Password with reset password
+# 7. User Forgot Password with reset password
 
 # ==============
-
 
 @user_bp.route("/login/forgot-password", methods = ["POST"])
 def user_forgot_password():
@@ -119,11 +126,22 @@ def user_forgot_password():
     """
     return send_verification_code()
 
+# ==============
+
+# 7. Verify code sent through forgot password API
+
+# ==============
+
 @user_bp.route("/login/verify-code", methods = ["POST"])
 def verify_sent_code():
 
     return verify_code()
 
+# ==============
+
+# 7. reset password
+
+# ==============
 @user_bp.route("/login/reset-password", methods = ["POST"])
 def user_reset_password():
     """
@@ -136,7 +154,7 @@ def user_reset_password():
 
 # ====================
 
-# Logout
+# 8. Logout
 
 # ====================
 
@@ -155,6 +173,11 @@ def logout():
 # Landing Page APIs 
 
 # ====================
+# ==============
+
+# 9. User Forgot Password with reset password
+
+# ==============
 
 @user_bp.route("/home", methods = ["POST"])
 def home():
@@ -166,12 +189,26 @@ def home():
     """
     return home_page()
 
+# ==============
+
+# 9. Fetch customized data from admin
+
+# ==============
+
+@user_bp.route('/admin/fetch-custom-data', methods=['POST'])
+def fetch_custom_data():
+    """
+    handles setting default invitation link as special offer link generated from admin side
+    Accepts: POST request
+    Returns and Saves :
+    """
+    return fetch_data_from_admin()
+
 # ====================
 
-# User Referrals 
+# 10. User Referrals
 
 # ====================
-
 
 @user_bp.route("/my-referrals", methods = ["POST"])
 def referrals():
@@ -185,7 +222,7 @@ def referrals():
 
 # ====================
 
-# User Rewards
+# 11. User Rewards
 
 # ====================
 
@@ -203,7 +240,7 @@ def rewards():
 
 # ====================
 
-# User Profile
+# 12. User Profile
 
 # ====================
 
@@ -218,6 +255,11 @@ def profile():
     """
     return my_profile()
 
+# ==============
+
+# 13. Update profile data
+
+# ==============
 @user_bp.route("/update-profile", methods = ["POST"])
 def update_user_profile():
     """
@@ -233,8 +275,11 @@ def update_user_profile():
 # Invitation Links
 
 # ====================
+# ==============
 
+# 14. WhatsAPP
 
+# ==============
 @user_bp.route("/send-whatsapp-invite", methods=["POST"])
 def send_link_on_whatsapp():
     """
@@ -243,7 +288,11 @@ def send_link_on_whatsapp():
     Redirects : on WhatsApp with pre-typed message
     """
     return send_whatsapp_invite()
+# ==============
 
+# 14. Twitter
+
+# ==============
 @user_bp.route("/send-twitter-invite", methods=["POST"])
 def send_link_on_twitter():
     """
@@ -252,6 +301,12 @@ def send_link_on_twitter():
     Redirects : on Twitter with pre-typed message
     """
     return send_twitter_invite()
+
+# ==============
+
+# 15. Telegram
+
+# ==============
 
 @user_bp.route("/send-telegram-invite", methods=["POST"])
 def send_link_on_telegram():
@@ -262,6 +317,11 @@ def send_link_on_telegram():
     """
     return send_telegram_invite()
 
+# ==============
+
+# 16. Facebook
+
+# ==============
 @user_bp.route("/send-facebook-invite", methods=["POST"])
 def send_link_on_facebook():
     """
@@ -271,6 +331,25 @@ def send_link_on_facebook():
     """
     return send_facebook_invite()
 
+# ==============
+
+# 17. LinkedIn
+
+# ==============
+
+@user_bp.route('/send-linkedin-invite', methods = ['POST'])
+def send_invite_linkedin():
+    """
+    handles sending invitation link on LinkedIn
+    Accepts: POST request
+    Redirects : on LinkedIn with invite-link NO pre-typed message
+    """
+    return send_linkedin_invite()
+# ==============
+
+# 18. Redeem Discount Voucher
+
+# ==============
 @user_bp.route("/redeem-voucher", methods=["POST"])
 def redeem_voucher():
     """
@@ -280,6 +359,11 @@ def redeem_voucher():
     """
     return
 
+# ==============
+
+# 19. Help Contact Message
+
+# ==============
 @user_bp.route('/contact', methods=['POST'])
 def submit():
     """
@@ -289,7 +373,11 @@ def submit():
     """
     return submit_msg()
 
+# ==============
 
+# 20. Change Invitation link of user for special offer
+
+# ==============
 @user_bp.route('/invite-link', methods=['POST'])
 def invite_link():
     """
@@ -299,19 +387,46 @@ def invite_link():
     """
     return change_invite_link()
 
-@user_bp.route('/admin/fetch-custom-data', methods=['POST'])
-def fetch_custom_data():
 
-    return fetch_data_from_admin()
+# ==============
 
-@user_bp.route('/update-user-progress/<user_id>', methods=['POST'])
-def update_planets(user_id):
-    return update_planet_and_galaxy(user_id)
+# 21. Convert Meteors to Stars
 
+# ==============
 @user_bp.route('/meteors-to-stars', methods=['POST'])
 def meteors_and_stars():
+    """
+    handles setting default invitation link as special offer link generated from admin side
+    Accepts: POST request
+    Returns and Saves :
+    """
     return meteors_to_stars()
 
+# ==============
+
+# 22. Convert Stars to currency
+
+# ==============
 @user_bp.route('/stars-to-currency', methods=['POST'])
 def stars_and_currency():
+    """
+    handles setting default invitation link as special offer link generated from admin side
+    Accepts: POST request
+    Returns and Saves :
+    """
     return stars_to_currency()
+
+# ==============
+
+# 23. update User's planets and galaxy
+
+# ==============
+@user_bp.route('/update-user-rewards/<user_id>', methods = ['POST'])
+def update(user_id):
+    """
+    handles setting default invitation link as special offer link generated from admin side
+    Accepts: POST request
+    Returns and Saves :
+    """
+    return update_planet_and_galaxy(user_id)
+

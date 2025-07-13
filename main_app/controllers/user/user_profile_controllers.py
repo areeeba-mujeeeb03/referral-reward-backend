@@ -15,23 +15,24 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def update_profile():
+    data = request.get_json()
+    user_id = data.get("user_id")
+    access_token = data.get("mode")
+    session_id = data.get("log_alt")
+
+    if not user_id or not access_token or not session_id:
+        return jsonify({"message": "Missing required fields", "success": False}), 400
+
+    user = User.objects(user_id=user_id).first()
     try:
-        data = request.get_json()
-        user_id = data.get("user_id")
-        access_token = data.get("mode")
-        session_id = data.get("log_alt")
-
-        if not user_id or not access_token or not session_id:
-            return jsonify({"message": "Missing required fields", "success": False}), 400
-
-        user = User.objects(user_id=user_id).first()
-
         if not user:
             return jsonify({"success": False, "message": "User does not exist"}), 404
 
         if hasattr(user, 'expiry_time') and user.expiry_time:
             if datetime.datetime.now() > user.expiry_time:
-                return jsonify({"success": False, "message": "Access token has expired"}), 401
+                return jsonify({"success": False, "message": "Access token has expired",
+                                "token": "expired"
+                                }), 401
 
         if user.access_token != access_token:
             return jsonify({"success": False, "message": "Invalid access token"}), 401
@@ -56,14 +57,14 @@ def update_profile():
             return jsonify({"error": get_error("incorrect_password")}), 400
 
         # Uniqueness checks
-        # if data.get("username") and User.objects(username=data["username"]).first():
-        #     return jsonify({"error": get_error("username_exists")}), 400
-        #
-        # if data.get("email") and User.objects(email=data["email"]).first():
-        #     return jsonify({"error": get_error("email_exists")}), 400
-        #
-        # if data.get("mobile_number") and User.objects(mobile_number=data["mobile_number"]).first():
-        #     return jsonify({"error": "This number is already registered"}), 400
+        if data.get("username")!= user.username and User.objects(username=data["username"]).first():
+            return jsonify({"error": get_error("username_exists")}), 400
+
+        if data.get("email")!= user.email and User.objects(email=data["email"]).first():
+            return jsonify({"error": get_error("email_exists")}), 400
+
+        if data.get("mobile_number")!= user.mobile_number and User.objects(mobile_number=data["mobile_number"]).first():
+            return jsonify({"error": "This number is already registered"}), 400
 
         update_fields = {}
 
@@ -95,18 +96,18 @@ def update_profile():
         }), 200
 
     except Exception as e:
-        return jsonify({"success": False, "message": "Server error", "error": str(e)}), 500
+        Errors(username = user.username, email = user.email, error_type = str(e),  error_source="Update Profile",)
+        return jsonify({"success": False, "message": "Server error"}), 500
 
 def redeem():
+    data = request.get_json()
+    user_id = data.get("user_id")
+    access_token = data.get("mode")
+    session_id = data.get("log_alt")
+    product_id = data.get("product_id")
+
+    user = User.objects(user_id=user_id).first()
     try:
-        data = request.get_json()
-        user_id = data.get("user_id")
-        access_token = data.get("mode")
-        session_id = data.get("log_alt")
-        product_id = data.get("product_id")
-
-        user = User.objects(user_id = user_id).first()
-
         if not user:
             return jsonify({"success" : False, "message" : "User does not exist"})
 
@@ -120,7 +121,8 @@ def redeem():
         }), 200
 
     except Exception as e:
-        return jsonify({"success": False, "message": "Server error", "error": str(e)}), 500
+        Errors(username = user.username, email = user.email, error_type = str(e), error_source = "Update user profile")
+        return jsonify({"success": False, "message": "Server error"}), 500
 
 
 UPLOAD_FOLDER = "static/uploads/contact"
@@ -173,7 +175,10 @@ def submit_msg():
             message=message,
             date=datetime.datetime.now(),
             file_url = files
-        ).save()
+        )
+        send.save()
+        return jsonify({"message": "Your query has been sent!" , "success" : True}), 201
+
     except Exception as e:
         Errors(
             username=user.username,
@@ -181,5 +186,5 @@ def submit_msg():
             error_source="send contact message",
             error_type=f"Failed to save attachments {str(e)}"
         ).save()
+        return jsonify({"message": "Failed to send query" , "success" : True}), 201
 
-        return jsonify({"message": "Your query has been sent!" , "success" : True}), 201

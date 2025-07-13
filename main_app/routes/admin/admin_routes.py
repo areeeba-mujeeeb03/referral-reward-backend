@@ -285,10 +285,10 @@ def add_new_faq():
 
 # ==============
 
-@admin_bp.route('/admin/delete-faqs/<faq_id>', methods=['DELETE'])
-def remove_faq(faq_id):
-
-    return delete_faq(faq_id)
+# @admin_bp.route('/admin/delete-faqs/<faq_id>/<category>', methods=['DELETE'])
+# def remove_faq(faq_id, category):
+#
+#     return delete_faq(faq_id, category)
 
 # ==============
 
@@ -438,10 +438,22 @@ def admin_create_exclusive_perks():
 
 # ===================
 
-#  Footer section
+#  33. Footer section
 
 # ==================
 
 @admin_bp.route("/admin/update_footer", methods=["POST"])
 def admin_create_footer():
+
     return edit_footer()
+
+# # ===================
+#
+# #  34. Footer section
+#
+# # ==================
+#
+# @admin_bp.route("/admin/update_footer", methods=["POST"])
+# def admin_create_footer():
+#
+#     return edit_footer()

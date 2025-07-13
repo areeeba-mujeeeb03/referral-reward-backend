@@ -69,7 +69,7 @@ def send_verification_code():
             server.starttls()
             server.login("areebamujeeb309@gmail.com", "rvph suey zpfl smpw")
             server.sendmail("something3029@gmail.com", email, msg.as_string())
-            return ({"message": f"Password verification code sent to {email}", "code": verification_code, "success" : True}), 201
+            return ({"message": f"Password verification code sent to {email}", "success" : True}), 201
     except Exception as e:
         Errors(username=user.user_id, email=user.email, error_source="send verification code for password reset",
                error_type=f"Failed to send email : {user.user_id}").save()

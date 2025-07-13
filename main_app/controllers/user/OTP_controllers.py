@@ -8,6 +8,7 @@ from flask import request, jsonify
 from dotenv import load_dotenv
 from main_app.controllers.user.login_controllers import SESSION_EXPIRY_MINUTES
 from main_app.controllers.user.referral_controllers import update_referral_status_and_reward
+from main_app.controllers.user.rewards_controllers import update_planet_and_galaxy
 from main_app.models.admin.error_model import Errors
 from main_app.models.user.user import User
 from main_app.utils.user.helpers import generate_access_token, create_user_session
@@ -407,7 +408,7 @@ def verify_user_otp():
                 "success": False,
                 "message": "OTP has expired. Please request a new OTP."
             }), 400
-        
+        update_planet_and_galaxy(user.user_id)
         if datetime.datetime.now() > user.otp_expires_at:
             logger.warning(f"Expired OTP verification attempt for user: {user.user_id}")
             # Clear expired OTP

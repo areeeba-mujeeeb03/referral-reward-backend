@@ -2,6 +2,8 @@ import logging
 import re
 import datetime
 from flask import request, jsonify
+
+from main_app.controllers.user.rewards_controllers import update_planet_and_galaxy
 from main_app.models.admin.error_model import Errors
 from main_app.models.admin.links import ReferralReward
 from main_app.models.user.user import User
@@ -18,6 +20,7 @@ from main_app.utils.user.error_handling import get_error
 # Configure logging for better debugging and monitoring
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
 
 # ==================
 
@@ -65,10 +68,10 @@ def handle_registration():
     # Step 2: Validate all required fields are present
     required_fields = ["username", "email", "mobile_number", "password", "confirm_password"]
     try:
-
         validation_result = _validate_required_fields(data, required_fields)
         if validation_result:
             return validation_result
+
         # Step 3: Additional field-specific validation
         email_validation = validate_email_format(data["email"])
         if email_validation:
@@ -91,7 +94,6 @@ def handle_registration():
         if conflict_check:
             return conflict_check
 
-        
         # Step 5: Create new user with secure password
         hashed_password = hash_password(data["password"])
         logger.info(f"Creating new user account for: {data['username']}")
@@ -126,6 +128,7 @@ def handle_registration():
                     return jsonify({"success" : False, "error" : "You can not refer yourself"}),400
                 if referral_code:
                     logger.info(f"Processing referral code: {referral_code}")
+                    print(referrer.user_id)
                     user.update(
                         set__referred_by = referrer.user_id
                     )
@@ -139,13 +142,11 @@ def handle_registration():
 
         user.save()
         # Step 7: Initialize user's reward and referral tracking records
-        print("start")
         initialize_user_records(user.user_id)
-        print("working")
         print(user.user_id)
         logger.info(f"User account created successfully with ID: {user.user_id}")
 
-
+        update_planet_and_galaxy(user.user_id)
         conversion_rate = []
         rates = ReferralReward.objects(admin_uid=user.admin_uid).first()
         reward_data = {

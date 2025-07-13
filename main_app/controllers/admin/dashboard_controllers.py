@@ -37,7 +37,6 @@ def dashboard_stats():
     if not exist:
         return jsonify({"success": False, "message" : "Admin id not found"})
 
-
 # ---------------------------------------------------------------------------------
 def dashboard_participants():
     users = User.objects()

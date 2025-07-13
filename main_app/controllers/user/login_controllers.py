@@ -1,8 +1,11 @@
 import logging
 from flask import jsonify, request
+
+from main_app.controllers.user.rewards_controllers import update_planet_and_galaxy
 from main_app.models.admin.error_model import Errors
+from main_app.models.user.reward import Reward
 from main_app.utils.user.helpers import (check_password,generate_access_token,create_user_session)
-from main_app.controllers.user.referral_controllers import update_referral_status_and_reward
+from main_app.controllers.user.referral_controllers import update_referral_status_and_reward, Login_Reward
 from main_app.utils.user.error_handling import get_error
 import datetime
 from main_app.models.user.user import User
@@ -132,6 +135,20 @@ def handle_email_login():
         user.login_count = (user.login_count or 0) + 1  # safe increment
 
         user.save()
+        reward = Reward.objects(user_id = user.user_id).first()
+        date = datetime.datetime.now()
+        update_planet_and_galaxy(user.user_id)
+        for referral in reward.reward_history:
+            if not referral.get("earned_by_action") == "Log In":
+                reward.reward_history.append({
+                    "earned_by_action": "Log In",
+                    "earned_meteors": Login_Reward,
+                    "referred_to": user.username,
+                    "referral_status": "pending",
+                    "referred_on": date.strftime('%d-%m-%y'),
+                    "transaction_type": "credit"
+                })
+
         # Step 9: Return success
         logger.info(f"Successful login for user: {user.user_id}")
         return jsonify({
@@ -172,14 +189,13 @@ def logout_user():
                 access_token=None,
                 session_id=None,
                 expiry_time=None,
-                last_logout=datetime.datetime.now()
             )
             logger.info(f"User logged out successfully: {user_id}")
-            return True
-        return False, 400
+
+            return jsonify({"message": "Logged out successfully", "success" : True}), 200
 
     except Exception as e:
         logger.error(f"Logout failed for user {user_id}: {str(e)}")
         Errors(username=user.username, email=user.email, error_type=get_error("logout_failed"),
                error_source="Logout form").save()
-        return False, 400
+        return jsonify({"message": "Something went wrong", "success" : False}), 400

@@ -1,5 +1,7 @@
 import datetime
 from main_app.controllers.admin.help_request_controllers import get_faqs_by_category_name
+from main_app.controllers.user.rewards_controllers import update_planet_and_galaxy
+from main_app.models.admin.admin_model import Admin
 from main_app.models.admin.error_model import Errors
 from main_app.models.admin.galaxy_model import Galaxy
 from main_app.models.admin.how_it_work_model import HowItWork
@@ -27,10 +29,10 @@ def home_page():
     session_id = data.get("log_alt")
 
     user = User.objects(user_id=user_id).first()
-    print(user.email)
     try:
         if not user:
-            return jsonify({"success" : False, "message" : "User does not exist"})
+            return jsonify({"success" : False,
+                            "message" : "User does not exist"})
 
         if not access_token or not session_id:
             return jsonify({"message": "Missing token or session", "success": False}), 400
@@ -47,10 +49,11 @@ def home_page():
         if hasattr(user, 'expiry_time') and user.expiry_time:
             if datetime.datetime.now() > user.expiry_time:
                 return ({"success": False,
-                         "message": "Access token has expired"}), 401
+                         "message": "Access token has expired",
+                            "token"  : "expired"}), 401
 
         # validate_session_token(user, access_token, session_id)
-
+        update_planet_and_galaxy(user_id)
         reward = Reward.objects(user_id = user_id).first()
 
         info = {
@@ -101,12 +104,13 @@ def my_rewards():
         if hasattr(user, 'expiry_time') and user.expiry_time:
             if datetime.datetime.now() > user.expiry_time:
                 return ({"success": False,
-                         "message": "Access token has expired"}), 401
+                         "message": "Access token has expired",
+                            "token"  : "expired"}), 401
 
         # validate_session_token(user, access_token, session_id)
         reward = Reward.objects(user_id = user_id).first()
         admin_uid = user.admin_uid
-        # faqs = get_faqs_by_category_name(admin_uid, "Rewards") or []
+        update_planet_and_galaxy(user_id)
 
         user_reward = Reward.objects(user_id = user_id).first()
         if user :
@@ -118,6 +122,9 @@ def my_rewards():
                 "invite_code": user.invitation_code,
                 "reward_history": list(user_reward.reward_history),
                  "redeemed_meteors" : reward.redeemed_meteors,
+                "redeemed_vouchers": reward.used_vouchers,
+                "total_meteors_earned": reward.total_meteors_earned
+
             }
 
             fields_to_encode = ["total_stars",
@@ -126,7 +133,9 @@ def my_rewards():
                                 "invite_code",
                                 "reward_history",
                                 "invitation_link",
-                                "redeemed_meteors"
+                                "redeemed_meteors",
+                                "total_meteors_earned",
+                                "redeemed_vouchers"
                                 ]
 
             encoded_str = generate_encoded_string(info, fields_to_encode)
@@ -163,9 +172,11 @@ def my_referrals():
         if hasattr(user, 'expiry_time') and user.expiry_time:
             if datetime.datetime.now() > user.expiry_time:
                 return ({"success": False,
-                         "message": "Access token has expired"}), 401
+                         "message": "Access token has expired",
+                            "token"  : "expired"}), 401
 
         # validate_session_token(user, access_token, session_id)
+        update_planet_and_galaxy(user_id)
         referral = Referral.objects(user_id = user.user_id).first()
         reward = Reward.objects(user_id = user_id).first()
 
@@ -221,9 +232,13 @@ def my_profile():
         if hasattr(user, 'expiry_time') and user.expiry_time:
             if datetime.datetime.now() > user.expiry_time:
                 return ({"success": False,
-                         "message": "Access token has expired"}), 401
+                         "message": "Access token has expired",
+                            "token"  : "expired"}), 401
+
+        update_planet_and_galaxy(user_id)
 
         reward = Reward.objects(user_id = user_id).first()
+
 
         # validate_session_token(user, access_token, session_id)
         if user:
@@ -234,7 +249,8 @@ def my_profile():
                     "redeemed_vouchers" : reward.used_vouchers,
                     "pending_rewards" : reward.unused_vouchers,
                     "invitation_link" : user.invitation_link,
-                    "invite_code" : user.invitation_code
+                    "invite_code" : user.invitation_code,
+                    "total_meteors_earned" : reward.total_meteors_earned
                     }
 
             fields_to_encode = ["username",
@@ -244,7 +260,8 @@ def my_profile():
                                 "redeemed_vouchers",
                                 "pending_rewards",
                                 "invitation_link",
-                                "invite_code"
+                                "invite_code",
+                                "total_meteors_earned"
                                 ]
             conversion_rate = []
 
@@ -264,6 +281,8 @@ def fetch_data_from_admin():
     data = request.get_json()
     user_id = data.get("user_id")
     user = User.objects(user_id = user_id).first()
+    admin = Admin.objects(admin_uid = user.admin_uid).first()
+
 
     if not user:
         return jsonify({"success": False, "message" : "User does not exist"})
@@ -275,6 +294,7 @@ def fetch_data_from_admin():
     help_faqs = get_faqs_by_category_name(admin_uid, "Help and Support FAQs") or []
 
     how_it_works_text = HowItWork.objects(admin_uid=admin_uid).first()
+    update_planet_and_galaxy(user_id)
 
     if not how_it_works_text:
         return ({"message": "No 'how it works' data found", "success": False}), 404
@@ -305,9 +325,7 @@ def fetch_data_from_admin():
     if not galaxy:
         return jsonify({"message": "Current galaxy not found"}), 404
 
-    galaxy_data = {}
-
-    user_galaxy_data = {
+    galaxy_data = {
         "galaxy_name": galaxy.galaxy_name,
         "total_meteors_required_in_this_galaxy": galaxy.total_meteors_required,
         "total_milestones": galaxy.total_milestones,
@@ -350,6 +368,25 @@ def fetch_data_from_admin():
 
       # --- Merge both
     exclusive_perks = {}
+    product_offers = Product.objects(admin_uid = admin_uid)
+
+    # for product in product_offers:
+    #     all =
+    #     return
+    product_data =[]
+    # for product in users:
+    #     user = user.to_mongo().to_dict()
+    #     userdata = {}
+    #     userdata['username'] = user['username']
+    #     userdata['email'] = user['email']
+    #     userdata['mobile_number'] = user['mobile_number']
+    #     # product_uid = Product.get('product_uid')  # Ensure this exists in the user model
+    #     # # if product_uid:
+    #     # product = Product.objects(uid= uid['uid']).first()
+    #     # userdata['product_name']= product['product_name'] if product else 0
+    #     # userdata['original_amt'] = product['original_amt']
+    #     # userdata['referral_code'] = user['invitation_code']
+    #     product_data.append(userdata)
 
     if user:
         return jsonify({
@@ -363,9 +400,10 @@ def fetch_data_from_admin():
             "galaxy_data" : galaxy_data,
             "advertisement_cards" : ad_data,
             "exclusive_perks" : exclusive_perks,
-            "conversion_data"  :conversion_rate
-
+            "conversion_data"  :conversion_rate,
+            "product_offer" : product_data
             })
+
 
     return ({"message": "An Unexpected error occurred",
              "success" : False,

@@ -7,7 +7,7 @@ class Reward(Document):
     total_meteors_earned = IntField(default=0)
     total_stars = IntField(default=0)
     total_currency = IntField(default=0)
-    current_meteors = IntField(default=200)
+    current_meteors = IntField(default=0)
     redeemed_meteors = IntField(default=0)
     total_vouchers = IntField(default=0)
     used_vouchers = IntField(default=0)

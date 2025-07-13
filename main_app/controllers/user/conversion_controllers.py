@@ -1,6 +1,7 @@
 from flask import request, jsonify
 import datetime
 
+from main_app.models.admin.links import ReferralReward
 from main_app.models.user.reward import Reward
 from main_app.models.user.user import User
 
@@ -14,7 +15,7 @@ def meteors_to_stars():
     session_id = data.get("log_alt")
 
     user = User.objects(user_id=user_id).first()
-    print(user.email)
+
     if not user:
         return jsonify({"success": False, "message": "User does not exist"})
 
@@ -36,8 +37,18 @@ def meteors_to_stars():
 
     rewards = Reward.objects(user_id = user_id).first()
 
+    conversions = ReferralReward.objects(admin_uid = user.admin_uid).first()
+
+    rate = conversions.conversion_rates["meteor_to_star"]
+
+    if meteors_debited > rewards.current_meteors:
+        return jsonify({"message": "You don't have enough meteors to convert in stars", "success" : False} ), 400
+
+    if not meteors_debited % rate == 0 and meteors_debited != (meteors_debited % rate == 0):
+        return jsonify({"message": f"Please enter the multiple of {rate}", "success" : False} ), 400
+
     rewards.update(
-        dec__total_meteors = meteors_debited,
+        dec__current_meteors = meteors_debited,
         inc__total_stars = stars_credited
     )
 
@@ -53,7 +64,7 @@ def stars_to_currency():
     session_id = data.get("log_alt")
 
     user = User.objects(user_id=user_id).first()
-    print(user.email)
+
     if not user:
         return jsonify({"success": False, "message": "User does not exist"})
 
@@ -74,6 +85,15 @@ def stars_to_currency():
                      "message": "Access token has expired"}), 401
 
     rewards = Reward.objects(user_id=user_id).first()
+    conversions = ReferralReward.objects(admin_uid = user.admin_uid).first()
+
+    rate = conversions.conversion_rates["star_to_meteor"]
+
+    if stars_debited >= rewards.current_meteors:
+        return jsonify({"message": "You don't have enough stars to convert in currency", "success" : False} ), 400
+
+    if not stars_debited % rate == 0  and stars_debited != (stars_debited % rate == 0):
+        return jsonify({"message": f"Please enter the multiple of {rate}", "success" : False} ), 400
 
     rewards.update(
         dec__total_stars=stars_debited,

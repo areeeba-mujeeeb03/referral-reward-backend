@@ -262,3 +262,63 @@ def send_facebook_invite():
     except Exception as e:
         logger.error(f"Twitter invite error: {str(e)}")
         return jsonify({"success": False, "message": "Internal Server Error"}), 500
+
+def send_linkedin_invite():
+    try:
+        data = request.get_json()
+        user_id = data.get("user_id")
+        access_token = data.get("mode")
+        session_id = data.get("log_alt")
+
+        user_exist = User.objects(user_id=user_id).first()
+
+        if not user_exist:
+            return jsonify({"success": False, "message": "User does not exist"})
+        if not access_token or not session_id:
+            return jsonify({"message": "Missing token or session", "success": False}), 400
+        if user_exist.access_token != access_token:
+            return ({"success": False,
+                     "message": "Invalid access token"}), 401
+
+        if user_exist.session_id != session_id:
+            return ({"success": False,
+                     "message": "Session mismatch or invalid session"}), 403
+
+        if hasattr(user_exist, 'expiry_time') and user_exist.expiry_time:
+            if datetime.datetime.now() > user_exist.expiry_time:
+                return ({"success": False,
+                         "message": "Access token has expired"}), 401
+
+        if not user_exist or not user_exist.invitation_link:
+            return jsonify({"success": False, "message": "User or invitation link not found"}), 404
+
+        encoded_msg = generate_msg(user_exist)
+
+        linkedin_link = f"https://www.linkedin.com/sharer/sharer.php?u={quote_plus(user_exist.invitation_link)}"
+        admin_uid = user_exist.admin_uid
+        app_data = AppStats.objects(admin_uid=admin_uid).first()
+
+        data = {"app_name": "LinkedIn", "total_sent": 1, "successful_registered": 0}
+
+        if not app_data:
+            app_data = AppStats(admin_uid=admin_uid, apps=[data])
+            app_data.save()
+        else:
+            updated = False
+            for app in app_data.apps:
+                if app.get("app_name", "").lower() == "facebook":
+                    app["total_sent"] += 1
+                    updated = True
+                    break
+            if not updated:
+                app_data.apps.append(data)
+            app_data.save()
+
+        return jsonify({
+            "success": True,
+            "link": linkedin_link
+        })
+
+    except Exception as e:
+        logger.error(f"Twitter invite error: {str(e)}")
+        return jsonify({"success": False, "message": "Internal Server Error"}), 500

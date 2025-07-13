@@ -2,7 +2,7 @@ import datetime
 import logging
 from main_app.controllers.user.rewards_controllers import win_voucher
 from main_app.models.admin.error_model import Errors
-from main_app.models.admin.links import Link
+from main_app.models.admin.links import Link, ReferralReward
 from main_app.models.admin.participants_model import UserData
 from main_app.models.user.reward import Reward
 from main_app.models.user.referral import Referral
@@ -17,7 +17,11 @@ logger = logging.getLogger(__name__)
 PENDING_REFERRAL_REWARD_POINTS = 400
 SUCCESS_REFERRAL_REWARD_POINTS = 600
 SESSION_EXPIRY_MINUTES = 30
+
+# admin_bonus = ReferralReward.objects(admin_uid= "AD_UID_2").first()
+# print(admin_bonus)
 SIGN_UP_REWARD = 500
+Login_Reward = 500
 
 # ==================
 
@@ -40,11 +44,13 @@ def process_referral_code_and_reward(referral_code, new_user_id, new_username):
         new_user_id (str): ID of the newly registered user
     """
     valid_code = User.objects(invitation_code=referral_code).first()
+    referrer  = valid_code.user_id
     try:
-        referrer_id = str(valid_code.user_id)
+        referrer_id = valid_code.user_id
+        print(referrer_id)
         if valid_code:
             referrer = Referral.objects(user_id = referrer_id).first()
-            new_user = User.objects(user_id = new_user_id)
+            new_user = User.objects(user_id = new_user_id).first()
             date = datetime.datetime.now()
             referrer.update(
                 push__all_referrals={
@@ -63,7 +69,6 @@ def process_referral_code_and_reward(referral_code, new_user_id, new_username):
 
             reward_record = Reward.objects(user_id=referrer_id).first()
             UserData.objects().first()
-            new_user = User.objects(user_id = new_user_id).first()
             if reward_record:
                 reward_record.total_meteors += PENDING_REFERRAL_REWARD_POINTS
                 reward_record.reward_history.append({
@@ -74,6 +79,11 @@ def process_referral_code_and_reward(referral_code, new_user_id, new_username):
                     "referred_on": date.strftime('%d-%m-%y'),
                     "transaction_type": "credit"})
                 reward_record.save()
+            admin = UserData.objects(admin_uid=referrer.admin_uid).first()
+            if admin:
+                admin.update(inc__total_referrals=1,
+                             inc__referral_leads = 1,
+                             inc__referral_earnings = PENDING_REFERRAL_REWARD_POINTS)
 
     except Exception as e:
         Errors(username=valid_code.user_id, email=valid_code.email, error_source="Sign Up Form",
@@ -132,6 +142,12 @@ def process_tag_id_and_reward(tag_id, new_user_id):
                 "transaction_type": "credit"
             })
             reward_record.save()
+            admin = UserData.objects(admin_uid=referrer.admin_uid).first()
+            if admin:
+                admin.update(inc__total_participants = 1,
+                             inc__total_referrals=1,
+                             inc__referral_leads=1,
+                             inc__referral_earnings=PENDING_REFERRAL_REWARD_POINTS)
 
     except Exception as e:
         Errors(username=valid_user.user_id, email=valid_user.email, error_source="Referee Sign Up Form",
@@ -149,6 +165,7 @@ def update_referral_status_and_reward(referrer_id, user_id):
         user_id (str): ID of the newly registered user
     """
     # Load the referrer’s referral document
+    user = User.objects(user_id = referrer_id).first()
     referral_record = Referral.objects(user_id=referrer_id).first()
     if not referral_record:
         logger.warning(f"No referral record found for referrer: {referrer_id}")
@@ -201,7 +218,13 @@ def update_referral_status_and_reward(referrer_id, user_id):
         entry.get("referred_user_id") == user_id
         for entry in reward_record.reward_history
     )
-
+    admin = UserData.objects(admin_uid=user.admin_uid).first()
+    if admin:
+        admin.update(inc__successful_referrals=1,
+                     admin_uid=user.admin_uid,
+                     total_participants=1,
+                     signup_earnings=SIGN_UP_REWARD
+                     )
     if already_rewarded:
         logger.info(f"Reward already credited for referral of user {user_id}")
         return
@@ -232,7 +255,6 @@ def initialize_user_records(user_id):
     user_rewards = Reward.objects(user_id=user_id).first()
     user_referrals = Referral.objects(user_id=user_id).first()
     user = User.objects(user_id=user_id).first()
-    print(user_id)
     try:
         if user_referrals and user_rewards :
             return "The rewards for this user is already initialized", False
@@ -245,13 +267,28 @@ def initialize_user_records(user_id):
         user_referral = Referral(user_id = user_id,
                                  all_referrals=[])
         user_referral.save()
+
         reward = Reward.objects(user_id = user_id).first()
         reward.update(
-            inc__total_meteors = SIGN_UP_REWARD,
+            inc__total_meteors_earned = SIGN_UP_REWARD,
+            inc__current_meteors = SIGN_UP_REWARD,
             redeemed_meteors = 0,
             push__galaxy_name= 'Milky Way Galaxy',
             push__current_planet='Planet A'
         )
+        admin = UserData.objects(admin_uid = user.admin_uid).first()
+        if admin:
+            admin.update(inc__total_participants = 1,
+                         inc__signup_earnings = SIGN_UP_REWARD)
+        date = datetime.datetime.now()
+        reward.reward_history.append({
+            "earned_by_action": "SignUp",
+            "earned_meteors": SIGN_UP_REWARD,
+            "referred_to": user.username,
+            "referral_status": "pending",
+            "referred_on": date.strftime('%d-%m-%y'),
+            "transaction_type": "credit"})
+
         user_referral.update(
             total_referrals=0,
             referral_earning=0,
@@ -456,5 +493,5 @@ def handle_invitation_visit(encoded_gen_str, tag_id, encoded_exp_str):
 
     except Exception as e:
         Errors(username=user.user_id, email=user.email, error_source="Sign Up Form",
-               error_type=f"Expired or Invalid referral link : {user.user_id}").save()
+               error_type=f"Expired or Invalid referral link : {user.user_id}, {str(e)}").save()
         return jsonify({"message": "Expired or Invalid referral link"}), 400
