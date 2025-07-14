@@ -16,7 +16,7 @@ import datetime
 class PrizeDetail(EmbeddedDocument):
     title = StringField(required=True)
     term_conditions = StringField()
-    image_url = StringField()
+    image = StringField()
     required_meteors = IntField(required=True)
     created_at = DateTimeField(default=datetime.datetime.now)
     product_id = StringField()

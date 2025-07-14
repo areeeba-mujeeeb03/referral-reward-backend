@@ -5,7 +5,7 @@ class AdvertisementCardItem(EmbeddedDocument):
     title = StringField()
     description = StringField()
     button_txt = StringField()
-    image_url = StringField()
+    image = StringField()
 
 class AdminAdvertisementCard(Document):
     admin_uid = StringField(required=True, unique=True)

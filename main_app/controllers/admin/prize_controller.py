@@ -26,6 +26,7 @@ def add_exciting_prizes():
         admin_uid = data.get("admin_uid")
         required_meteors = data.get("required_meteors")
         product_id = data.get("product_id")
+        image = data.get("image")
 
         #  Validation fields
         if not all ([title , term_conditions, admin_uid, required_meteors]):
@@ -48,13 +49,13 @@ def add_exciting_prizes():
             return jsonify({"message": "Product Id not found"}), 400
       
 
-        files = request.files.get("image")
-        image_url = None
-        if files:
-            filename = secure_filename(files.filename)
-            image_path = os.path.join(UPLOAD_FOLDER, filename)
-            files.save(image_path)
-            image_url = f"/{image_path}"
+        # files = request.files.get("image")
+        # image_url = None
+        # if files:
+        #     filename = secure_filename(files.filename)
+        #     image_path = os.path.join(UPLOAD_FOLDER, filename)
+        #     files.save(image_path)
+        #     image_url = f"/{image_path}"
 
           # Fetch existing admin prizes
         admin_prize = AdminPrizes.objects(admin_uid=admin_uid).first()
@@ -67,8 +68,8 @@ def add_exciting_prizes():
                     prize.term_conditions = term_conditions
                     prize.required_meteors = required_meteors
                     prize.product_id = product_id 
-                    if image_url:
-                        prize.image_url = image_url
+                    if image:
+                        prize.image = image
                     updated = True
                     break
 
@@ -80,7 +81,7 @@ def add_exciting_prizes():
                 new_prize = PrizeDetail(
                     title=title,
                     term_conditions=term_conditions,
-                    image_url=image_url,
+                    image=image,
                     required_meteors=required_meteors,
                     product_id = product_id 
                 )
@@ -92,7 +93,7 @@ def add_exciting_prizes():
             new_prize = PrizeDetail(
                 title=title,
                 term_conditions=term_conditions,
-                image_url=image_url,
+                image=image,
                 required_meteors=required_meteors,
                 product_id=product_id
             )
@@ -129,7 +130,7 @@ def check_eligibility():
                 eligible_prizes.append({
                     "title": prize.title,
                     "required_meteors": prize.required_meteors,
-                    "image_url": prize.image_url,
+                    "image": prize.image,
                     "term_conditions": prize.term_conditions,
                     "product_id": prize.product_id,
                     "created_at": str(prize.created_at),
