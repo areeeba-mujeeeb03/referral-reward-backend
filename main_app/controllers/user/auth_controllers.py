@@ -7,7 +7,8 @@ from main_app.controllers.user.rewards_controllers import update_planet_and_gala
 from main_app.models.admin.error_model import Errors
 from main_app.models.admin.links import ReferralReward
 from main_app.models.user.user import User
-from main_app.controllers.user.referral_controllers import (process_referral_code_and_reward, initialize_user_records, process_tag_id_and_reward)
+from main_app.controllers.user.referral_controllers import (process_referral_code_and_reward, initialize_user_records,
+                                                            process_tag_id_and_reward, process_referrer)
 from main_app.utils.user.helpers import hash_password
 from main_app.utils.user.error_handling import get_error
 
@@ -29,146 +30,81 @@ logger = logging.getLogger(__name__)
 # ==================
 
 def handle_registration():
-    """
-    Handle complete user registration process including validation,
-    referral processing, and initial account setup
-    
-    Process Flow:
-    1. Validate request data and required fields
-    2. Check for existing username/email conflicts
-    3. Hash password securely
-    4. Create new user account
-    5. Process referral code if provided
-    6. Initialize user reward and referral records
-    7. Return success response with user details
-    
-    Expected JSON Request Body:
-    {
-        "username": "string (required)",
-        "email": "string (required)", 
-        "mobile_number": "string (required)",
-        "password": "string (required)",
-        "referral_code": "string (optional)"
-    }
-    
-    Returns:
-        Flask Response: JSON response with registration status
-        - Success (200): User details and confirmation
-        - Error (400): Validation errors or conflicts
-        - Error (500): Server-side processing errors
-    """
     logger.info("Starting user registration process")
 
-    # Step 1: Extract and validate request data
     data = request.get_json()
     if not data:
         logger.warning("Registration attempt with empty request body")
         return jsonify({"error": get_error("invalid_data")}), 400
 
-    # Step 2: Validate all required fields are present
     required_fields = ["username", "email", "mobile_number", "password", "confirm_password"]
-    try:
-        validation_result = _validate_required_fields(data, required_fields)
-        if validation_result:
-            return validation_result
+    validation_result = _validate_required_fields(data, required_fields)
+    if validation_result:
+        return validation_result
 
-        # Step 3: Additional field-specific validation
-        email_validation = validate_email_format(data["email"])
-        if email_validation:
-            return email_validation
-            
+    if validate_email_format(data["email"]):
+        return validate_email_format(data["email"])
 
-        if not re.match(r'^\d{10}$',str(data["mobile_number"])):
-            return jsonify({"error": "Mobile must be 10 digits"}), 400
+    if not re.match(r'^\d{10}$', str(data["mobile_number"])):
+        return jsonify({"error": "Mobile must be 10 digits"}), 400
 
-        if data["password"] != data["confirm_password"]:
-            return jsonify({"error": "Password and Confirm Password do not match"}), 400
+    if data["password"] != data["confirm_password"]:
+        return jsonify({"error": "Password and Confirm Password do not match"}), 400
 
+    if validate_password_strength(data["password"]):
+        return validate_password_strength(data["password"])
 
-        password_validation = validate_password_strength(data["password"])
-        if password_validation:
-            return password_validation
-        
-        # Step 4: Check for existing user conflicts
-        conflict_check = _check_user_conflicts(data["username"], data["email"], data['mobile_number'])
-        if conflict_check:
-            return conflict_check
+    conflict_check = _check_user_conflicts(data["username"], data["email"], data['mobile_number'])
+    if conflict_check:
+        return conflict_check
 
-        # Step 5: Create new user with secure password
-        hashed_password = hash_password(data["password"])
-        logger.info(f"Creating new user account for: {data['username']}")
-        user = User(
-            username=data["username"],
-            email=data["email"],
-            mobile_number=data["mobile_number"],
-            admin_uid = "AD_UID_2",
-            password=hashed_password,
-            created_at=datetime.datetime.now(),
-            is_active=True
-        )
+    hashed_password = hash_password(data["password"])
+    user = User(
+        username=data["username"],
+        email=data["email"],
+        mobile_number=data["mobile_number"],
+        admin_uid="AD_UID_2",
+        password=hashed_password,
+        created_at=datetime.datetime.utcnow(),
+        is_active=True
+    )
 
-        if data.get("tag_id"):
-            user_exist = User.objects(tag_id=data['tag_id']).first()
-            if not user_exist:
-                return jsonify({"message": "referral link is not valid"}),400
-            user.save()
-            process_tag_id_and_reward(user_exist.tag_id, user.user_id)
-        # Step 6: Process referral code if provided
-        try:
-            referral_code = data.get("referral_code")
-            if referral_code:
-                referrer = User.objects(invitation_code = referral_code).first()
-                if not referrer:
-                    error = Errors(username=data['username'], email=data["email"], error_source="Sign up form",
-                           error_type= "Invalid referral code")
-                    error.save()
-                    logger.info("No such code exists.")
-                    return jsonify({"success" : False, "error" : "Invalid referral code."}),400
-                if referrer.user_id == user.user_id:
-                    return jsonify({"success" : False, "error" : "You can not refer yourself"}),400
-                if referral_code:
-                    logger.info(f"Processing referral code: {referral_code}")
-                    print(referrer.user_id)
-                    user.update(
-                        set__referred_by = referrer.user_id
-                    )
-                    print(user.user_id, user.username)
-                    process_referral_code_and_reward(referral_code, user.user_id, user.username)
-
-        except Exception as e:
-            Errors(username=data['username'], email=data["email"], error_source="Sign Up Form",
-                  error_type=get_error(f"failed_to_update{str(e)}")).save()
-            return jsonify({"error" : get_error("failed_to_update")})
-
+    # Save user early if referral via tag_id
+    if data.get("tag_id"):
+        inviter = User.objects(tag_id=data["tag_id"]).first()
+        if not inviter:
+            return jsonify({"error": "Invalid referral link"}), 400
         user.save()
-        # Step 7: Initialize user's reward and referral tracking records
-        initialize_user_records(user.user_id)
-        print(user.user_id)
-        logger.info(f"User account created successfully with ID: {user.user_id}")
+        process_referrer(inviter.user_id, user.user_id, user.username, during_signup=True)
 
-        update_planet_and_galaxy(user.user_id)
-        conversion_rate = []
-        rates = ReferralReward.objects(admin_uid=user.admin_uid).first()
-        reward_data = {
-            "signup_reward": rates.signup_reward,
-            "login_reward": rates.login_reward,
-        }
-        conversion_rate.append(reward_data)
-        # Step 8: Return successful registration response
-        logger.info(f"User registration completed successfully for: {user.user_id}")
-        return jsonify({
-            "message": "User registered successfully",
-            "user_id": user.user_id,
-            "registration_date": user.created_at.isoformat() if hasattr(user, 'created_at') else None,
-            "rewards" : conversion_rate
-        }), 200
-        
-    except Exception as e:
-        logger.error(f"Registration failed with error: {str(e)}")
-        Errors(username = data['username'], email = data["email"],
-               error_source = "Sign Up Form", error_type = get_error("registration_failed")).save()
+    referral_code = data.get("referral_code")
+    if referral_code:
+        inviter = User.objects(invitation_code=referral_code).first()
+        if not inviter:
+            return jsonify({"error": "Invalid referral code"}), 400
+        user.save()
+        process_referrer(inviter.user_id, user.user_id, user.username, during_signup=True)
 
-        return jsonify({"error": get_error("registration_failed")}), 500
+    if not user.pk:
+        user.save()
+
+    initialize_user_records(user.user_id)
+
+    update_planet_and_galaxy(user.user_id)
+
+    rates = ReferralReward.objects(admin_uid=user.admin_uid).first() or {}
+    rewards_info = {
+        "signup_reward": getattr(rates, "signup_reward", 0),
+        "login_reward": getattr(rates, "login_reward", 0)
+    }
+
+    return jsonify({
+        "message": "User registered successfully",
+        "user_id": user.user_id,
+        "registration_date": user.created_at.isoformat(),
+        "rewards": [rewards_info]
+    }), 200
+
 
 # ==================
 

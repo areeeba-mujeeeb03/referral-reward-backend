@@ -85,54 +85,6 @@ def send_milestone_email(email, email_template_type):
         print(f"Error sending email: {str(e)}")
         return False
 
-# def update_user_milestone(user_id, galaxy_name, meteors_earned):
-#     reward = Reward.objects(user_id=user_id).first()
-#     galaxy = Galaxy.objects(galaxy_name=galaxy_name).first()
-#     if not reward or not galaxy:
-#         return {"success": False, "message": "User or galaxy not found"}
-#
-#     reward.total_meteors += meteors_earned
-#
-#     progress = None
-#     for galaxy in reward.galaxy_progress:
-#         if galaxy["galaxy_name"] == galaxy_name:
-#             progress = galaxy
-#             break
-#
-#     if not progress:
-#         progress = {
-#             "galaxy_name": galaxy_name,
-#             "earned_meteors": meteors_earned,
-#             "milestones_completed": 0
-#         }
-#         reward.galaxy_progress.append(progress)
-#     else:
-#         progress["earned_meteors"] += meteors_earned
-#
-#     completed = progress["milestones_completed"]
-#
-#     if completed < len(galaxy.all_milestones):
-#         milestone = galaxy.all_milestones[completed]
-#         if progress["earned_meteors"] >= milestone.meteors_required_to_unlock:
-#             reward.total_stars += milestone.milestone_reward
-#             progress["milestones_completed"] += 1
-#
-#             reward.galaxy_name.append(galaxy_name)
-#             reward.current_planet.append(milestone.milestone_name)
-#
-#             reward.reward_history.append({
-#                 "milestone_id": milestone.milestone_id,
-#                 "milestone_name": milestone.milestone_name,
-#                 "galaxy": galaxy_name,
-#                 "reward": milestone.milestone_reward
-#             })
-#
-#             send_milestone_email(user_id, milestone.email_config)
-#
-#     reward.save()
-#     return {"success": True, "message": "Milestone updated"}
-
-
 def update_planet_and_galaxy(user_id):
     try:
         reward = Reward.objects(user_id=user_id).first()
@@ -174,51 +126,71 @@ def update_planet_and_galaxy(user_id):
         return jsonify({"message": f"Failed to update progress: {str(e)}"}), 500
 
 def win_voucher(user_id):
-    user = User.objects(user_id = user_id).first()
+    if not user_id:
+        logger.warning("Missing user_id in request body")
+        return jsonify({'error': 'user_id is required'}), 400
+    user = User.objects(user_id=user_id).only("user_id", "username", "email").first()
+
     try:
-        if not user_id:
-            logger.warning("Missing user_id in request body")
-            return jsonify({'error': 'user_id is required'}), 400
+        # Fetch user and reward profile
+        if not user:
+            logger.warning(f"User not found: {user_id}")
+            return jsonify({'error': 'User not found'}), 404
 
         reward = Reward.objects(user_id=user_id).first()
         if not reward:
             logger.error(f"Reward profile not found for user_id: {user_id}")
             return jsonify({'error': 'Reward profile not found'}), 404
 
-        products = Product.objects(
+        # Get eligible products with live offers
+        products = list(Product.objects(
             status="Live",
             apply_offer=True,
-            expiry_date__gte=datetime.datetime.now()
-        )
+            expiry_date__gte=datetime.datetime.utcnow(),
+            voucher_code__exists=True
+        ))
 
         if not products:
             logger.info("No active products with offers available")
             return jsonify({'message': 'No offers available to win at this time'}), 400
 
+        # Randomly select one product
         won_product = random.choice(products)
 
         if not won_product.voucher_code:
             logger.error(f"Product {won_product.uid} has no voucher_code generated.")
             return jsonify({'error': 'This offer is not properly configured'}), 500
 
+        # Check if voucher already won
+        if any(v['voucher_code'] == won_product.voucher_code for v in reward.all_vouchers):
+            logger.info(f"User {user_id} already has voucher {won_product.voucher_code}")
+            return jsonify({'message': 'You already won this voucher'}), 409
+
+        now = datetime.datetime.utcnow()
+        expiry = now + datetime.timedelta(days=7)
+
         voucher_data = {
-            "voucher_code": won_product.voucher_code,  # Shared voucher code
+            "voucher_code": won_product.voucher_code,
             "product_id": won_product.uid,
             "product_name": won_product.product_name,
             "discounted_amt": won_product.discounted_amt,
             "original_amt": won_product.original_amt,
             "off_percent": won_product.off_percent,
             "offer_type": won_product.offer_type,
-            "expiry_date": won_product.expiry_date.isoformat(),
+            "start_date": now.isoformat(),
+            "expiry_date": expiry.isoformat(),
+            "status": "active",
             "redeemed": False
         }
 
-        if any(v['voucher_code'] == won_product.voucher_code for v in reward.all_vouchers):
-            logger.info(f"User {user_id} already has voucher {won_product.voucher_code}")
-            return jsonify({'message': 'You already won this voucher'}), 409
-
         reward.all_vouchers.append(voucher_data)
         reward.total_vouchers += 1
+        reward.unused_vouchers += 1
+        reward.reward_history.append({
+            "action": "voucher_won",
+            "voucher_code": won_product.voucher_code,
+            "timestamp": now
+        })
         reward.save()
 
         logger.info(f"User {user_id} won voucher {won_product.voucher_code}")
@@ -228,7 +200,10 @@ def win_voucher(user_id):
         }), 200
 
     except Exception as e:
-        Errors(username=user.username, email=user.email, error_source="win voucher",
-               error_type=f"Error in user redeeming voucher: {str(e)}").save()
         logger.exception(f"Error in user redeeming voucher: {str(e)}")
+        Errors(username=user.username if user else "unknown",
+               email=user.email if user else "unknown",
+               error_source="win voucher",
+               error_type=f"Error in user redeeming voucher: {str(e)}").save()
         return jsonify({'error': 'Internal server error'}), 500
+
