@@ -17,7 +17,6 @@ from main_app.models.admin.product_model import Product
 from main_app.models.admin.prize_model import PrizeDetail, AdminPrizes
 from main_app.models.admin.advertisment_card_model import AdvertisementCardItem, AdminAdvertisementCard
 
-
 # Configure logging for better debugging and monitoring
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -32,7 +31,7 @@ def home_page():
     try:
         if not user:
             return jsonify({"success" : False,
-                            "message" : "User does not exist"})
+                            "message" : "User does not exist"}),400
 
         if not access_token or not session_id:
             return jsonify({"message": "Missing token or session", "success": False}), 400
@@ -53,7 +52,6 @@ def home_page():
                             "token"  : "expired"}), 401
 
         # validate_session_token(user, access_token, session_id)
-        update_planet_and_galaxy(user_id)
         reward = Reward.objects(user_id = user_id).first()
 
         info = {
@@ -88,7 +86,7 @@ def my_rewards():
     print(user)
     try:
         if not user:
-            return jsonify({"success" : False, "message" : "User does not exist"})
+            return jsonify({"success" : False, "message" : "User does not exist"}),400
 
         if not access_token or not session_id:
             return jsonify({"message": "Missing token or session", "success": False}), 400
@@ -110,7 +108,7 @@ def my_rewards():
         # validate_session_token(user, access_token, session_id)
         reward = Reward.objects(user_id = user_id).first()
         admin_uid = user.admin_uid
-        update_planet_and_galaxy(user_id)
+        # update_planet_and_galaxy(user_id)
 
         user_reward = Reward.objects(user_id = user_id).first()
         if user :
@@ -156,7 +154,7 @@ def my_referrals():
     user = User.objects(user_id=user_id).first()
     try:
         if not user:
-            return jsonify({"success" : False, "message" : "User does not exist"})
+            return jsonify({"success" : False, "message" : "User does not exist"}),400
 
         if not access_token or not session_id:
             return jsonify({"message": "Missing token or session", "success": False}), 400
@@ -176,7 +174,7 @@ def my_referrals():
                             "token"  : "expired"}), 401
 
         # validate_session_token(user, access_token, session_id)
-        update_planet_and_galaxy(user_id)
+        # update_planet_and_galaxy(user_id)
         referral = Referral.objects(user_id = user.user_id).first()
         reward = Reward.objects(user_id = user_id).first()
 
@@ -216,7 +214,7 @@ def my_profile():
     user = User.objects(user_id=user_id).first()
     try:
         if not user:
-            return jsonify({"success" : False, "message" : "User does not exist"})
+            return jsonify({"success" : False, "message" : "User does not exist"}),400
 
         if not access_token or not session_id:
             return jsonify({"message": "Missing token or session", "success": False}), 400
@@ -234,8 +232,6 @@ def my_profile():
                 return ({"success": False,
                          "message": "Access token has expired",
                             "token"  : "expired"}), 401
-
-        update_planet_and_galaxy(user_id)
 
         reward = Reward.objects(user_id = user_id).first()
         referral = Referral.objects(user_id = user.user_id).first()
@@ -265,6 +261,7 @@ def my_profile():
                                 ]
 
             encoded_str = generate_encoded_string(info, fields_to_encode)
+            update_planet_and_galaxy(user_id)
             return encoded_str, 200
 
     except Exception as e:
@@ -284,7 +281,7 @@ def fetch_data_from_admin():
 
 
     if not user:
-        return jsonify({"success": False, "message" : "User does not exist"})
+        return jsonify({"success": False, "message" : "User does not exist"}),400
 
     admin_uid = user.admin_uid
     home_faqs = get_faqs_by_category_name(admin_uid, "Home Screen") or []
@@ -293,7 +290,7 @@ def fetch_data_from_admin():
     help_faqs = get_faqs_by_category_name(admin_uid, "Help and Support FAQs") or []
 
     how_it_works_text = HowItWork.objects(admin_uid=admin_uid).first()
-    update_planet_and_galaxy(user_id)
+    # update_planet_and_galaxy(user_id)
 
     if not how_it_works_text:
         return ({"message": "No 'how it works' data found", "success": False}), 404
@@ -315,14 +312,9 @@ def fetch_data_from_admin():
         prize_data.append(prize_dict)
 
     reward = Reward.objects(user_id=user_id).first()
-    if not reward or not reward.galaxy_name:
-        return jsonify({"message": "User has no galaxy assigned yet"}), 404
 
     current_galaxy_name = reward.galaxy_name[-1]
     galaxy = Galaxy.objects(galaxy_name=current_galaxy_name).first()
-
-    if not galaxy:
-        return jsonify({"message": "Current galaxy not found"}), 404
 
     galaxy_data = {
         "galaxy_name": galaxy.galaxy_name,
@@ -369,23 +361,8 @@ def fetch_data_from_admin():
     exclusive_perks = {}
     product_offers = Product.objects(admin_uid = admin_uid)
 
-    # for product in product_offers:
-    #     all =
-    #     return
     product_data =[]
-    # for product in users:
-    #     user = user.to_mongo().to_dict()
-    #     userdata = {}
-    #     userdata['username'] = user['username']
-    #     userdata['email'] = user['email']
-    #     userdata['mobile_number'] = user['mobile_number']
-    #     # product_uid = Product.get('product_uid')  # Ensure this exists in the user model
-    #     # # if product_uid:
-    #     # product = Product.objects(uid= uid['uid']).first()
-    #     # userdata['product_name']= product['product_name'] if product else 0
-    #     # userdata['original_amt'] = product['original_amt']
-    #     # userdata['referral_code'] = user['invitation_code']
-    #     product_data.append(userdata)
+
 
     if user:
         return jsonify({

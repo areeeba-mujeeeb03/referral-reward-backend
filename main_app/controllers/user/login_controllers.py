@@ -76,29 +76,96 @@ def handle_email_login():
     password = data.get("password")
 
     # Step 2: Validate required fields
-    missing_fields = [field for field in ["email", "password"] if not data.get(field)]
-    if missing_fields:
-        logger.warning(f"Missing fields during login: {missing_fields}")
-        return jsonify({
-            "error": "Email and password are required",
-            "missing_fields": missing_fields,
-            "success" : False
-        }), 400
+    if email and password:
+        missing_fields = [field for field in ["email", "password"] if not data.get(field)]
+        if missing_fields:
+            logger.warning(f"Missing fields during login: {missing_fields}")
+            return jsonify({
+                "error": "Email/Username and password are required",
+                "missing_fields": missing_fields,
+                "success" : False
+            }), 400
 
     # Step 3: Find user by email
     user = User.objects(email=email).first()
-    try:
-        if not user:
-            logger.warning(f"Login attempt with unknown email: {email}")
+    if not user:
+        user_name = User.objects(username=email).first()
+        if not user_name:
+            logger.warning(f"Login attempt with unknown username: {email}")
             return jsonify({"error": get_error("user_not_found")}), 404
-        if user.email != email:
+
+        if user_name.username != email:
             return jsonify({"message" :  "Invalid email"})
+        is_member = user_name.is_member
+
+        if not is_member == True:
+            return jsonify({"success" : False, "message" : "Need to purchase before logging in!"}), 400
+
+        # Step 4: Check if account is active
+        if hasattr(user_name, "is_active") and not user_name.is_active:
+            logger.warning(f"Inactive account login attempt: {email}")
+            return jsonify({"error": "Account is deactivated"}), 403
+
+        if not user_name.password.startswith("$2"):
+            logger.warning("Invalid or corrupt password hash")
+            return jsonify({"success": False, "message": "Something went wrong. Please reset your password."}), 400
+        # Step 5: Verify password
+        if not check_password(password, user_name.password):
+            Errors(username=user_name.username, email=email,
+                   error_source="Login Form", error_type= f"Incorrect password attempt for: {email}").save()
+            logger.warning(f"Incorrect password attempt for: {email}")
+            return jsonify({"error": get_error("incorrect_password")}), 400
+        # Step 6: Generate tokens
+        access_token = generate_access_token(user_name.user_id)
+        session_id = create_user_session(user_name.user_id)
+        expiry_time = datetime.datetime.now() + datetime.timedelta(minutes=SESSION_EXPIRY_MINUTES)
+
+        # Step 7: Update referral status (if referred)
+        referred_by = user_name['referred_by']
+
+        if referred_by:
+            referrer_obj = User.objects(user_id=referred_by).first()
+            referrer = referrer_obj.user_id
+            update_referral_status_and_reward(referrer, user_name.user_id)
+
+        # Step 8: Update user session info in DB
+        user_name.access_token = access_token
+        user_name.session_id = session_id
+        user_name.expiry_time = expiry_time
+        user_name.joining_status = "Completed"
+        user_name.last_login = datetime.datetime.now()
+        user_name.login_count = (user_name.login_count or 0) + 1  # safe increment
+
+        user_name.save()
+        reward = Reward.objects(user_id = user_name.user_id).first()
+        date = datetime.datetime.now()
+        for referral in reward.reward_history:
+            if not referral.get("earned_by_action") == "Log In":
+                reward.reward_history.append({
+                    "earned_by_action": "Log In",
+                    "earned_meteors": Login_Reward,
+                    "referred_to": user_name.username,
+                    "referral_status": "pending",
+                    "referred_on": date.strftime('%d-%m-%y'),
+                    "transaction_type": "credit"
+                })
+
+        # Step 9: Return success
+        logger.info(f"Successful login for user: {user_name.user_id}")
+        return jsonify({
+            "message": "Logged in successfully",
+            "mode": access_token,
+            "log_alt": session_id,
+            "user_id": user_name.user_id
+        }), 200
+
+    if user:
+        if user.email != email:
+            return jsonify({"message": "Invalid email"})
         is_member = user.is_member
 
         if not is_member == True:
-            Errors(username=user.username, email=user.email, error_type="User Tried to login before purchasing",
-                   error_source="Login form").save()
-            return jsonify({"success" : False, "message" : "Need to purchase before logging in!"}), 400
+            return jsonify({"success": False, "message": "Need to purchase before logging in!"}), 400
 
         # Step 4: Check if account is active
 
@@ -112,7 +179,7 @@ def handle_email_login():
         # Step 5: Verify password
         if not check_password(password, user.password):
             Errors(username=user.username, email=email,
-                   error_source="Login Form", error_type= f"Incorrect password attempt for: {email}").save()
+                   error_source="Login Form", error_type=f"Incorrect password attempt for: {email}").save()
             logger.warning(f"Incorrect password attempt for: {email}")
             return jsonify({"error": get_error("incorrect_password")}), 400
 
@@ -122,9 +189,12 @@ def handle_email_login():
         expiry_time = datetime.datetime.now() + datetime.timedelta(minutes=SESSION_EXPIRY_MINUTES)
 
         # Step 7: Update referral status (if referred)
-        referred_by = getattr(user, "referred_by", None)
+        referred_by = user['referred_by']
+
         if referred_by:
-            update_referral_status_and_reward(referred_by, user.user_id)
+            referrer_obj = User.objects(user_id=referred_by).first()
+            referrer = referrer_obj.user_id
+            update_referral_status_and_reward(referrer, user.user_id)
 
         # Step 8: Update user session info in DB
         user.access_token = access_token
@@ -136,8 +206,8 @@ def handle_email_login():
 
         user.save()
         reward = Reward.objects(user_id = user.user_id).first()
+
         date = datetime.datetime.now()
-        update_planet_and_galaxy(user.user_id)
         for referral in reward.reward_history:
             if not referral.get("earned_by_action") == "Log In":
                 reward.reward_history.append({
@@ -158,11 +228,7 @@ def handle_email_login():
             "user_id": user.user_id
         }), 200
 
-    except Exception as e:
-        logger.error(f"Login failed for email with error: {str(e)}")
-        Errors(username = user.username, email = user.email,
-               error_type = get_error("login_failed"), error_source = "Login form").save()
-        return jsonify({"error": get_error("login_failed")}), 500
+    return jsonify({"error": get_error("login_failed")}), 500
 
 # ==================
 

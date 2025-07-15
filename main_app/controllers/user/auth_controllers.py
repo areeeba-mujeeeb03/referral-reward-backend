@@ -8,7 +8,8 @@ from main_app.models.admin.error_model import Errors
 from main_app.models.admin.links import ReferralReward
 from main_app.models.user.user import User
 from main_app.controllers.user.referral_controllers import (process_referral_code_and_reward, initialize_user_records,
-                                                            process_tag_id_and_reward, process_referrer)
+                                                            process_tag_id_and_reward ,process_referrer_by_tag_id,
+                                                            update_referral_status_and_reward)
 from main_app.utils.user.helpers import hash_password
 from main_app.utils.user.error_handling import get_error
 
@@ -65,17 +66,18 @@ def handle_registration():
         mobile_number=data["mobile_number"],
         admin_uid="AD_UID_2",
         password=hashed_password,
-        created_at=datetime.datetime.utcnow(),
+        created_at=datetime.datetime.now(),
         is_active=True
     )
 
     # Save user early if referral via tag_id
-    if data.get("tag_id"):
+    tag_id = data.get("tag_id")
+    if tag_id:
         inviter = User.objects(tag_id=data["tag_id"]).first()
         if not inviter:
             return jsonify({"error": "Invalid referral link"}), 400
         user.save()
-        process_referrer(inviter.user_id, user.user_id, user.username, during_signup=True)
+        process_referrer_by_tag_id(tag_id, user.user_id, user.username)
 
     referral_code = data.get("referral_code")
     if referral_code:
@@ -83,14 +85,13 @@ def handle_registration():
         if not inviter:
             return jsonify({"error": "Invalid referral code"}), 400
         user.save()
-        process_referrer(inviter.user_id, user.user_id, user.username, during_signup=True)
+        update_referral_status_and_reward(inviter.user_id, user.user_id)
+        process_referrer_by_tag_id(inviter.tag_id, user.user_id, user.username)
 
     if not user.pk:
         user.save()
 
     initialize_user_records(user.user_id)
-
-    update_planet_and_galaxy(user.user_id)
 
     rates = ReferralReward.objects(admin_uid=user.admin_uid).first() or {}
     rewards_info = {

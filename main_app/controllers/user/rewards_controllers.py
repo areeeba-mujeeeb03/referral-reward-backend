@@ -1,5 +1,6 @@
 from flask import request, jsonify
 
+from main_app.models.admin.admin_model import Admin
 from main_app.models.admin.email_model import EmailTemplate
 from main_app.models.admin.error_model import Errors
 import smtplib
@@ -21,8 +22,32 @@ logger = logging.getLogger(__name__)
 def set_reward_settings():
     try:
         data = request.get_json()
+        admin_uid = data.get("admin_uid")
+        # access_token = data.get("mode")
+        # session_id = data.get("log_alt")
 
-        # Validate input fields
+        # exist = Admin.objects(admin_uid=admin_uid).first()
+        #
+        # if not exist:
+        #     return jsonify({"success": False, "message": "User does not exist"})
+        #
+        # if not access_token or not session_id:
+        #     return jsonify({"message": "Missing token or session", "success": False}), 400
+        #
+        # if exist.access_token != access_token:
+        #     return ({"success": False,
+        #              "message": "Invalid access token"}), 401
+        #
+        # if exist.session_id != session_id:
+        #     return ({"success": False,
+        #              "message": "Session mismatch or invalid session"}), 403
+        #
+        # if hasattr(exist, 'expiry_time') and exist.expiry_time:
+        #     if datetime.datetime.now() > exist.expiry_time:
+        #         return ({"success": False,
+        #                  "message": "Access token has expired",
+        #                  "token": "expired"}), 401
+
         required_fields = ['referrer_reward', 'invitee_reward', 'conversion_rates']
         if not all(field in data for field in required_fields):
             return jsonify({"error": "Missing required fields"}), 400
@@ -31,8 +56,7 @@ def set_reward_settings():
         if not all(k in cr for k in ['meteor_to_star', 'star_to_meteor', 'reward_to_currency']):
             return jsonify({"error": "Invalid conversion rates format"}), 400
 
-        # Upsert settings (only one document in this collection)
-        ReferralReward.objects().update_one(
+        ReferralReward.objects(admin_uid = admin_uid).update_one(
             set__referrer_reward=data['referrer_reward'],
             set__invitee_reward=data['invitee_reward'],
             set__conversion_rates=data['conversion_rates'],
@@ -88,18 +112,11 @@ def send_milestone_email(email, email_template_type):
 def update_planet_and_galaxy(user_id):
     try:
         reward = Reward.objects(user_id=user_id).first()
-        if not reward:
-            return jsonify({"message": "Reward entry not found"}), 404
 
         all_galaxies = reward.galaxy_name
-        if not all_galaxies:
-            return jsonify({"message": "No galaxy assigned yet"}), 400
 
         current_galaxy_name = all_galaxies[-1]
         current_galaxy = Galaxy.objects(galaxy_name=current_galaxy_name).first()
-
-        if not current_galaxy:
-            return jsonify({"message": "This galaxy does not exist"}), 404
 
         total_meteors = reward.current_meteors
         milestone_unlocked = False
@@ -109,18 +126,16 @@ def update_planet_and_galaxy(user_id):
                 if total_meteors >= milestone.meteors_required_to_unlock:
                     reward.update(push__current_planet=milestone.milestone_name)
                     milestone_unlocked = True
-                    return jsonify({"message": f"New planet unlocked: {milestone.milestone_name}", "success": True}), 200
+                    return jsonify({"milestones": reward.current_planet, "galaxy": reward.galaxy_name,"meteors": reward.current_meteors,"success": True}), 200
 
         if total_meteors >= current_galaxy.total_meteors_required:
             next_galaxy = Galaxy.objects(galaxy_name__nin=all_galaxies).first()
             if next_galaxy:
                 reward.update(push__galaxy_name=next_galaxy.galaxy_name)
-                return jsonify({"message": "New Galaxy Unlocked", "success": True}), 200
-            else:
-                return jsonify({"message": "No more galaxies available"}), 200
+                return jsonify({"milestones": reward.current_planet, "galaxy": reward.galaxy_name, "meteors": reward.current_meteors,"success": True}), 200
 
         if not milestone_unlocked:
-            return jsonify({"message": "No new planet or galaxy unlocked yet"}), 200
+            return jsonify({"milestones": reward.current_planet, "galaxy": reward.galaxy_name,"meteors": reward.current_meteors,}), 200
 
     except Exception as e:
         return jsonify({"message": f"Failed to update progress: {str(e)}"}), 500

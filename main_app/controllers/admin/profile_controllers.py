@@ -55,13 +55,13 @@ def edit_profile_data():
             return jsonify({"error": get_error("incorrect_password")}), 400
 
         # Uniqueness checks
-        if data.get("username") and Admin.objects(username=data["username"]).first():
+        if data.get("username") != admin.username and Admin.objects(username=data["username"]).first():
             return jsonify({"error": get_error("username_exists")}), 400
 
-        if data.get("email") and Admin.objects(email=data["email"]).first():
+        if data.get("email") != admin.email and Admin.objects(email=data["email"]).first():
             return jsonify({"error": get_error("email_exists")}), 400
 
-        if data.get("mobile_number") and Admin.objects(mobile_number=data["mobile_number"]).first():
+        if data.get("mobile_number")!= admin.mobile_number and Admin.objects(mobile_number=data["mobile_number"]).first():
             return jsonify({"error": "This number is already registered"}), 400
 
         update_fields = {}

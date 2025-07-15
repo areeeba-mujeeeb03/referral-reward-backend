@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 # Referral reward points configuration
 PENDING_REFERRAL_REWARD_POINTS = 400
-SUCCESS_REFERRAL_REWARD_POINTS = 600
+SUCCESS_REFERRAL_REWARD_POINTS = 400
 SESSION_EXPIRY_MINUTES = 30
 
 # admin_bonus = ReferralReward.objects(admin_uid= "AD_UID_2").first()
@@ -47,7 +47,6 @@ def process_referral_code_and_reward(referral_code, new_user_id, new_username):
     referrer  = valid_code.user_id
     try:
         referrer_id = valid_code.user_id
-        print(referrer_id)
         if valid_code:
             referrer = Referral.objects(user_id = referrer_id).first()
             new_user = User.objects(user_id = new_user_id).first()
@@ -91,13 +90,20 @@ def process_referral_code_and_reward(referral_code, new_user_id, new_username):
         logger.error(f"Failed to initialize user rewards : {str(e)}")
         return jsonify({"message" : "Failed to initialize user rewards.", "success" : False})
 
-def process_referrer(referrer_id, new_user_id, new_username, during_signup=False):
-    ref = Referral.objects(user_id=referrer_id).first()
+def process_referrer_by_tag_id(tag_id, new_user_id, new_username):
+    user = User.objects(tag_id=tag_id).first()
+    print(user)
+    ref  = Referral.objects(user_id = user.user_id).first()
     if not ref:
-        logger.error(f"No referral record for user {referrer_id}")
+        logger.error(f"No referral record for user {user.username}")
         return
+    new_user = User.objects(user_id = new_user_id).first()
+    if new_user:
+        new_user.update(
+            set__referred_by=user.user_id
+        )
 
-    date_str = datetime.datetime.utcnow().strftime("%Y-%m-%d")
+    date_str = datetime.datetime.now().strftime("%Y-%m-%d")
     ref.update(
         push__all_referrals={
             "username": new_username,
@@ -110,8 +116,7 @@ def process_referrer(referrer_id, new_user_id, new_username, during_signup=False
         inc__pending_referrals=1,
         inc__referral_earning=PENDING_REFERRAL_REWARD_POINTS
     )
-
-    reward = Reward.objects(user_id=referrer_id).first()
+    reward = Reward.objects(user_id=ref.user_id).first()
     if reward:
         reward.current_meteors += PENDING_REFERRAL_REWARD_POINTS
         reward.reward_history.append({
@@ -125,7 +130,7 @@ def process_referrer(referrer_id, new_user_id, new_username, during_signup=False
         reward.unused_vouchers = getattr(reward, "unused_vouchers", 0)
         reward.save()
 
-    admin = UserData.objects(admin_uid=referrer_id).first()
+    admin = UserData.objects(admin_uid=user.admin_uid).first()
     if admin:
         admin.update(
             inc__total_participants=1,
@@ -201,7 +206,7 @@ def update_referral_status_and_reward(referrer_id, user_id):
         logger.warning(f"No referral record for {referrer_id}")
         return
 
-    date_str = datetime.datetime.utcnow().strftime("%Y-%m-%d")
+    date_str = datetime.datetime.now().strftime("%Y-%m-%d")
     for item in ref.all_referrals:
         if item["user_id"] == user_id and item["referral_status"] != "Completed":
             item["referral_status"] = "Completed"
@@ -216,8 +221,11 @@ def update_referral_status_and_reward(referrer_id, user_id):
     ref.save()
 
     reward = Reward.objects(user_id=referrer_id).first()
+    new_user = User.objects(user_id = user_id).first()
+    new_user.update(
+        referred_by = referrer_id
+    )
     if reward:
-        reward.total_meteors += SUCCESS_REFERRAL_REWARD_POINTS
         reward.current_meteors += SUCCESS_REFERRAL_REWARD_POINTS
         reward.reward_history.append({
             "earned_by_action": "referral_success",
@@ -259,63 +267,66 @@ def update_referrer_stats(admin_uid):
     except Exception as e:
         logger.error(f"Failed to update admin stats for UID: {admin_uid} — {str(e)}")
 
-def initialize_users_records(user_id):
-    """
-    Initialize empty reward and referral tracking records for new user
-
-    Args:
-        user_id (str): ID of the newly registered user
-    """
-    user_rewards = Reward.objects(user_id=user_id).first()
-    user_referrals = Referral.objects(user_id=user_id).first()
-    user = User.objects(user_id=user_id).first()
-    try:
-        if user_referrals and user_rewards :
-            return "The rewards for this user is already initialized", False
-
-        user_reward = Reward(
-            user_id=user_id,
-            reward_history=[],
-        )
-        user_reward.save()
-        user_referral = Referral(user_id = user_id,
-                                 all_referrals=[])
-        user_referral.save()
-
-        reward = Reward.objects(user_id = user_id).first()
-        reward.update(
-            inc__total_meteors_earned=SIGN_UP_REWARD,
-            inc__current_meteors=SIGN_UP_REWARD,
-            set__redeemed_meteors=0,
-            set__galaxy_name='Milky Way Galaxy',
-            set__current_planet='Planet A'
-        )
-        admin = UserData.objects(admin_uid = user.admin_uid).first()
-        if admin:
-            admin.update(inc__total_participants = 1,
-                         inc__signup_earnings = SIGN_UP_REWARD)
-        date = datetime.datetime.now()
-        reward.reward_history.append({
-            "earned_by_action": "SignUp",
-            "earned_meteors": SIGN_UP_REWARD,
-            "referred_to": user.username,
-            "referral_status": "pending",
-            "referred_on": date.strftime('%d-%m-%y'),
-            "transaction_type": "credit"})
-
-        user_referral.update(
-            total_referrals=0,
-            referral_earning=0,
-            pending_referrals=0,
-            successful_referrals=0
-        ).save()
-
-        logger.info(f"Initialized reward and referral records for user: {user_id}")
-
-    except Exception as e:
-        Errors(username=user.user_id, email=user.email, error_source="Sign Up Form",
-               error_type=f"Failed to initialize user records for {user_id}").save()
-        logger.error(f"Failed to initialize user records for {user_id}: {str(e)}")
+# def initialize_users_records(user_id):
+#     """
+#     Initialize empty reward and referral tracking records for new user
+#
+#     Args:
+#         user_id (str): ID of the newly registered user
+#     """
+#     user_rewards = Reward.objects(user_id=user_id).first()
+#     user_referrals = Referral.objects(user_id=user_id).first()
+#     user = User.objects(user_id=user_id).first()
+#     try:
+#         if user_referrals and user_rewards :
+#             return "The rewards for this user is already initialized", False
+#
+#         user_reward = Reward(
+#             user_id=user_id,
+#             reward_history=[],
+#         )
+#         user_reward.save()
+#         user_referral = Referral(user_id = user_id,
+#                                  all_referrals=[])
+#         user_referral.save()
+#
+#         reward = Reward.objects(user_id = user_id).first()
+#         reward.update(
+#             inc__total_meteors_earned=SIGN_UP_REWARD,
+#             inc__current_meteors=SIGN_UP_REWARD,
+#             set__redeemed_meteors=0,
+#             push__galaxy_name= 'Milky Way Galaxy',
+#             push__current_planet='Planet A'
+#         )
+#         reward.galaxy_name.append("Milky Way Galaxy")
+#         reward.current_planet.append("Planet A")
+#         reward.save()
+#         admin = UserData.objects(admin_uid = user.admin_uid).first()
+#         if admin:
+#             admin.update(inc__total_participants = 1,
+#                          inc__signup_earnings = SIGN_UP_REWARD)
+#         date = datetime.datetime.now()
+#         reward.reward_history.append({
+#             "earned_by_action": "SignUp",
+#             "earned_meteors": SIGN_UP_REWARD,
+#             "referred_to": user.username,
+#             "referral_status": "pending",
+#             "referred_on": date.strftime('%d-%m-%y'),
+#             "transaction_type": "credit"})
+#
+#         user_referral.update(
+#             total_referrals=0,
+#             referral_earning=0,
+#             pending_referrals=0,
+#             successful_referrals=0
+#         ).save()
+#
+#         logger.info(f"Initialized reward and referral records for user: {user_id}")
+#
+#     except Exception as e:
+#         Errors(username=user.user_id, email=user.email, error_source="Sign Up Form",
+#                error_type=f"Failed to initialize user records for {user_id}").save()
+#         logger.error(f"Failed to initialize user records for {user_id}: {str(e)}")
 
 def initialize_user_records(user_id):
     if Reward.objects(user_id=user_id).first() or Referral.objects(user_id=user_id).first():
@@ -330,6 +341,11 @@ def initialize_user_records(user_id):
         "referred_on": datetime.datetime.utcnow().strftime("%Y-%m-%d")
     })
     reward.save()
+    reward.update(
+        set__redeemed_meteors=0,
+        push__galaxy_name='Milky Way Galaxy',
+        push__current_planet='Planet A'
+    )
 
     Referral(user_id=user_id, all_referrals=[]).save()
 

@@ -95,7 +95,7 @@ def generate_invite_link_with_expiry():
     encoded_gen_str = encode_timestamp(gen_str)
     encoded_exp_str = encode_timestamp(exp_str)
 
-    base_url = "http://127.0.0.1:5000/wealth-elite/referral-program/invite_link"
+    base_url = "http://localhost:5173/invite_link"
 
     invitation_link = f"{base_url}/{encoded_gen_str}/{encoded_exp_str}"
     is_active = gen_str <= int(datetime.now().strftime("%Y%m%d%H%M%S"))
