@@ -1,5 +1,5 @@
 from flask import Blueprint
-from main_app.controllers.admin.admin_auth_controller import admin_register
+from main_app.controllers.admin.admin_auth_controller import admin_register, handle_authentication
 from main_app.controllers.admin.admin_auth_controller import handle_admin_login
 from main_app.controllers.admin.discount_coupons_controllers import create_discount_coupons, update_discount_coupon, \
     delete_discount_coupon
@@ -61,7 +61,7 @@ def login_email():
 # ==============
 
 
-@admin_bp.route("/admin/forgot_password", methods = ["POST"])
+@admin_bp.route("/admin/forgot-password", methods = ["POST"])
 def user_forgot_password():
     """
     Handle forgot password request - send reset code to email
@@ -75,7 +75,7 @@ def user_forgot_password():
 
 # =========================
 
-@admin_bp.route("/admin/verify_otp", methods = ["POST"])
+@admin_bp.route("/admin/verify-otp", methods = ["POST"])
 def forget_otp_verify():
      """
     Handle verify otp request - send to email
@@ -90,7 +90,7 @@ def forget_otp_verify():
 
 # =========================
 
-@admin_bp.route("/admin/reset_password", methods = ["POST"])
+@admin_bp.route("/admin/reset-password", methods = ["POST"])
 def user_reset_password():
     """
     Handle password reset using code(otp) from email
@@ -105,7 +105,7 @@ def user_reset_password():
 
 # =============================
 
-@admin_bp.route("/admin/add_product", methods = ["POST"])
+@admin_bp.route("/admin/add-product", methods = ["POST"])
 def admin_add_product():
     """
     Handle password reset using code(otp) from email
@@ -120,7 +120,7 @@ def admin_add_product():
 
 # ========================
 
-@admin_bp.route("/admin/update_product/<string:uid>", methods = ["PUT"])
+@admin_bp.route("/admin/update-product/<string:uid>", methods = ["PUT"])
 def update_add_product(uid):
     """
     Updates an existing product in the database.
@@ -136,7 +136,7 @@ def update_add_product(uid):
 
 # ===================
 
-@admin_bp.route("/admin/add_offer", methods = ["POST"])
+@admin_bp.route("/admin/add-offer", methods = ["POST"])
 def admin_add_offer():
     """
     # Handle password reset using code(otp) from email
@@ -152,7 +152,7 @@ def admin_add_offer():
 
 # ==========================
 
-@admin_bp.route("/admin/update_offer", methods = ["PUT"])
+@admin_bp.route("/admin/update-offer", methods = ["PUT"])
 def admin_update_offer():
     """
     Update offers
@@ -183,7 +183,7 @@ def admin_exciting_prizes():
 
 # ===============
 
-@admin_bp.route('/admin/check_prize_eligibility', methods=["POST"])
+@admin_bp.route('/admin/check-prize-eligibility', methods=["POST"])
 def prize_check_eligibility():
     """
     Checks if a user is eligible for the prize based on certain criteria.
@@ -196,7 +196,7 @@ def prize_check_eligibility():
 
 # ========================
 
-@admin_bp.route("/admin/how_it_work", methods = ["POST"])
+@admin_bp.route("/admin/how-it-work", methods = ["POST"])
 def admin_how_it_work():
     """
     Add or update 'How It Works' content based on admin_uid.
@@ -210,7 +210,7 @@ def admin_how_it_work():
 
 # ==========================
 
-@admin_bp.route("/admin/advertisement_card", methods = ["POST"])
+@admin_bp.route("/admin/advertisement-card", methods = ["POST"])
 def admin_advertisement_card():
     """
     Handles the creation of a new advertisement card.
@@ -225,7 +225,7 @@ def admin_advertisement_card():
 
 # =======================================
 
-@admin_bp.route("/admin/dashboard/participant_table", methods =["POST"])
+@admin_bp.route("/admin/dashboard/participant-table", methods =["POST"])
 def admin_reward_participant_table():
 
      return dashboard_participants()
@@ -236,7 +236,7 @@ def admin_reward_participant_table():
 
 # ===============
 
-@admin_bp.route("/admin/dashboard/error_table", methods = ["POST"])
+@admin_bp.route("/admin/dashboard/error-table", methods = ["POST"])
 def admin_error_table():
     return error_table()
 
@@ -337,7 +337,7 @@ def generate_link():
 
 # ==============
 
-@admin_bp.route('/special-link-referral-', methods = ['POST'])
+@admin_bp.route('/admin/special-referral-link', methods = ['POST'])
 def special_link_referral():
 
     return save_referral_data()
@@ -348,7 +348,7 @@ def special_link_referral():
 
 # ==============
 
-@admin_bp.route('/admin/sharing_apps', methods=['POST'])
+@admin_bp.route('/admin/sharing-apps', methods=['POST'])
 def sharing_apps():
 
     return sharing_app_stats()
@@ -505,3 +505,18 @@ def admin_create_exclusive_perks():
 def admin_create_footer():
 
     return edit_footer()
+
+# ===================
+
+#  37. Authentications
+
+# ==================
+
+@admin_bp.route("/admin/auths", methods = ["POST"])
+def authentication():
+    """
+    Handle password reset using code(otp) from email
+    Accepts: POST request with new password and reset
+    Returns: Password reset confirmation response
+    """
+    return handle_authentication()

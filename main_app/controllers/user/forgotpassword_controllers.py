@@ -136,7 +136,6 @@ def reset_password():
     """
     data = request.json
     email = data.get("email")
-
     new_password = data.get("new_password")
     confirm_password = data.get("confirm_password")
     verification_code = data.get("verification_code")

@@ -11,6 +11,9 @@ def create_galaxy():
         admin_uid = data.get("admin_uid")
         access_token = data.get("mode")
         session_id = data.get("log_alt")
+        total_milestones = data.get("total_milestones")
+        highest_reward = data.get("highest_reward")
+        stars = data.get("stars")
 
         exist = Admin.objects(admin_uid=admin_uid).first()
 
@@ -44,7 +47,7 @@ def create_galaxy():
         galaxy = Galaxy(
             galaxy_name=galaxy_name,
             total_meteors_required=0,
-            total_milestones=0,
+            total_milestones=total_milestones,
             all_milestones=[],
             admin_uid=admin_uid
         )

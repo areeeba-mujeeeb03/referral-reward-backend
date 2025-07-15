@@ -65,8 +65,10 @@ def process_referral_code_and_reward(referral_code, new_user_id, new_username):
                 inc__referral_earning = PENDING_REFERRAL_REWARD_POINTS
             )
 
-
             reward_record = Reward.objects(user_id=referrer_id).first()
+            reward_record.update(
+                inc__total_meteors_earned = PENDING_REFERRAL_REWARD_POINTS
+            )
             UserData.objects().first()
             if reward_record:
                 reward_record.total_meteors += PENDING_REFERRAL_REWARD_POINTS
@@ -118,6 +120,9 @@ def process_referrer_by_tag_id(tag_id, new_user_id, new_username):
     )
     reward = Reward.objects(user_id=ref.user_id).first()
     if reward:
+        reward.update(
+            inc__total_meteors_earned=PENDING_REFERRAL_REWARD_POINTS
+        )
         reward.current_meteors += PENDING_REFERRAL_REWARD_POINTS
         reward.reward_history.append({
             "earned_by_action": "referral",
@@ -176,6 +181,9 @@ def process_tag_id_and_reward(tag_id, new_user_id):
 
         )
         reward_record = Reward.objects(user_id=valid_user.user_id).first()
+        reward_record.update(
+            inc__total_meteors_earned=PENDING_REFERRAL_REWARD_POINTS
+        )
         if reward_record:
             reward_record.total_meteors += PENDING_REFERRAL_REWARD_POINTS
             reward_record.reward_history.append({
@@ -227,6 +235,7 @@ def update_referral_status_and_reward(referrer_id, user_id):
     )
     if reward:
         reward.current_meteors += SUCCESS_REFERRAL_REWARD_POINTS
+        reward.total_meteors_earned += SUCCESS_REFERRAL_REWARD_POINTS
         reward.reward_history.append({
             "earned_by_action": "referral_success",
             "earned_meteors": SUCCESS_REFERRAL_REWARD_POINTS,

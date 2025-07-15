@@ -224,7 +224,9 @@ def sharing_app_stats():
 
     existing_platforms = {}
     for app in stats.apps:
-        existing_platforms[app["platform"]] = app
+        platform = app.get("platform")
+        if platform:
+            existing_platforms[platform] = app
 
     for platform in platforms:
         if platform not in existing_platforms:

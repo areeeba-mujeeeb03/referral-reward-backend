@@ -23,30 +23,30 @@ def set_reward_settings():
     try:
         data = request.get_json()
         admin_uid = data.get("admin_uid")
-        # access_token = data.get("mode")
-        # session_id = data.get("log_alt")
+        access_token = data.get("mode")
+        session_id = data.get("log_alt")
 
-        # exist = Admin.objects(admin_uid=admin_uid).first()
-        #
-        # if not exist:
-        #     return jsonify({"success": False, "message": "User does not exist"})
-        #
-        # if not access_token or not session_id:
-        #     return jsonify({"message": "Missing token or session", "success": False}), 400
-        #
-        # if exist.access_token != access_token:
-        #     return ({"success": False,
-        #              "message": "Invalid access token"}), 401
-        #
-        # if exist.session_id != session_id:
-        #     return ({"success": False,
-        #              "message": "Session mismatch or invalid session"}), 403
-        #
-        # if hasattr(exist, 'expiry_time') and exist.expiry_time:
-        #     if datetime.datetime.now() > exist.expiry_time:
-        #         return ({"success": False,
-        #                  "message": "Access token has expired",
-        #                  "token": "expired"}), 401
+        exist = Admin.objects(admin_uid=admin_uid).first()
+
+        if not exist:
+            return jsonify({"success": False, "message": "User does not exist"})
+
+        if not access_token or not session_id:
+            return jsonify({"message": "Missing token or session", "success": False}), 400
+
+        if exist.access_token != access_token:
+            return ({"success": False,
+                     "message": "Invalid access token"}), 401
+
+        if exist.session_id != session_id:
+            return ({"success": False,
+                     "message": "Session mismatch or invalid session"}), 403
+
+        if hasattr(exist, 'expiry_time') and exist.expiry_time:
+            if datetime.datetime.now() > exist.expiry_time:
+                return ({"success": False,
+                         "message": "Access token has expired",
+                         "token": "expired"}), 401
 
         required_fields = ['referrer_reward', 'invitee_reward', 'conversion_rates']
         if not all(field in data for field in required_fields):
@@ -147,7 +147,6 @@ def win_voucher(user_id):
     user = User.objects(user_id=user_id).only("user_id", "username", "email").first()
 
     try:
-        # Fetch user and reward profile
         if not user:
             logger.warning(f"User not found: {user_id}")
             return jsonify({'error': 'User not found'}), 404

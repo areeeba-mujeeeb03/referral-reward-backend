@@ -106,25 +106,11 @@ def handle_admin_login():
             logger.warning(f"Incorrect password attempt for: {email}")
             return jsonify({"message": get_error("incorrect_password")}), 400
 
-        #  Generate tokens
-        access_token = generate_access_token(user.admin_uid)
-        session_id = create_user_session(user.admin_uid)
-        expiry_time = datetime.datetime.now() + datetime.timedelta(minutes=SESSION_EXPIRY_MINUTES)
-
-        #  Update user session info in DB
-        user.access_token = access_token
-        user.session_id = session_id
-        user.expiry_time = expiry_time
-        user.last_login = datetime.datetime.now()
-        user.save()
-
         #  Return success
         logger.info(f"Admin login Successfully: {user.admin_uid}")
         return jsonify({
             "success": "true",
             "message": "Login successfully",
-            "access_token": access_token,
-            "session_id": session_id,
             "admin_uid": user.admin_uid,
             "username": user.username,
             "email": user.email,
@@ -145,3 +131,30 @@ def initialize_admin_data(admin_uid):
         admin_uid=admin_uid
     ).save()
     return "done"
+
+
+def handle_authentication():
+    data = request.get_json()
+    admin_uid = data.get("admin_uid")
+
+    existing = Admin.objects(admin_uid = admin_uid).first()
+
+    if not existing:
+        logger.warning("User not found")
+        return jsonify({"message": get_error("user_not_found")}), 404
+
+    #  Generate tokens
+    access_token = generate_access_token(existing.admin_uid)
+    session_id = create_user_session(existing.admin_uid)
+    expiry_time = datetime.datetime.now() + datetime.timedelta(minutes=SESSION_EXPIRY_MINUTES)
+
+    #  Update user session info in DB
+    existing.access_token = access_token
+    existing.session_id = session_id
+    existing.expiry_time = expiry_time
+    existing.last_login = datetime.datetime.now()
+    existing.save()
+
+    return jsonify({"access_token": access_token,
+                    "session_id": session_id,
+                    "success" : True})

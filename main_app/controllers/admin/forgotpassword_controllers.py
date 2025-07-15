@@ -18,7 +18,7 @@ def forgot_otp_email():
     try:
         logger.info("Forgot OTP Email API called")
         data = request.get_json()
-        email = data.get("email", "").strip()
+        email = data.get("email")
        
         # Email validation 
         if not email:
@@ -32,7 +32,7 @@ def forgot_otp_email():
             return jsonify({"message": get_error("user_not_found")}), 400
         
         # Generate code
-        code =   generate_otp()
+        code =  generate_otp()
         expiry_time = get_expiry_time()
         user.code = code
         user.code_expiry = expiry_time
@@ -49,7 +49,7 @@ def forgot_otp_email():
     
     except Exception as e:
         logger.error(f"code send failed:{str(e)}")
-        return jsonify({"errro": "Internal server error"}), 500
+        return jsonify({"error": "Internal server error"}), 500
 
 # ----------------------------------------------------------------------------------------------------
 
