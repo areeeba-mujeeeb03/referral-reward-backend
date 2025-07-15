@@ -1,5 +1,4 @@
 import datetime
-
 from flask import request, jsonify
 import logging
 from main_app.models.admin.admin_model import Admin
@@ -85,6 +84,9 @@ def dashboard_stats():
 def dashboard_participants():
     data = request.get_json()
     admin_uid = data.get("admin_uid")
+    users = User.objects(admin_uid = admin_uid)
+    data = request.get_json()
+    admin_uid = data.get("admin_uid")
     access_token = data.get("mode")
     session_id = data.get("log_alt")
 
@@ -145,13 +147,27 @@ def dashboard_participants():
         userdata['username'] = user['username']
         userdata['email'] = user['email']
         userdata['mobile_number'] = user['mobile_number']
-        # product_uid = Product.get('product_uid')  # Ensure this exists in the user model
-        # # if product_uid:
-        # product = Product.objects(uid= uid['uid']).first()
-        # userdata['product_name']= product['product_name'] if product else 0
-        # userdata['original_amt'] = product['original_amt']
-        # userdata['referral_code'] = user['invitation_code']
+        product = Product.objects(uid= product['uid']).first()
+        userdata['product_name']= product['product_name'] if product else 0
+        userdata['original_amt'] = product['original_amt']
+        userdata['referral_code'] = user['invitation_code']
         product_data.append(userdata)
+
+        games_data =[]
+        for user in users:
+            user = user.to_mongo().to_dict()
+            userdata = {}
+            userdata['username'] = user['username']
+            userdata['email'] = user['email']
+            userdata['mobile_number'] = user['mobile_number']
+            # game = Game
+            userdata['game_name'] = 0
+            userdata['last_play_date'] = 0
+            userdata['earning_game'] = 0
+            userdata['total_earning'] = 0
+            games_data.append(userdata)
+
+
 
     return jsonify({"Participants_and_earning_with_referral" : data,
                     "redeem_table" : redemption_data,

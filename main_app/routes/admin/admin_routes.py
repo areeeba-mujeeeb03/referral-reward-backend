@@ -6,7 +6,7 @@ from main_app.controllers.admin.discount_coupons_controllers import create_disco
 from main_app.controllers.admin.forgotpassword_controllers import forgot_otp_email, verify_otp, reset_password
 from main_app.controllers.admin.help_request_controllers import add_faqs, delete_faq, list_contact_messages, update_faqs
 from main_app.controllers.admin.profile_controllers import edit_profile_data
-from main_app.controllers.admin.product_controllers import add_product, update_product, update_offer
+from main_app.controllers.admin.product_controllers import add_product, update_product, update_offer, add_offer
 from main_app.controllers.admin.prize_controller import add_exciting_prizes, check_eligibility
 from main_app.controllers.admin.how_it_work_controller import add_how_it_work, advertisement_card
 from main_app.controllers.admin.referral_controllers import generate_invite_link_with_expiry, sharing_app_stats, \
@@ -128,6 +128,23 @@ def update_add_product(uid):
     Returns: Success message or error response.
     """
     return update_product(uid)
+
+
+# ==================
+
+#  Add offer
+
+# ===================
+
+@admin_bp.route("/admin/add_offer", methods = ["POST"])
+def admin_add_offer():
+    """
+    # Handle password reset using code(otp) from email
+    # Accepts: POST request with new password and reset 
+    # Returns: Password reset confirmation response
+    """
+    return add_offer()
+
 
 # ==========================
 

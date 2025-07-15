@@ -1,6 +1,6 @@
 import datetime
 from flask import request, jsonify
-from werkzeug.utils import secure_filename
+# from werkzeug.utils import secure_filename
 from main_app.models.admin.perks_model import ExclusivePerks, FooterSection, FooterItem
 import os , logging
 from main_app.models.admin.admin_model import Admin
@@ -22,6 +22,7 @@ def create_exclusive_perks():
         title = data.get("title")
         information = data.get("information")
         term_conditions = data.get("term_conditions")
+        image = data.get("image")
 
         exist = Admin.objects(admin_uid=admin_uid).first()
 
@@ -55,13 +56,13 @@ def create_exclusive_perks():
             logger.warning(f"Admin not found for UID: {admin_uid}")
             return jsonify({"message": "Admin not found" }), 400
 
-        upload = request.files.get("image")
-        image_url = None
-        if upload:
-            filename = secure_filename(upload.filename)
-            image_path  = os.path.join(UPLOAD_FOLDER, filename)
-            upload.save(image_path)
-            image_url = f"/{image_path}"
+        # upload = request.files.get("image")
+        # image_url = None
+        # if upload:
+        #     filename = secure_filename(upload.filename)
+        #     image_path  = os.path.join(UPLOAD_FOLDER, filename)
+        #     upload.save(image_path)
+        #     image_url = f"/{image_path}"
 
           # Check if a similar perk exists for the admin
         existing_perk = ExclusivePerks.objects(title=title, admin_uid=admin_uid).first()
@@ -69,7 +70,7 @@ def create_exclusive_perks():
              existing_perk.update(
                    information=information,
                    term_conditions=term_conditions,
-                   image=image_url
+                   image=image
               )
              message = "Exclusive perks updated successfully"
         else:
@@ -77,7 +78,7 @@ def create_exclusive_perks():
                    title=title,
                    information=information,
                    term_conditions=term_conditions,
-                   image=image_url,
+                   image=image,
                    admin_uid=admin_uid
              )
             new_perk.save()
@@ -88,7 +89,6 @@ def create_exclusive_perks():
 
      except Exception as e:
             logger.error(f"Add exclusive perks failed:{str(e)}")
-            return jsonify({"error": "Internal server error"}), 500
             return jsonify({"error": "Internal server error"}), 500
 
 

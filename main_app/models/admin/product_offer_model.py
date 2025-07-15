@@ -1,17 +1,40 @@
-# from mongoengine import StringField, Document, DateTimeField, IntField
-# import datetime
-# class Offer(Document):
+from mongoengine import (StringField, Document, DateTimeField, IntField, ListField, EmbeddedDocument, EmbeddedDocumentField)
+import datetime
+# class Offer(EmbeddedDocument):
 #     offer_uid = StringField(required = True, Unique = True)
-#     offer_name = StringField(required = True, Unique = True)
-#     one_liner = StringField(required = True, Unique =True)
-#     image_url = StringField()
+#     product_id = StringField()
+#     # admin_uid = StringField()
+#     offer_name = StringField(required = True)
+#     one_liner = StringField(required = True)
+#     image = StringField()
 #     button_txt = StringField(required =True)
 #     off_percent = IntField(required = True)
-#     start_date = DateTimeField(required = True)
-#     expiry_date = DateTimeField(required = True)
+#     status = StringField(default="Live")  # Options: Live, Paused, Upcoming
+#     start_date = DateTimeField()
+#     expiry_date = DateTimeField()
+
+# class OfferSection(Document):
+#     admin_uid = StringField(required=True)
+#     offer = ListField(EmbeddedDocumentField(Offer)) 
 
 
-#     meta = {"db_alias" : "admin-db", "collection" : "offers"}
+
+class Offer(Document):
+    offer_uid = StringField(required = True)
+    product_id = StringField()
+    admin_uid = StringField()
+    offer_name = StringField(required = True)
+    one_liner = StringField(required = True)
+    image = StringField()
+    button_txt = StringField(required =True)
+    off_percent = IntField(required = True)
+    status = StringField(default="Live")  # Options: Live, Paused, Upcoming
+    start_date = DateTimeField(required = True)
+    expiry_date = DateTimeField(required = True)
+
+
+
+    meta = {"db_alias" : "admin-db", "collection" : "offers"}
 
 
 

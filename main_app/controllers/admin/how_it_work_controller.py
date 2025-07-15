@@ -1,9 +1,8 @@
 import datetime
-
 from flask import request , jsonify
 import os
 import logging
-from werkzeug.utils import secure_filename
+# from werkzeug.utils import secure_filename
 from main_app.models.admin.how_it_work_model import HowItWork 
 from main_app.models.admin.advertisment_card_model import AdvertisementCardItem, AdminAdvertisementCard
 from main_app.models.admin.admin_model import Admin
@@ -130,6 +129,8 @@ def advertisement_card():
       title = data.get("title")
       description = data.get("description")
       button_txt = data.get("button_txt")
+      admin_uid = data.get("admin_uid")
+      image = data.get("image")
 
       exist = Admin.objects(admin_uid=admin_uid).first()
 
@@ -152,7 +153,7 @@ def advertisement_card():
               return ({"success": False,
                        "message": "Access token has expired",
                        "token": "expired"}), 401
-      
+
       if not all([title, description, button_txt, admin_uid]):
          logger.warning("Missing required fields")
          return jsonify({"message": "All fields are required."}), 400
@@ -162,35 +163,35 @@ def advertisement_card():
             logger.warning(f"Admin not found for UID: {admin_uid}")
             return jsonify({"message": "Admin not found" }), 400
       
-       # Image upload
-      image = request.files.get("image_url")
-      image_url = None
-      if image:   
-        filename = secure_filename(image.filename)
-        image_path = os.path.join(UPLOAD_FOLDER, filename)
-        image.save(image_path)
-        image_url = f"/{image_path}"    
+    #    # Image upload
+    #   image = request.files.get("image_url")
+    #   image_url = None
+    #   if image:
+    #     filename = secure_filename(image.filename)
+    #     image_path = os.path.join(UPLOAD_FOLDER, filename)
+    #     image.save(image_path)
+    #     image_url = f"/{image_path}"
 
          # Prepare embedded ad card
-        ad_card = AdvertisementCardItem(
+      ad_card = AdvertisementCardItem(
             title=title,
             description=description,
             button_txt=button_txt,
-            image_url=image_url
+            image=image
         )
 
         # Insert or update (append to array)
-        record = AdminAdvertisementCard.objects(admin_uid=admin_uid).first()
+      record = AdminAdvertisementCard.objects(admin_uid=admin_uid).first()
         
-        if record:
+      if record:
             # Check if card with same title exists (Update)
             updated = False
             for card in record.advertisement_cards:
                 if card.title == title:
                     card.description = description
                     card.button_txt = button_txt
-                    if image_url:
-                        card.image_url = image_url
+                    if image:
+                        card.image = image
                     updated = True
                     break
 
@@ -203,18 +204,18 @@ def advertisement_card():
                     title=title,
                     description=description,
                     button_txt=button_txt,
-                    image_url=image_url,
+                    image=image,
                 )
                 record.advertisement_cards.append(new_card)
                 record.save()
                 msg = "New advertisement card added"
-        else:
+      else:
             # No document found, create new
             new_card = AdvertisementCardItem(
                 title=title,
                 description=description,
                 button_txt=button_txt,
-                image_url=image_url,
+                image=image,
             )
             AdminAdvertisementCard(
                 admin_uid=admin_uid,
@@ -223,8 +224,8 @@ def advertisement_card():
             msg = "Advertisement card document created and card added"
 
 
-        logger.info(f"Ad card added for admin UID: {admin_uid}")
-        return jsonify({"success": True, "message": msg}), 200
+      logger.info(f"Ad card added for admin UID: {admin_uid}")
+      return jsonify({"success": True, "message": msg}), 200
     
     except Exception as e:
        logger.error(f"Add advertisment card failed : {str(e)}")
