@@ -1,8 +1,98 @@
 import datetime
 from flask import request, jsonify
+from main_app.models.admin.links import ReferralReward
+from main_app.models.admin.galaxy_model import Galaxy
 from main_app.models.admin.admin_model import Admin
-from main_app.models.admin.galaxy_model import Galaxy, Milestone
+from main_app.models.admin.email_model import EmailTemplate
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
+def set_reward_settings():
+    try:
+        data = request.get_json()
+        admin_uid = data.get("admin_uid")
+        access_token = data.get("mode")
+        session_id = data.get("log_alt")
+
+        exist = Admin.objects(admin_uid=admin_uid).first()
+
+        if not exist:
+            return jsonify({"success": False, "message": "User does not exist"})
+
+        if not access_token or not session_id:
+            return jsonify({"message": "Missing token or session", "success": False}), 400
+
+        if exist.access_token != access_token:
+            return ({"success": False,
+                     "message": "Invalid access token"}), 401
+
+        if exist.session_id != session_id:
+            return ({"success": False,
+                     "message": "Session mismatch or invalid session"}), 403
+
+        if hasattr(exist, 'expiry_time') and exist.expiry_time:
+            if datetime.datetime.now() > exist.expiry_time:
+                return ({"success": False,
+                         "message": "Access token has expired",
+                         "token": "expired"}), 401
+
+        required_fields = ['referrer_reward', 'invitee_reward', 'conversion_rates']
+        if not all(field in data for field in required_fields):
+            return jsonify({"error": "Missing required fields"}), 400
+
+        cr = data['conversion_rates']
+        if not all(k in cr for k in ['meteors_to_stars', 'stars', 'stars_to_currency', "currency"]):
+            return jsonify({"error": "Invalid conversion rates format"}), 400
+
+        ReferralReward.objects(admin_uid = admin_uid).update_one(
+            set__referrer_reward=data['referrer_reward'],
+            set__invitee_reward=data['invitee_reward'],
+            set__conversion_rates=data['conversion_rates'],
+            set__updated_at=datetime.datetime.now(),
+            upsert=True
+        )
+
+        return jsonify({
+            "message": "Reward settings updated successfully",
+            "success": True
+        }), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+def send_milestone_email(email, email_template_type):
+    try:
+        template = EmailTemplate.objects(email_type= email_template_type).first()
+        if not template:
+            print(f"Email template  {email_template_type} not found.")
+            return False
+
+        smtp_server = "smtp.gmail.com"
+        smtp_port = 587
+        smtp_username = "areebamujeeb309@gmail.com"
+        smtp_password = "rvph suey zpfl smpw"
+
+        msg = MIMEMultipart('alternative')
+        msg['From'] = f"{template.name} <{template.email}>"
+        msg['To'] = email
+        msg['Subject'] = template.subject
+        msg.add_header('Reply-To', template.reply_to)
+        content = template.content
+
+        msg.attach(MIMEText(content, 'plain'))
+
+        server = smtplib.SMTP(smtp_server, smtp_port)
+        server.starttls()
+        server.login(smtp_username, smtp_password)
+        server.sendmail(template.email, email, msg.as_string())
+        server.quit()
+        print(f"Email sent to {email} using template {email_template_type}")
+        return True
+
+    except Exception as e:
+        print(f"Error sending email: {str(e)}")
+        return False
 
 def create_galaxy():
     try:
@@ -49,13 +139,16 @@ def create_galaxy():
             total_meteors_required=0,
             total_milestones=total_milestones,
             all_milestones=[],
-            admin_uid=admin_uid
+            admin_uid=admin_uid,
+            highest_reward = highest_reward,
+            stars_to_be_achieved = stars
         )
         galaxy.save()
-        return jsonify({"message": "Galaxy created successfully", "galaxy_id": str(galaxy.id)}), 201
+        return jsonify({"message": "Galaxy created successfully","success" : True}), 201
 
     except Exception as e:
-        return jsonify({"message": f"Galaxy creation failed: {str(e)}"}), 500
+        print(str(e))
+        return jsonify({"message": "Galaxy creation failed"}), 500
 
 def add_new_milestone():
     try:

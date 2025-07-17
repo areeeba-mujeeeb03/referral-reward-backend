@@ -11,14 +11,12 @@ from main_app.controllers.admin.prize_controller import add_exciting_prizes, che
 from main_app.controllers.admin.how_it_work_controller import add_how_it_work, advertisement_card
 from main_app.controllers.admin.referral_controllers import generate_invite_link_with_expiry, sharing_app_stats, \
     save_referral_data
-from main_app.controllers.admin.rewards_controllers import create_galaxy, remove_milestone, add_new_milestone
-from main_app.controllers.admin.dashboard_controllers import error_table, dashboard_participants, dashboard_stats
+from main_app.controllers.admin.rewards_controllers import create_galaxy, remove_milestone, add_new_milestone,set_reward_settings
+from main_app.controllers.admin.dashboard_controllers import error_table, dashboard_participants, dashboard_stats, \
+    graph_data
 from main_app.controllers.admin.email_controller import create_email
-from main_app.controllers.user.landingpage_controllers import fetch_data_from_admin
 from main_app.controllers.admin.notification_controller import create_push_notification, list_push_notifications, update_push_notification, delete_push_notification
 from main_app.controllers.admin.perks_controller import create_exclusive_perks, edit_footer
-from main_app.controllers.admin.perks_controller import create_exclusive_perks
-from main_app.controllers.user.rewards_controllers import set_reward_settings
 
 admin_bp = Blueprint("admin_routes", __name__)
 
@@ -520,3 +518,12 @@ def authentication():
     Returns: Password reset confirmation response
     """
     return handle_authentication()
+
+@admin_bp.route("/admin/graph-data/<admin_uid>", methods = ["POST"])
+def graph(admin_uid):
+    """
+    Handle password reset using code(otp) from email
+    Accepts: POST request with new password and reset
+    Returns: Password reset confirmation response
+    """
+    return graph_data(admin_uid)

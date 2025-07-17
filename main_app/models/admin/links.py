@@ -13,6 +13,8 @@ class Link(Document):
     reward_condition = StringField()
     success_reward = StringField()
     created_at = DateTimeField(default=datetime.now())
+    active = BooleanField()
+    invitation_link = StringField()
 
     meta = {"db_alias" : "admin-db", "collection" : "links"}
 

@@ -1,16 +1,9 @@
-import base64
-import os
-import re
 import datetime
 from flask import request, jsonify
-from werkzeug.utils import secure_filename
 from main_app.models.admin.admin_model import Admin
 from main_app.models.admin.error_model import Errors
 from main_app.utils.user.error_handling import get_error
 from main_app.utils.user.helpers import check_password, hash_password
-
-UPLOAD_FOLDER ="uploads/profile"
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 def edit_profile_data():
     try:

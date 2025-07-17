@@ -4,6 +4,7 @@ import datetime
 from flask import request, jsonify
 
 from main_app.controllers.user.rewards_controllers import update_planet_and_galaxy
+from main_app.controllers.user.user_profile_controllers import update_app_stats
 from main_app.models.admin.error_model import Errors
 from main_app.models.admin.links import ReferralReward
 from main_app.models.user.user import User
@@ -54,14 +55,14 @@ def handle_registration():
 
     if validate_password_strength(data["password"]):
         return validate_password_strength(data["password"])
-
-    conflict_check = _check_user_conflicts(data["username"], data["email"], data['mobile_number'])
+    username = data["username"].strip('').lower()
+    conflict_check = _check_user_conflicts(username, data["email"], data['mobile_number'])
     if conflict_check:
         return conflict_check
 
     hashed_password = hash_password(data["password"])
     user = User(
-        username=data["username"],
+        username=username,
         email=data["email"],
         mobile_number=data["mobile_number"],
         admin_uid="AD_UID_2",
@@ -90,14 +91,17 @@ def handle_registration():
 
     if not user.pk:
         user.save()
-
-    initialize_user_records(user.user_id)
+    app = data.get("accepted_via")
 
     rates = ReferralReward.objects(admin_uid=user.admin_uid).first() or {}
     rewards_info = {
         "signup_reward": getattr(rates, "signup_reward", 0),
         "login_reward": getattr(rates, "login_reward", 0)
     }
+
+    if app:
+        update_app_stats(app, user)
+    initialize_user_records(user.user_id)
 
     return jsonify({
         "message": "User registered successfully",
@@ -217,7 +221,7 @@ def _check_user_conflicts(username, email, mobile_number):
         Flask Response or None: Error response if conflict exists, None if available
     """
     # Check for existing username
-    existing_username = User.objects(username=username).first()
+    existing_username = User.objects(username=username.strip('').lower()).first()
     if existing_username:
         Errors(username = username, email = existing_username.email,
                error_source = "Sign Up Form", error_type = get_error("registration_failed")).save()

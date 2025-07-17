@@ -208,67 +208,71 @@ def my_referrals():
 def my_profile():
     data = request.get_json()
     user_id = data.get("user_id")
-    access_token = data.get("mode")
-    session_id = data.get("log_alt")
-
+    # access_token = data.get("mode")
+    # session_id = data.get("log_alt")
+    #
     user = User.objects(user_id=user_id).first()
-    try:
-        if not user:
-            return jsonify({"success" : False, "message" : "User does not exist"}),400
+    # try:
+    #     if not user:
+    #         return jsonify({"success" : False, "message" : "User does not exist"}),400
+    #
+    #     if not access_token or not session_id:
+    #         return jsonify({"message": "Missing token or session", "success": False}), 400
+    #
+    #     if user.access_token != access_token:
+    #         return ({"success": False,
+    #                  "message": "Invalid access token"}), 401
+    #
+    #     if user.session_id != session_id:
+    #         return ({"success": False,
+    #                  "message": "Session mismatch or invalid session"}), 403
+    #
+    #     if hasattr(user, 'expiry_time') and user.expiry_time:
+    #         if datetime.datetime.now() > user.expiry_time:
+    #             return ({"success": False,
+    #                      "message": "Access token has expired",
+    #                         "token"  : "expired"}), 401
 
-        if not access_token or not session_id:
-            return jsonify({"message": "Missing token or session", "success": False}), 400
+    reward = Reward.objects(user_id = user_id).first()
+    referral = Referral.objects(user_id = user.user_id).first()
 
-        if user.access_token != access_token:
-            return ({"success": False,
-                     "message": "Invalid access token"}), 401
+    # validate_session_token(user, access_token, session_id)
 
-        if user.session_id != session_id:
-            return ({"success": False,
-                     "message": "Session mismatch or invalid session"}), 403
+    if user:
+        info = {"username" : user.username,
+                "email" : user.email,
+                "mobile_number" : user.mobile_number,
+                "current_meteors" : reward.current_meteors,
+                "referral_earnings" : referral.referral_earning,
+                "redeemed_meteors" : reward.redeemed_meteors,
+                "invitation_link" : user.invitation_link,
+                "invite_code" : user.invitation_code,
+                "total_meteors_earned" : reward.total_meteors_earned
+                }
+        fields_to_encode = ["username",
+                            "email",
+                            "mobile_number",
+                            "current_meteors",
+                            "referral_earnings",
+                            "redeemed_meteors",
+                            "invitation_link",
+                            "invite_code",
+                            "total_meteors_earned"
+                            ]
+        if user.referred_by:
+            referrer = User.objects(user_id = user.referred_by).first()
+            info["referred_by"] = referrer.user_id
+            fields_to_encode.append("referred_by")
 
-        if hasattr(user, 'expiry_time') and user.expiry_time:
-            if datetime.datetime.now() > user.expiry_time:
-                return ({"success": False,
-                         "message": "Access token has expired",
-                            "token"  : "expired"}), 401
+        encoded_str = generate_encoded_string(info, fields_to_encode)
+        update_planet_and_galaxy(user_id)
+        return encoded_str, 200
 
-        reward = Reward.objects(user_id = user_id).first()
-        referral = Referral.objects(user_id = user.user_id).first()
-
-        # validate_session_token(user, access_token, session_id)
-        if user:
-            info = {"username" : user.username,
-                    "email" : user.email,
-                    "mobile_number" : user.mobile_number,
-                    "current_meteors" : reward.current_meteors,
-                    "referral_earnings" : referral.referral_earning,
-                    "redeemed_meteors" : reward.redeemed_meteors,
-                    "invitation_link" : user.invitation_link,
-                    "invite_code" : user.invitation_code,
-                    "total_meteors_earned" : reward.total_meteors_earned
-                    }
-
-            fields_to_encode = ["username",
-                                "email",
-                                "mobile_number",
-                                "current_meteors",
-                                "referral_earnings",
-                                "redeemed_meteors",
-                                "invitation_link",
-                                "invite_code",
-                                "total_meteors_earned"
-                                ]
-
-            encoded_str = generate_encoded_string(info, fields_to_encode)
-            update_planet_and_galaxy(user_id)
-            return encoded_str, 200
-
-    except Exception as e:
-        Errors(username = user.username, email = user.email,
-               error_source = "Sign Up Form", error_type = "server_error").save()
-        logger.error(f"Server Error: {str(e)}")
-        return jsonify({"error": get_error("server_error")}), 500
+    # except Exception as e:
+    #     # Errors(username = user.username, email = user.email,
+    #     #        error_source = "Sign Up Form", error_type = "server_error").save()
+    #     logger.error(f"Server Error: {str(e)}")
+    #     return jsonify({"error": get_error("server_error")}), 500
 
 
 # -------------------------------------------------------------------------

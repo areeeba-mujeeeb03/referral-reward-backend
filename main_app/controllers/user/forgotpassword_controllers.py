@@ -1,3 +1,4 @@
+import logging
 import uuid
 import datetime
 import smtplib
@@ -12,6 +13,10 @@ from flask import request,jsonify
 from main_app.controllers.user.auth_controllers import validate_password_strength
 from main_app.utils.user.helpers import hash_password
 
+
+# Configure logging for better debugging and monitoring
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def send_verification_code():
     """
@@ -102,6 +107,7 @@ def verify_code():
             return jsonify({"message": "Reset code expired", "success" : False}), 404
 
         return jsonify({"message" : "Verified Successfully", "success" : True}),200
+
     except Exception as e:
         Errors(username=user.user_id, email=user.email, error_source="send verification code for password reset",
                error_type=f"Failed to send email : {user.user_id}").save()
@@ -156,6 +162,9 @@ def reset_password():
         if not code:
             return jsonify({"message" : "resend verification code", "success" : False}),400
 
+        if datetime.datetime.now() > link.expiry:
+            return jsonify({"message": "Reset code expired", "success" : False}), 404
+
         password_validation = validate_password_strength(new_password)
         if password_validation:
             return password_validation
@@ -173,7 +182,8 @@ def reset_password():
         return jsonify({"message": "Password updated successfully!", "success" : True}), 201
 
     except Exception as e:
-        return
+        logger.error(f"Login failed for email with error: {str(e)}")
+        return jsonify({"message": "Password updated successfully!", "success" : True}), 201
 
 
 

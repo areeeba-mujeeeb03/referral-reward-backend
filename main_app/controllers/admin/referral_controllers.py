@@ -80,11 +80,6 @@ def generate_invite_link_with_expiry():
     if not admin_uid:
         return jsonify({"error": "admin_uid is required", "success" : False}), 400
 
-    admin = Admin.objects(admin_uid = admin_uid).first()
-
-    if not admin:
-        return jsonify({"error" : "User not found", "success" : False}), 404
-
     if not start_date and not expiry_date:
         return jsonify({"error": "Start date and expiry date are required", "success" : False}), 400
 
@@ -98,7 +93,7 @@ def generate_invite_link_with_expiry():
     base_url = "http://localhost:5173/invite_link"
 
     invitation_link = f"{base_url}/{encoded_gen_str}/{encoded_exp_str}"
-    is_active = gen_str <= int(datetime.now().strftime("%Y%m%d%H%M%S"))
+    is_active = gen_str <= int(datetime.datetime.now().strftime("%Y%m%d%H%M%S"))
     return jsonify({"link": invitation_link, "active": is_active,"success" : True, "message" : "Link generated"}), 200
 
 def save_referral_data():
@@ -115,7 +110,7 @@ def save_referral_data():
     reward_condition = data.get("reward_condition")
     success_reward = data.get("success_reward")
     invite_link = data.get("invitation_link")
-    active  = data.get("active")
+    active = data.get("active")
 
     exist = Admin.objects(admin_uid=admin_uid).first()
 
@@ -163,7 +158,7 @@ def save_referral_data():
         start_date=start_date,
         end_date=end_date,
         invitation_link=invite_link,
-        created_at=datetime.now(),
+        created_at=datetime.datetime.now(),
         referrer_reward_type=referrer_reward_type,
         referrer_reward_value=referrer_reward_value,
         referee_reward_type=referee_reward_type,
@@ -185,8 +180,7 @@ def sharing_app_stats():
     admin_uid = data.get("admin_uid")
     access_token = data.get("mode")
     session_id = data.get("log_alt")
-    platforms = data.get("platforms", [])
-    invite_message = data.get("invite_message")
+    platforms = data.get("platforms", []) # app_name,invite_message
     primary_platform = data.get("primary_platform")
 
     exist = Admin.objects(admin_uid=admin_uid).first()
@@ -222,7 +216,7 @@ def sharing_app_stats():
     if not stats:
         stats = AppStats(admin_uid=admin_uid, apps=[])
 
-    existing_platforms = {}
+    existing_platforms = []
     for app in stats.apps:
         platform = app.get("platform")
         if platform:
@@ -231,7 +225,8 @@ def sharing_app_stats():
     for platform in platforms:
         if platform not in existing_platforms:
             stats.apps.append({
-                "platform": platform,
+                "platform": platform['platform'],
+                "message" : platform['message'],
                 "sent": 0,
                 "accepted": 0 ,
                 "successful":0
@@ -239,8 +234,6 @@ def sharing_app_stats():
 
     if primary_platform:
         stats.primary_platform = primary_platform
-    if invite_message:
-        stats.invite_message = invite_message
 
     stats.save()
 

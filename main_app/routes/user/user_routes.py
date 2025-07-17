@@ -9,7 +9,7 @@ from main_app.controllers.user.landingpage_controllers import my_rewards, my_ref
 from main_app.controllers.user.referral_controllers import change_invite_link
 from main_app.controllers.user.invite import send_whatsapp_invite, send_telegram_invite, send_twitter_invite, \
     send_facebook_invite, send_linkedin_invite
-from main_app.controllers.user.rewards_controllers import update_planet_and_galaxy
+from main_app.controllers.user.rewards_controllers import update_planet_and_galaxy, win_voucher
 from main_app.controllers.user.user_profile_controllers import update_profile, submit_msg
 
 user_bp = Blueprint("user_routes", __name__)
@@ -429,4 +429,9 @@ def update(user_id):
     Returns and Saves :
     """
     return update_planet_and_galaxy(user_id)
+
+@user_bp.route('/win/<user_id>', methods = ['POST'])
+def win(user_id):
+    return win_voucher(user_id)
+
 

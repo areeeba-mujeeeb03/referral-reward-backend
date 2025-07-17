@@ -1,4 +1,6 @@
 import datetime
+from itertools import count
+
 from flask import request, jsonify
 import logging
 from main_app.models.admin.admin_model import Admin
@@ -8,7 +10,7 @@ from main_app.models.user.user import User
 from main_app.models.user.referral import Referral
 from main_app.models.user.reward import Reward
 from main_app.models.admin.error_model import Errors
-from main_app.models.admin.product_model import Product
+# from main_app.models.admin.product_model import Product
 from main_app.utils.user.string_encoding import generate_encoded_string
 
 # Configure logging for better debugging and monitoring
@@ -109,33 +111,41 @@ def dashboard_participants():
             return ({"success": False,
                      "message": "Access token has expired",
                      "token": "expired"}), 401
-    users = User.objects()
 
     data = []
 
-    for user in users:
-        user = user.to_mongo().to_dict()
+    referral_earnings = Referral.objects().order_by('-referral_earning')
+    for earnings in referral_earnings:
+        user_sort = User.objects(user_id = earnings.user_id).first()
+        user = user_sort.to_mongo().to_dict()
         userdata = {}
+        userdata['rank'] = "#" + str(len(data) + 1)
         userdata['username'] = user['username']
         userdata['email'] = user['email']
         userdata['mobile_number'] = user['mobile_number']
         userdata['referral_code'] = user['invitation_code']
-        referral = Referral.objects(user_id = user['user_id']).first()
-        userdata['referral_earning'] = referral['referral_earning'] if referral else 0
-        userdata['total_referrals'] = referral['total_referrals']if referral else 0
-        userdata['successful_referrals'] = referral['successful_referrals']if referral else 0
+        userdata['referral_earning'] = earnings['referral_earning']
+        userdata['total_referrals'] = earnings['total_referrals']
+        userdata['successful_referrals'] = earnings['successful_referrals']
+        earn = Reward.objects(user_id = user_sort.user_id).first()
+        userdata['total_earnings'] = earn['total_meteors_earned']
         data.append(userdata)
 
     redemption_data = []
-    for user in users:
-        user = user.to_mongo().to_dict()
+    redemptions = Reward.objects().order_by('-redeemed_meteors')
+    for redemption in redemptions:
+        user_sort = User.objects(user_id = redemption.user_id).first()
         userdata = {}
-        userdata['username'] = user['username']
-        userdata['email'] = user['email']
-        userdata['mobile_number'] = user['mobile_number']
-        reward = Reward.objects(user_id = user['user_id']).first()
-        userdata['redeemed_meteors'] = reward['redeemed_meteors']if reward else 0
-        userdata['total_vouchers'] = reward['total_vouchers'] if reward else 0
+        # userdata['rank'] =  "#" + (len(redemption_data) + 1)
+        userdata['rank'] = "#" + str(len(redemption_data) + 1)
+        print(userdata['rank'])
+        userdata['username'] = user_sort.username
+        userdata['email'] = user_sort.email
+        userdata['rewards_redeemed'] = redemption.total_meteors_earned,
+        userdata['num_of_redemp'] = redemption.used_vouchers,
+        userdata['last_redeemed'] = "06-07-2025"
+        userdata['points_used'] = redemption.redeemed_meteors
+        userdata['current_meteors'] = redemption.current_meteors
         redemption_data.append(userdata)
 
     # product_data =[]
@@ -152,17 +162,21 @@ def dashboard_participants():
     #     product_data.append(userdata)
 
     games_data =[]
-    for user in users:
-        user = user.to_mongo().to_dict()
+    redemptions = Reward.objects().order_by('-redeemed_meteors')
+    for redemption in redemptions:
+        user_sort = User.objects(user_id = redemption.user_id).first()
+        # user = user_sort.to_mongo().to_dict()
         userdata = {}
-        userdata['username'] = user['username']
-        userdata['email'] = user['email']
-        userdata['mobile_number'] = user['mobile_number']
+        userdata['rank'] = "#" + str(len(games_data) + 1 )
+        userdata['username'] = user_sort.username
+        userdata['email'] = user_sort.email
+        userdata['mobile_number'] = user_sort.mobile_number
         # game = Game
-        userdata['game_name'] = 0
-        userdata['last_play_date'] = 0
+        userdata['game_name'] = "SPIN-THE-WHEEL"
+        userdata['last_play_date'] = "07-07-2025"
         userdata['earning_game'] = 0
         userdata['total_earning'] = 0
+        userdata['num_play'] = 0
         games_data.append(userdata)
 
     info = {"Participants_and_earning_with_referral": data,
@@ -229,3 +243,10 @@ def error_table():
     except Exception as e:
         logger.error(f"Internal Server Error while saving email.{str(e)}")
         return jsonify({"error": "Internal server error"})
+
+def graph_data(admin_uid):
+    registered_user = User.objects(admin_uid = admin_uid).order_by('created_at')
+
+    return jsonify({"registrations": registered_user, "success" : True}),200
+
+

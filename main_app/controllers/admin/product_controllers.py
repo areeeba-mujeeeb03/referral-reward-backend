@@ -33,7 +33,6 @@ def parse_date_flexible(date_str):
 def add_product():
     try:
          logger.info("Add Product API")
-         
          data = request.get_json()
          product_name = data.get("product_name")
          original_amt = data.get("original_amt")

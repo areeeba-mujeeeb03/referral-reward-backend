@@ -1,8 +1,9 @@
 import os
 from main_app.models.admin.error_model import Errors
 from main_app.models.admin.help_model import FAQ, Contact
+from main_app.models.admin.links import AppStats
 from main_app.models.user.user import User
-from main_app.controllers.user.auth_controllers import validate_session_token
+# from main_app.controllers.user.auth_controllers import validate_session_token
 from main_app.models.admin.product_model import Product
 from main_app.utils.user.error_handling import get_error
 import logging
@@ -188,3 +189,13 @@ def submit_msg():
         ).save()
         return jsonify({"message": "Failed to send query" , "success" : True}), 201
 
+def update_app_stats(app, user):
+    if app:
+        app_col = AppStats.objects(admin_uid = user.admin_uid).first()
+        for app in app_col.apps:
+            name = app.get('platform')
+            if name.strip('').lower() == app.strip('').lower():
+                app['accepted'] += 1
+                return None
+
+    return jsonify({"message" : "failed to update app status"})

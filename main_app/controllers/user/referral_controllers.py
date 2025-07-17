@@ -28,7 +28,7 @@ Login_Reward = 500
 # Referral Code Processing Utility
 
 # ==================
-galaxies = ['Milky Way Galaxy' , 'Andromeda Galaxy', 'Bear Paw Galaxy', 'Blinking Galaxy', 'Fireworks Galaxy', '']
+galaxies = ['Milky Way Galaxy' , 'Andromeda Galaxy', 'Bear Paw Galaxy', 'Blinking Galaxy', 'Fireworks Galaxy']
 def process_referral_code_and_reward(referral_code, new_user_id, new_username):
     """
     Process referral code and update referrer's rewards and statistics
