@@ -11,8 +11,6 @@ class ExclusivePerks(Document):
 
     meta = {"db_alias" : "admin-db", "collection" : "exclusive_perks"}
 
-
-
 # --------------------------------------------------------------------------
 
 

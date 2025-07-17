@@ -11,6 +11,7 @@ class DiscountCoupon(EmbeddedDocument):
     description = StringField()
     validity_till = StringField()
 
+
 class ProductDiscounts(Document):
     admin_uid = StringField(required=True)
     coupons = ListField(EmbeddedDocumentField(DiscountCoupon))

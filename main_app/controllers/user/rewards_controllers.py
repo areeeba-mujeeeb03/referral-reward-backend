@@ -66,36 +66,24 @@ def win_voucher(user_id):
         products = ProductDiscounts.objects(admin_uid = user.admin_uid).first()
 
         print(products)
-        # for product in products.coupons:
-        #     offer_valid = products.coupons.get('end_date')
-        #     if not offer_valid:
-        #         continue
-        #     else:
-        #         reward  = Reward.objects(user_id = user_id).first()
-        #         reward.discount_coupons.append(offer_valid)
-        #         return jsonify({"message" : "Congrats!! You just won a Discount Coupon"})
-        # # offer_valid = products.coupons.get('end_date')
-        # #
-        # # if not offer_valid
-        #
-        # end_date__gte = datetime.datetime.now(),
-        # voucher_code__exists = True
-        # if not products:
-        #     logger.info("No active products with offers available")
-        #     return jsonify({'message': 'No offers available to win at this time'}), 400
 
-        # Randomly select one product
-        won_product = random.choice(products.coupons)
+        valid_coupons = []
+
+        for coupon in products.coupons:
+            if coupon.end_date and coupon.end_date >= datetime.datetime.now():
+                valid_coupons.append(coupon)
+        won_product = random.choice(valid_coupons)
         print(won_product)
 
         if not won_product['coupon_code']:
-            logger.error(f"Product {won_product.uid} has no voucher_code generated.")
+            logger.error(f"Product {won_product.product_name} has no voucher_code generated.")
             return jsonify({'error': 'This offer is not properly configured'}), 500
 
-        # Check if voucher already won
-        if any(v['coupon_code'] == won_product.voucher_code for v in reward.discount_coupons):
-            logger.info(f"User {user_id} already has voucher {won_product.coupon_code}")
-            return jsonify({'message': 'You already won this voucher'}), 409
+        for v in reward.discount_coupons:
+            if v['coupon_code'] == won_product.voucher_code:
+                already_has_voucher = True
+                if already_has_voucher :
+                    return jsonify({"message" : "Already won voucher"})
 
         now = datetime.datetime.now()
         expiry = now + datetime.timedelta(days=7)
@@ -103,11 +91,9 @@ def win_voucher(user_id):
         voucher_data = {
             "voucher_code": won_product.coupon_code,
             "product_id": won_product.product_id,
-            "discounted_amt": won_product.discounted_amt,
+            "discounted_amt": won_product.discount_amt,
             "original_amt": won_product.original_amt,
             "off_percent": won_product.off_percent,
-            "start_date": now.isoformat(),
-            "expiry_date": expiry.isoformat(),
             "status": "active",
             "redeemed": False
         }

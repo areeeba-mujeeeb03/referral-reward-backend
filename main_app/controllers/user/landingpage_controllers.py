@@ -6,6 +6,7 @@ from main_app.models.admin.error_model import Errors
 from main_app.models.admin.galaxy_model import Galaxy
 from main_app.models.admin.how_it_work_model import HowItWork
 from main_app.models.admin.links import ReferralReward
+from main_app.models.admin.special_offer_model import Offer
 from main_app.models.user.user import User
 from main_app.models.user.reward import Reward
 from main_app.models.user.referral import Referral
@@ -296,7 +297,6 @@ def fetch_data_from_admin():
     help_faqs = get_faqs_by_category_name(admin_uid, "Help and Support FAQs") or []
 
     how_it_works_text = HowItWork.objects(admin_uid=admin_uid).first()
-    # update_planet_and_galaxy(user_id)
 
     if not how_it_works_text:
         return ({"message": "No 'how it works' data found", "success": False}), 404
@@ -339,8 +339,6 @@ def fetch_data_from_admin():
         }
         galaxy_data["milestones"].append(milestones)
 
-
-      # --- Fetch advertisement cards
     ad_data = []
     ad_record = AdminAdvertisementCard.objects(admin_uid=admin_uid).first()
     if ad_record:
@@ -362,13 +360,19 @@ def fetch_data_from_admin():
     }
     conversion_rate.append(conversion_data)
 
-
-      # --- Merge both
     exclusive_perks = {}
-    product_offers = Product.objects(admin_uid = admin_uid)
 
     product_data =[]
-
+    special_offer = {}
+    offer = Offer.objects(admin_uid = admin_uid).first()
+    if offer and offer.special_offer:
+        for offer in offer.special_offer:
+            if offer['active'] is True:
+                special_offer['title'] = offer['offer_title']
+                special_offer['tag'] = offer['tag']
+                special_offer['offer_code'] = offer['offer_code']
+                special_offer['pop_up_text'] = offer['pop_up_text']
+                special_offer['offer_desc'] = offer['offer_desc']
 
     if user:
         return jsonify({
@@ -383,7 +387,8 @@ def fetch_data_from_admin():
             "advertisement_cards" : ad_data,
             "exclusive_perks" : exclusive_perks,
             "conversion_data"  :conversion_rate,
-            "product_offer" : product_data
+            "product_offer" : product_data,
+            "special_offer" : special_offer
             })
 
 

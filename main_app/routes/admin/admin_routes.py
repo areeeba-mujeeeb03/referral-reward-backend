@@ -531,6 +531,6 @@ def graph(admin_uid):
     return graph_data(admin_uid)
 
 
-@admin_bp.route('/admin/create-special-offer', methods = ['POST'])
+@admin_bp.route('/admin/special-offer', methods = ['POST'])
 def add_special_offer():
     return create_special_offer()

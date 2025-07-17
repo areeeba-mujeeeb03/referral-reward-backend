@@ -1,5 +1,6 @@
 from mongoengine import Document, StringField, DateTimeField, ListField, EmbeddedDocumentField, IntField, \
-    EmbeddedDocument
+    EmbeddedDocument, BooleanField
+
 
 class SpecialOffer(EmbeddedDocument):
     offer_title = StringField()
@@ -13,7 +14,7 @@ class SpecialOffer(EmbeddedDocument):
     pop_up_text = StringField()
     start_timestamp = DateTimeField()
     expiry_timestamp = DateTimeField()
-    active = StringField()
+    active = BooleanField()
 
 class Offer(Document):
     admin_uid = StringField()

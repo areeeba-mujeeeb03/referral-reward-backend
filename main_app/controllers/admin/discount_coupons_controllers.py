@@ -10,66 +10,73 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def create_discount_coupons():
-    data = request.get_json()
-    admin_uid = data.get("admin_uid")
-    access_token = data.get("mode")
-    session_id = data.get("log_alt")
-    coupon_code = data.get("coupon_code")
-    validity_till = data.get("validity_till")
-    product_name = data.get("product_name")
-    percent = data.get("off_percent")
-    desc_text = data.get("desc_text")
+    try:
+        data = request.get_json()
+        admin_uid = data.get("admin_uid")
+        access_token = data.get("mode")
+        session_id = data.get("log_alt")
+        coupon_code = data.get("coupon_code")
+        validity_till = data.get("validity_till")
+        product_name = data.get("product_name")
+        percent = data.get("off_percent")
+        desc_text = data.get("desc_text")
+        print(data)
 
-    exist = Admin.objects(admin_uid=admin_uid).first()
+        exist = Admin.objects(admin_uid=admin_uid).first()
 
-    if not exist:
-        return jsonify({"success": False, "message": "User does not exist"})
+        if not exist:
+            return jsonify({"success": False, "message": "User does not exist"})
 
-    if not access_token or not session_id:
-        return jsonify({"message": "Missing token or session", "success": False}), 400
+        if not access_token or not session_id:
+            return jsonify({"message": "Missing token or session", "success": False}), 400
 
-    if exist.access_token != access_token:
-        return ({"success": False,
-                 "message": "Invalid access token"}), 401
-
-    if exist.session_id != session_id:
-        return ({"success": False,
-                 "message": "Session mismatch or invalid session"}), 403
-
-    if hasattr(exist, 'expiry_time') and exist.expiry_time:
-        if datetime.datetime.now() > exist.expiry_time:
+        if exist.access_token != access_token:
             return ({"success": False,
-                     "message": "Access token has expired",
-                     "token": "expired"}), 401
+                     "message": "Invalid access token"}), 401
 
-    if not all([admin_uid, coupon_code]):
-        return jsonify({"error": "admin_uid and coupon data are required"}), 400
+        if exist.session_id != session_id:
+            return ({"success": False,
+                     "message": "Session mismatch or invalid session"}), 403
 
-    if not all([coupon_code, product_name]):
-        return jsonify({"error": "Coupon code and product_id are required"}), 400
-    product = Product.objects(product_name = product_name).first()
+        if hasattr(exist, 'expiry_time') and exist.expiry_time:
+            if datetime.datetime.now() > exist.expiry_time:
+                return ({"success": False,
+                         "message": "Access token has expired",
+                         "token": "expired"}), 401
 
-    original_amount = product.original_amt
-    discount_amount = original_amount * percent/100
-    coupon_data = {"coupon_code" : coupon_code,
-                   "product_id" : product.uid,
-                   "validity_till" : validity_till,
-                   "off_percent" : percent,
-                   "discount_amt" : discount_amount,
-                   "original_amt" : original_amount,
-                   "description" : desc_text
-                   }
-    product = ProductDiscounts.objects(admin_uid=admin_uid).first()
-    if not product:
-        product = ProductDiscounts(admin_uid=admin_uid, coupons=[])
+        if not all([admin_uid, coupon_code]):
+            return jsonify({"error": "admin_uid and coupon data are required"}), 400
 
-    for coupon in product.coupons:
-        if coupon.coupon_code.lower() == coupon_code.lower():
-            return jsonify({"error": "Coupon code already exists"}), 400
+        if not all([coupon_code, product_name]):
+            return jsonify({"error": "Coupon code and product_id are required"}), 400
+        product = Product.objects(product_name = product_name).first()
 
-    product.coupons.append(DiscountCoupon(**coupon_data))
-    product.save()
-    return jsonify({"message": "Discount coupon added successfully"}), 201
+        original_amount = product.original_amt
+        discount_amount = original_amount * percent/100
+        coupon_data = {"coupon_code" : coupon_code,
+                       "product_id" : product.uid,
+                       "validity_till" : validity_till,
+                       "off_percent" : percent,
+                       "discount_amt" : discount_amount,
+                       "original_amt" : original_amount,
+                       "description" : desc_text
+                       }
+        product = ProductDiscounts.objects(admin_uid=admin_uid).first()
+        if not product:
+            product = ProductDiscounts(admin_uid=admin_uid, coupons=[])
+
+        for coupon in product.coupons:
+            if coupon.coupon_code.lower() == coupon_code.lower():
+                return jsonify({"error": "Coupon code already exists"}), 400
+
+        ProductDiscounts.objects(admin_uid=admin_uid).update(
+            push__coupons = coupon_data
+        )
+        product.save()
+        return jsonify({"message": "Discount coupon added successfully"}), 201
+    except Exception as e:
+        logger.error(f"Failed to add Special offer as {str(e)}")
+        return jsonify({"message": "Something Went Wrong"}), 500
 
 
 def update_discount_coupon():
