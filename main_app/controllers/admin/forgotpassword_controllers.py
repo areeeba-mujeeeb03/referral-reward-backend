@@ -45,7 +45,7 @@ def forgot_otp_email():
             return jsonify({"message": "Failed to send code"}), 500
 
         logger.info(f"OTP email sent successfully to: {email}")
-        return jsonify({"message": "Code send successfully to email","success": "True", "data": code}), 200
+        return jsonify({"message": "Code send successfully to email","success": "True"}), 200
     
     except Exception as e:
         logger.error(f"code send failed:{str(e)}")
@@ -93,6 +93,7 @@ def reset_password():
      data = request.get_json()
 
      email = data.get("email", "").strip()
+     code = data.get("code")
      new_password = data.get("new_password", "")
      confirm_password = data.get("confirm_password", "")
 
@@ -116,6 +117,10 @@ def reset_password():
      salt = bcrypt.gensalt(rounds=12)
      hashed = bcrypt.hashpw(new_password.encode(), salt)
 
+     if user.code != code:
+         return jsonify({"error": "Invalid code for this email"}), 400
+
+
      user.password = hashed.decode()
      user.code = None
      user.code_expiry = None
@@ -126,4 +131,4 @@ def reset_password():
   
  except Exception as e:
          logger.error(f"Password reset failed:{str(e)}")
-         return jsonify({"errro": "Internal server error"}), 500
+         return jsonify({"error": "Internal server error"}), 500

@@ -121,7 +121,8 @@ def my_rewards():
                 "reward_history": list(user_reward.reward_history),
                  "redeemed_meteors" : reward.redeemed_meteors,
                 "redeemed_vouchers": reward.used_vouchers,
-                "total_meteors_earned": reward.total_meteors_earned
+                "total_meteors_earned": reward.total_meteors_earned,
+                "discount_coupons" : reward.discount_coupons
 
             }
 
@@ -134,6 +135,7 @@ def my_rewards():
                                 "redeemed_meteors",
                                 "redeemed_vouchers"
                                 "total_meteors_earned",
+                                "discount_coupons"
                                 ]
 
             encoded_str = generate_encoded_string(info, fields_to_encode)
@@ -261,7 +263,7 @@ def my_profile():
                             ]
         if user.referred_by:
             referrer = User.objects(user_id = user.referred_by).first()
-            info["referred_by"] = referrer.user_id
+            info["referred_by"] = referrer.username
             fields_to_encode.append("referred_by")
 
         encoded_str = generate_encoded_string(info, fields_to_encode)

@@ -3,7 +3,7 @@ import datetime
 from main_app.models.admin.discount_coupon_model import ProductDiscounts, DiscountCoupon
 import logging
 from main_app.models.admin.admin_model import Admin
-
+from main_app.models.admin.product_model import Product
 
 # Configure logging for better debugging and monitoring
 logging.basicConfig(level=logging.INFO)
@@ -14,7 +14,11 @@ def create_discount_coupons():
     admin_uid = data.get("admin_uid")
     access_token = data.get("mode")
     session_id = data.get("log_alt")
-    coupon_data = data.get("coupon")
+    coupon_code = data.get("coupon_code")
+    validity_till = data.get("validity_till")
+    product_name = data.get("product_name")
+    percent = data.get("off_percent")
+    desc_text = data.get("desc_text")
 
     exist = Admin.objects(admin_uid=admin_uid).first()
 
@@ -38,14 +42,23 @@ def create_discount_coupons():
                      "message": "Access token has expired",
                      "token": "expired"}), 401
 
-    if not all([admin_uid, coupon_data]):
+    if not all([admin_uid, coupon_code]):
         return jsonify({"error": "admin_uid and coupon data are required"}), 400
 
-    coupon_code = coupon_data.get("coupon_code")
-    product_id = coupon_data.get("product_id")
-    if not all([coupon_code, product_id]):
+    if not all([coupon_code, product_name]):
         return jsonify({"error": "Coupon code and product_id are required"}), 400
+    product = Product.objects(product_name = product_name).first()
 
+    original_amount = product.original_amt
+    discount_amount = original_amount * percent/100
+    coupon_data = {"coupon_code" : coupon_code,
+                   "product_id" : product.uid,
+                   "validity_till" : validity_till,
+                   "off_percent" : percent,
+                   "discount_amt" : discount_amount,
+                   "original_amt" : original_amount,
+                   "description" : desc_text
+                   }
     product = ProductDiscounts.objects(admin_uid=admin_uid).first()
     if not product:
         product = ProductDiscounts(admin_uid=admin_uid, coupons=[])

@@ -100,30 +100,30 @@ def update_profile():
         Errors(username = user.username, email = user.email, error_type = str(e),  error_source="Update Profile",)
         return jsonify({"success": False, "message": "Server error"}), 500
 
-def redeem():
-    data = request.get_json()
-    user_id = data.get("user_id")
-    access_token = data.get("mode")
-    session_id = data.get("log_alt")
-    product_id = data.get("product_id")
-
-    user = User.objects(user_id=user_id).first()
-    try:
-        if not user:
-            return jsonify({"success" : False, "message" : "User does not exist"})
-
-        validate_session_token(user, access_token, session_id)
-
-        reward = Product.objects()
-
-        return jsonify({
-            "success": True,
-            "message": "Voucher Redeemed successfully!"
-        }), 200
-
-    except Exception as e:
-        Errors(username = user.username, email = user.email, error_type = str(e), error_source = "Update user profile")
-        return jsonify({"success": False, "message": "Server error"}), 500
+# def redeem():
+#     data = request.get_json()
+#     user_id = data.get("user_id")
+#     access_token = data.get("mode")
+#     session_id = data.get("log_alt")
+#     product_id = data.get("product_id")
+#
+#     user = User.objects(user_id=user_id).first()
+#     try:
+#         if not user:
+#             return jsonify({"success" : False, "message" : "User does not exist"})
+#
+#         # validate_session_token(user, access_token, session_id)
+#
+#         reward = Product.objects()
+#
+#         return jsonify({
+#             "success": True,
+#             "message": "Voucher Redeemed successfully!"
+#         }), 200
+#
+#     except Exception as e:
+#         Errors(username = user.username, email = user.email, error_type = str(e), error_source = "Update user profile")
+#         return jsonify({"success": False, "message": "Server error"}), 500
 
 
 UPLOAD_FOLDER = "static/uploads/contact"
@@ -189,13 +189,15 @@ def submit_msg():
         ).save()
         return jsonify({"message": "Failed to send query" , "success" : True}), 201
 
-def update_app_stats(app, user):
-    if app:
+def update_app_stats(app_name, user):
+    if app_name:
         app_col = AppStats.objects(admin_uid = user.admin_uid).first()
         for app in app_col.apps:
-            name = app.get('platform')
-            if name.strip('').lower() == app.strip('').lower():
+            print(app['platform'])
+            if app['platform'].strip('').lower() == app_name.strip('').lower():
+                print(app)
                 app['accepted'] += 1
-                return None
+                app_col.save()
+                return "done"
 
-    return jsonify({"message" : "failed to update app status"})
+    return jsonify({"message" : "failed to update app status"}),400

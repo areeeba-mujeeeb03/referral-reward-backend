@@ -1,18 +1,15 @@
 from mongoengine import Document, EmbeddedDocument, StringField, DateTimeField, ListField, EmbeddedDocumentField, \
-    IntField
+    IntField, FloatField
 
 
 class DiscountCoupon(EmbeddedDocument):
-    title = StringField(required=True)
     product_id = StringField(required=True)
     coupon_code = StringField(required=True, unique=True)
-    original_amt = StringField()
-    discounted_amt = StringField()
+    original_amt = FloatField()
+    discount_amt = FloatField()
     off_percent = IntField()
     description = StringField()
-    image = StringField()
-    start_date = DateTimeField()
-    end_date = DateTimeField()
+    validity_till = StringField()
 
 class ProductDiscounts(Document):
     admin_uid = StringField(required=True)

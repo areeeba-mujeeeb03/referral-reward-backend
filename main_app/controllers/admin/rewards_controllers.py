@@ -38,8 +38,12 @@ def set_reward_settings():
                          "token": "expired"}), 401
 
         required_fields = ['referrer_reward', 'invitee_reward', 'conversion_rates']
-        if not all(field in data for field in required_fields):
+
+        if not all(required_fields):
             return jsonify({"error": "Missing required fields"}), 400
+
+        if type('referrer_reward') != int and type('invitee_reward') != int:
+            return jsonify({"message" : "The type of referral and invitee reward must be an integer"})
 
         cr = data['conversion_rates']
         if not all(k in cr for k in ['meteors_to_stars', 'stars', 'stars_to_currency', "currency"]):

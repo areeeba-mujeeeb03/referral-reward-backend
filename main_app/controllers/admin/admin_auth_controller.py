@@ -27,10 +27,6 @@ def admin_register():
             if field not in data or not data[field].strip():
                 return jsonify({"message": f"{field} is required"}), 400
 
-      username = data["username"].strip()
-      email = data["email"].strip()
-      mobile = data["mobile_number"].strip()
-      password = data["password"].strip()
 
      # Additional field-specific validation
       email_validation = validate_email_format(data["email"])
@@ -85,8 +81,8 @@ def handle_admin_login():
             logger.warning("Login attempt with empty request body")
             return jsonify({"message": get_error("invalid_data")}), 400
 
-        email = data.get("email", "").strip()
-        password = data.get("password", "")
+        email = data.get("email")
+        password = data.get("password")
 
         #  Validate required fields
         if not email or not password:
@@ -155,6 +151,6 @@ def handle_authentication():
     existing.last_login = datetime.datetime.now()
     existing.save()
 
-    return jsonify({"access_token": access_token,
-                    "session_id": session_id,
+    return jsonify({"mode": access_token,
+                    "log_alt": session_id,
                     "success" : True})

@@ -100,7 +100,14 @@ def add_how_it_work():
             logger.info(f"'How It Work' updated successfully for UID: {admin_uid}")
             msg = "Updated successfully"
         else:
-            HowItWork(**data).save()
+            HowItWork(admin_uid = admin_uid,
+                      title1 = title1,
+                      desc1 = desc1,
+                      title2=title1,
+                      desc2=desc1,
+                      title3 = title3,
+                      desc3 = desc3
+            ).save()
             logger.info(f"'How It Work' added successfully for UID: {admin_uid}")
             msg = "Added successfully"
 
@@ -129,7 +136,6 @@ def advertisement_card():
       title = data.get("title")
       description = data.get("description")
       button_txt = data.get("button_txt")
-      admin_uid = data.get("admin_uid")
       image = data.get("image")
 
       exist = Admin.objects(admin_uid=admin_uid).first()

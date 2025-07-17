@@ -15,7 +15,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 def create_exclusive_perks():
      try:
-        data = request.form
+        data = request.get_json()
         admin_uid = data.get("admin_uid")
         access_token = data.get("mode")
         session_id = data.get("log_alt")
@@ -23,6 +23,8 @@ def create_exclusive_perks():
         information = data.get("information")
         term_conditions = data.get("term_conditions")
         image = data.get("image")
+
+        print(data)
 
         exist = Admin.objects(admin_uid=admin_uid).first()
 

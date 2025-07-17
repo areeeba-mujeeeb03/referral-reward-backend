@@ -6,6 +6,7 @@ from main_app.controllers.user.login_controllers import handle_email_login, logo
 from main_app.controllers.user.forgotpassword_controllers import reset_password,send_verification_code, verify_code
 from main_app.controllers.user.landingpage_controllers import my_rewards, my_referrals, my_profile, home_page, \
     fetch_data_from_admin
+from main_app.controllers.user.redeem_controllers import redeem
 from main_app.controllers.user.referral_controllers import change_invite_link
 from main_app.controllers.user.invite import send_whatsapp_invite, send_telegram_invite, send_twitter_invite, \
     send_facebook_invite, send_linkedin_invite
@@ -350,14 +351,14 @@ def send_invite_linkedin():
 # 22. Redeem Discount Voucher
 
 # ==============
-@user_bp.route("/redeem-voucher", methods=["POST"])
-def redeem_voucher():
+@user_bp.route("/redeem-offer/<card_type>", methods=["POST"])
+def redeem_func(card_type):
     """
     handles sending invitation link on facebook
     Accepts: POST request
     Redirects : on facebook with invite-link NO pre-typed message
     """
-    return
+    return redeem(card_type)
 
 # ==============
 
@@ -432,6 +433,7 @@ def update(user_id):
 
 @user_bp.route('/win/<user_id>', methods = ['POST'])
 def win(user_id):
+
     return win_voucher(user_id)
 
 

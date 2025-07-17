@@ -17,6 +17,7 @@ from main_app.controllers.admin.dashboard_controllers import error_table, dashbo
 from main_app.controllers.admin.email_controller import create_email
 from main_app.controllers.admin.notification_controller import create_push_notification, list_push_notifications, update_push_notification, delete_push_notification
 from main_app.controllers.admin.perks_controller import create_exclusive_perks, edit_footer
+from main_app.controllers.admin.special_off_controllers import create_special_offer
 
 admin_bp = Blueprint("admin_routes", __name__)
 
@@ -177,7 +178,7 @@ def admin_exciting_prizes():
 
 # ===============
 
-# 10. Check user prize eligibility meteores
+# 10. Check user prize eligibility meteors
 
 # ===============
 
@@ -252,10 +253,11 @@ def fetch_stats():
 # 16. Email save
 
 # =============
-@admin_bp.route("/admin/send_email", methods = ["POST"])
+@admin_bp.route("/admin/send-email", methods = ["POST"])
 def admin_send_email():
-    ""
-    ""
+    """
+    handles : admin defining email templates for different e-mails
+    """
     return create_email()
 
 
@@ -401,7 +403,7 @@ def delete_milestone():
 
 # ========================
 
-@admin_bp.route('/admin/push_notification', methods=['POST'])
+@admin_bp.route('/admin/push-notification', methods=['POST'])
 def admin_push_notification():
     """
     """
@@ -413,7 +415,7 @@ def admin_push_notification():
 
 # ============================
 
-@admin_bp.route('/admin/table_push_notifications', methods=['POST'])
+@admin_bp.route('/admin/table-push-notifications', methods=['POST'])
 def admin_list_push_notification():
     """
     """
@@ -425,7 +427,7 @@ def admin_list_push_notification():
 
 # ================
 
-@admin_bp.route('/admin/update_push_notifications/<notification_id>', methods=['PUT'])
+@admin_bp.route('/admin/update-push-notifications/<notification_id>', methods=['PUT'])
 def admin_update_push_notification(notification_id):
     """
     """
@@ -486,7 +488,7 @@ def remove_discount_coupons():
 
 # ====================
 
-@admin_bp.route("/admin/exclusive_perks", methods= ["POST"])
+@admin_bp.route("/admin/exclusive-perks", methods= ["POST"])
 def admin_create_exclusive_perks():
     """
     """
@@ -499,7 +501,7 @@ def admin_create_exclusive_perks():
 
 # ==================
 
-@admin_bp.route("/admin/update_footer", methods=["POST"])
+@admin_bp.route("/admin/update-footer", methods=["POST"])
 def admin_create_footer():
 
     return edit_footer()
@@ -527,3 +529,8 @@ def graph(admin_uid):
     Returns: Password reset confirmation response
     """
     return graph_data(admin_uid)
+
+
+@admin_bp.route('/admin/create-special-offer', methods = ['POST'])
+def add_special_offer():
+    return create_special_offer()
