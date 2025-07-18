@@ -58,14 +58,6 @@ def create_exclusive_perks():
             logger.warning(f"Admin not found for UID: {admin_uid}")
             return jsonify({"message": "Admin not found" }), 400
 
-        # upload = request.files.get("image")
-        # image_url = None
-        # if upload:
-        #     filename = secure_filename(upload.filename)
-        #     image_path  = os.path.join(UPLOAD_FOLDER, filename)
-        #     upload.save(image_path)
-        #     image_url = f"/{image_path}"
-
           # Check if a similar perk exists for the admin
         existing_perk = ExclusivePerks.objects(title=title, admin_uid=admin_uid).first()
         if existing_perk:
