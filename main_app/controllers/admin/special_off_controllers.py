@@ -62,7 +62,7 @@ def create_special_offer():
         start_timestamp = datetime.datetime.combine(start_date, start_time_obj)
         expiry_timestamp = datetime.datetime.combine(end_date, end_time_obj)
 
-        if not all([offer_code, offer_desc, offer_title, start_date, end_date, pop_up_text, tag]):
+        if not all([admin_uid, access_token, session_id,offer_code, offer_desc, offer_title, start_date, end_date, pop_up_text, tag]):
             return jsonify({"error": "All fields are required"}), 400
 
         if expiry_timestamp <= start_timestamp:
