@@ -1,7 +1,5 @@
-import datetime
-
 from flask import request, jsonify
-from werkzeug.utils import secure_filename
+import datetime
 import os
 import logging
 from main_app.models.admin.prize_model import PrizeDetail, AdminPrizes
@@ -71,15 +69,6 @@ def add_exciting_prizes():
         
         if not Product.objects(uid=product_id).first():
             return jsonify({"message": "Product Id not found"}), 400
-      
-
-        # files = request.files.get("image")
-        # image_url = None
-        # if files:
-        #     filename = secure_filename(files.filename)
-        #     image_path = os.path.join(UPLOAD_FOLDER, filename)
-        #     files.save(image_path)
-        #     image_url = f"/{image_path}"
 
           # Fetch existing admin prizes
         admin_prize = AdminPrizes.objects(admin_uid=admin_uid).first()

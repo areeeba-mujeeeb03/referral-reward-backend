@@ -27,18 +27,40 @@ def get_expiry_time(minute = 1):
 
 #  Example PROD_01, PROD_02, ....
 
-def generate_product_uid():
-    count = Product.objects.count() + 1
+# def generate_product_uid():
+#     count = Product.objects.count() + 1
+#     return f"PROD_{str(count).zfill(2)}"  
+
+def generate_product_uid(admin_uid):
+    prod_doc = Product.objects(admin_uid=admin_uid).first()
+    count = 1
+    if prod_doc:
+        for product in prod_doc.products:
+            if product:
+                  count = len(prod_doc.products) + 1
+    else:
+        count = 1
     return f"PROD_{str(count).zfill(2)}"  
 
 # --------------------------------------------------------------------------------------------
 
-#  Genrate offer uid 
+# --------------------------------  Genrate offer uid ------------------------------------------#
 
 # Example OFR_01, OFR_02, .....
 
-def generate_offer_uid():
-    count = Offer.objects.count() + 1
-    return f"OFR_{str(count).zfill(2)}"
+# def generate_offer_uid(admin_uid):
+#     count = Offer.objects(admin_uid=admin_uid).count() + 1
+#     return f"OFR_{str(count).zfill(2)}"
+  
 
+def generate_offer_uid(admin_uid):
+    offer_doc = Offer.objects(admin_uid=admin_uid).first()
+    count = 1
+    if offer_doc:
+        for offer in offer_doc.offers:
+            if offer:
+                count = len(offer_doc.offers) + 1
+    else:
+        count = 1
+    return f"OFR_{str(count).zfill(2)}"
 

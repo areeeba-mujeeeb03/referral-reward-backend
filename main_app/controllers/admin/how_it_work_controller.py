@@ -2,7 +2,6 @@ import datetime
 from flask import request , jsonify
 import os
 import logging
-# from werkzeug.utils import secure_filename
 from main_app.models.admin.how_it_work_model import HowItWork 
 from main_app.models.admin.advertisment_card_model import AdvertisementCardItem, AdminAdvertisementCard
 from main_app.models.admin.admin_model import Admin
@@ -168,15 +167,6 @@ def advertisement_card():
       if not Admin.objects(admin_uid=admin_uid).first():
             logger.warning(f"Admin not found for UID: {admin_uid}")
             return jsonify({"message": "Admin not found" }), 400
-      
-    #    # Image upload
-    #   image = request.files.get("image_url")
-    #   image_url = None
-    #   if image:
-    #     filename = secure_filename(image.filename)
-    #     image_path = os.path.join(UPLOAD_FOLDER, filename)
-    #     image.save(image_path)
-    #     image_url = f"/{image_path}"
 
          # Prepare embedded ad card
       ad_card = AdvertisementCardItem(
