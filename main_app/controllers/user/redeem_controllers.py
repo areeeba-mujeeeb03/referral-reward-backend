@@ -123,6 +123,7 @@ def redeem_offer(data, user):
 
 def redeem_exciting_prize(data, user):
     prize_id = data.get("prize_id")
+    user_id = data.get("user_id")
 
     if not prize_id:
         return jsonify({'error': 'prize_id is required'}), 400
@@ -144,7 +145,7 @@ def redeem_exciting_prize(data, user):
 
         for p in prod.products:
             if p['uid'] == product_id:
-                reward = Reward.objects(user_id=user.user_id).first()
+                reward = Reward.objects(user_id=user_id).first()
                 required_meteors = prize['required_meteors']
                 if not reward:
                     return jsonify({'error': 'Reward data not found'}), 404
@@ -155,11 +156,16 @@ def redeem_exciting_prize(data, user):
                         "message": f"You need {needed} more meteors to unlock this prize.",
                         "success": False
                     }), 400
+                if reward.current_meteors > required_meteors:
+                    reward.update(
+                        inc__redeemed_meteors = required_meteors,
+                        dec__current_meteors = required_meteors
+                    )
 
-                return jsonify({
-                    "congrats_text": "Congratulations! You have claimed your Prize",
-                    "success": True
-                }), 200
+                    return jsonify({
+                        "congrats_text": "Congratulations! You have claimed your Prize",
+                        "success": True
+                    }), 200
 
     return jsonify({"message": "Prize not found or not eligible", "success": False}), 400
 
