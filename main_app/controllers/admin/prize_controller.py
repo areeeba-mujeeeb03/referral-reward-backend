@@ -5,6 +5,7 @@ import logging
 from main_app.models.admin.prize_model import PrizeDetail, AdminPrizes
 from main_app.models.admin.admin_model import Admin
 from main_app.models.admin.product_model import Product
+from main_app.utils.admin.helpers import generate_prize_uid
 
 # Configure logging for better debugging and monitoring
 logging.basicConfig(level=logging.INFO)
@@ -25,30 +26,30 @@ def add_exciting_prizes():
         term_conditions = data.get("term_conditions")
         admin_uid = data.get("admin_uid")
         required_meteors = data.get("required_meteors")
-        product_id = data.get("product_id")
+        product_uid = data.get("product_uid")
         image = data.get("image")
 
         exist = Admin.objects(admin_uid=admin_uid).first()
 
-        # if not exist:
-        #     return jsonify({"success": False, "message": "User does not exist"})
-        #
-        # if not access_token or not session_id:
-        #     return jsonify({"message": "Missing token or session", "success": False}), 400
-        #
-        # if exist.access_token != access_token:
-        #     return ({"success": False,
-        #              "message": "Invalid access token"}), 401
-        #
-        # if exist.session_id != session_id:
-        #     return ({"success": False,
-        #              "message": "Session mismatch or invalid session"}), 403
-        #
-        # if hasattr(exist, 'expiry_time') and exist.expiry_time:
-        #     if datetime.datetime.now() > exist.expiry_time:
-        #         return ({"success": False,
-        #                  "message": "Access token has expired",
-        #                  "token": "expired"}), 401
+        if not exist:
+            return jsonify({"success": False, "message": "User does not exist"})
+
+        if not access_token or not session_id:
+            return jsonify({"message": "Missing token or session", "success": False}), 400
+
+        if exist.access_token != access_token:
+            return ({"success": False,
+                     "message": "Invalid access token"}), 401
+
+        if exist.session_id != session_id:
+            return ({"success": False,
+                     "message": "Session mismatch or invalid session"}), 403
+
+        if hasattr(exist, 'expiry_time') and exist.expiry_time:
+            if datetime.datetime.now() > exist.expiry_time:
+                return ({"success": False,
+                         "message": "Access token has expired",
+                         "token": "expired"}), 401
 
         #  Validation fields
         if not all ([title , term_conditions, admin_uid, required_meteors]):
@@ -66,10 +67,9 @@ def add_exciting_prizes():
         if not Admin.objects(admin_uid=admin_uid).first():
             logger.warning(f"Admin not found for UID: {admin_uid}")
             return jsonify({"message": "Admin not found" }), 400
-        # prod = Product.objects(admin_uid=admin_uid).first()
-        # for p in prod.products:
-        #     if p['uid'] == product_id:
-        #         return jsonify({"message": "Product not found"}), 400
+        
+        # if not Product.objects(id=product_uid).first():
+        #     return jsonify({"message": "Product Id not found"}), 400
 
           # Fetch existing admin prizes
         admin_prize = AdminPrizes.objects(admin_uid=admin_uid).first()
@@ -78,10 +78,10 @@ def add_exciting_prizes():
         if admin_prize:
             # Check if a prize with same title exists → update it
             for prize in admin_prize.prizes:
-                if prize['title'] == title:
-                    prize['term_conditions']= term_conditions
-                    prize['required_meteors'] = required_meteors
-                    prize['uid'] = product_id
+                if prize.title == title:
+                    prize.term_conditions = term_conditions
+                    prize.required_meteors = required_meteors
+                    prize.product_uid = product_uid
                     if image:
                         prize.image = image
                     updated = True
@@ -93,11 +93,12 @@ def add_exciting_prizes():
             else:
                 # Add new prize
                 new_prize = PrizeDetail(
+                    prize_id = generate_prize_uid(admin_uid),
                     title=title,
                     term_conditions=term_conditions,
                     image=image,
                     required_meteors=required_meteors,
-                    product_id = product_id 
+                    product_uid = product_uid
                 )
                 admin_prize.prizes.append(new_prize)
                 admin_prize.save()
@@ -105,11 +106,12 @@ def add_exciting_prizes():
         else:
             # First time prize creation for admin
             new_prize = PrizeDetail(
+                prize_id = generate_prize_uid(admin_uid),
                 title=title,
                 term_conditions=term_conditions,
                 image=image,
                 required_meteors=required_meteors,
-                product_id=product_id
+                product_uid=product_uid
             )
             AdminPrizes(admin_uid=admin_uid, prizes=[new_prize]).save()
             msg = "Prize list created for new admin"

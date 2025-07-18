@@ -8,8 +8,7 @@ from main_app.controllers.user.user_profile_controllers import update_app_stats
 from main_app.models.admin.error_model import Errors
 from main_app.models.admin.links import ReferralReward
 from main_app.models.user.user import User
-from main_app.controllers.user.referral_controllers import (process_referral_code_and_reward, initialize_user_records,
-                                                            process_tag_id_and_reward ,process_referrer_by_tag_id,
+from main_app.controllers.user.referral_controllers import (initialize_user_records ,process_referrer_by_tag_id,
                                                             update_referral_status_and_reward)
 from main_app.utils.user.helpers import hash_password
 from main_app.utils.user.error_handling import get_error

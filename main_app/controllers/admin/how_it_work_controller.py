@@ -136,28 +136,28 @@ def advertisement_card():
       description = data.get("description")
       button_txt = data.get("button_txt")
       image = data.get("image")
-      #
-      # exist = Admin.objects(admin_uid=admin_uid).first()
-      #
-      # if not exist:
-      #     return jsonify({"success": False, "message": "User does not exist"})
-      #
-      # if not access_token or not session_id:
-      #     return jsonify({"message": "Missing token or session", "success": False}), 400
-      #
-      # if exist.access_token != access_token:
-      #     return ({"success": False,
-      #              "message": "Invalid access token"}), 401
-      #
-      # if exist.session_id != session_id:
-      #     return ({"success": False,
-      #              "message": "Session mismatch or invalid session"}), 403
-      #
-      # if hasattr(exist, 'expiry_time') and exist.expiry_time:
-      #     if datetime.datetime.now() > exist.expiry_time:
-      #         return ({"success": False,
-      #                  "message": "Access token has expired",
-      #                  "token": "expired"}), 401
+
+      exist = Admin.objects(admin_uid=admin_uid).first()
+
+      if not exist:
+          return jsonify({"success": False, "message": "User does not exist"})
+
+      if not access_token or not session_id:
+          return jsonify({"message": "Missing token or session", "success": False}), 400
+
+      if exist.access_token != access_token:
+          return ({"success": False,
+                   "message": "Invalid access token"}), 401
+
+      if exist.session_id != session_id:
+          return ({"success": False,
+                   "message": "Session mismatch or invalid session"}), 403
+
+      if hasattr(exist, 'expiry_time') and exist.expiry_time:
+          if datetime.datetime.now() > exist.expiry_time:
+              return ({"success": False,
+                       "message": "Access token has expired",
+                       "token": "expired"}), 401
 
       if not all([title, description, button_txt, admin_uid]):
          logger.warning("Missing required fields")
@@ -224,5 +224,5 @@ def advertisement_card():
       return jsonify({"success": True, "message": msg}), 200
     
     except Exception as e:
-       logger.error(f"Add advertisment card failed : {str(e)}")
+       logger.error(f"Add advertisement card failed : {str(e)}")
        return jsonify({"error": "Internal server error"}), 500

@@ -42,25 +42,25 @@ def add_product():
 
          exist = Admin.objects(admin_uid=admin_uid).first()
 
-         # if not exist:
-         #     return jsonify({"success": False, "message": "User does not exist"})
-         #
-         # if not access_token or not session_id:
-         #     return jsonify({"message": "Missing token or session", "success": False}), 400
-         #
-         # if exist.access_token != access_token:
-         #     return ({"success": False,
-         #              "message": "Invalid access token"}), 401
-         #
-         # if exist.session_id != session_id:
-         #     return ({"success": False,
-         #              "message": "Session mismatch or invalid session"}), 403
-         #
-         # if hasattr(exist, 'expiry_time') and exist.expiry_time:
-         #     if datetime.datetime.now() > exist.expiry_time:
-         #         return ({"success": False,
-         #                  "message": "Access token has expired",
-         #                  "token": "expired"}), 401
+         if not exist:
+             return jsonify({"success": False, "message": "User does not exist"})
+
+         if not access_token or not session_id:
+             return jsonify({"message": "Missing token or session", "success": False}), 400
+
+         if exist.access_token != access_token:
+             return ({"success": False,
+                      "message": "Invalid access token"}), 401
+
+         if exist.session_id != session_id:
+             return ({"success": False,
+                      "message": "Session mismatch or invalid session"}), 403
+
+         if hasattr(exist, 'expiry_time') and exist.expiry_time:
+             if datetime.datetime.now() > exist.expiry_time:
+                 return ({"success": False,
+                          "message": "Access token has expired",
+                          "token": "expired"}), 401
 
          if not all([product_name, original_amt, short_desc, admin_uid]):
              return jsonify({"message": "Missing required fields"}), 400
@@ -69,35 +69,10 @@ def add_product():
             original_amt = float(original_amt)
          except ValueError: 
             return jsonify({"message": "Amount must be numeric"}), 400
-    
-        #   # Convert date
-        #  visibility_date = None
-        #  if visibility_till:
-        #     visibility_date = parse_date_flexible(visibility_till)
-        #     if not visibility_date:
-        #         return jsonify({"message": "Date must be in DD/MM/YYYY or DD-MM-YYYY format"}), 400
-       
-        #   # Image upload
-        #  image = request.files.get("image")
-        #  image_url = None
-        #  if image:
-        #     filename = secure_filename(image.filename)
-        #     image_path = os.path.join(UPLOAD_FOLDER, filename)
-        #     image.save(image_path)
-        #     image_url = f"/{image_path}"
-        #  offer_data = {}
-        #  if apply_offer:
-        #     offer_name = data.get("offer_name")
-        #     one_liner = data.get("one_liner")
-        #     button_txt = data.get("button_txt")
-        #     off_percent = data.get("off_percent")
-        #     start_date = data.get("start_date")
-        #     expiry_date = data.get("expiry_date")
-        #     offer_type = data.get("offer_type")
 
          # Save product
          pro_dict =  {
-            "uid" : generate_product_uid(admin_uid),
+            "product_uid" : generate_product_uid(admin_uid),
             "product_name" : product_name,
             "original_amt" : original_amt,
             "short_desc" : short_desc,

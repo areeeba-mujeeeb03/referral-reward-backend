@@ -30,31 +30,31 @@ def create_special_offer():
         offer_code = data.get('code')
         pop_up_text = data.get('pop_up_text')
 
-        # admin = Admin.objects(admin_uid=admin_uid).first()
-        # if not admin:
-        #     logger.info(f"Unauthorized access attempt with user_id: {admin_uid}")
-        #     return jsonify({"success": False, "message": "User does not exist"}), 401
+        admin = Admin.objects(admin_uid=admin_uid).first()
+        if not admin:
+            logger.info(f"Unauthorized access attempt with user_id: {admin_uid}")
+            return jsonify({"success": False, "message": "User does not exist"}), 401
 
-        # if not access_token or not session_id:
-        #     logger.info("Missing token or session in request body")
-        #     return jsonify({"message": "Missing token or session", "success": False}), 400
-        #
-        # if admin.access_token != access_token:
-        #     logger.info("Invalid access token")
-        #     return jsonify({"success": False, "message": "Invalid access token"}), 401
-        #
-        # if admin.session_id != session_id:
-        #     logger.info("Session mismatch or invalid session")
-        #     return jsonify({"success": False, "message": "Session mismatch or invalid session"}), 403
-        #
-        # if hasattr(admin, 'expiry_time') and admin.expiry_time:
-        #     if datetime.datetime.now() > admin.expiry_time:
-        #         logger.info("Access token has expired")
-        #         return jsonify({
-        #             "success": False,
-        #             "message": "Access token has expired",
-        #             "token": "expired"
-        #         }), 401
+        if not access_token or not session_id:
+            logger.info("Missing token or session in request body")
+            return jsonify({"message": "Missing token or session", "success": False}), 400
+
+        if admin.access_token != access_token:
+            logger.info("Invalid access token")
+            return jsonify({"success": False, "message": "Invalid access token"}), 401
+
+        if admin.session_id != session_id:
+            logger.info("Session mismatch or invalid session")
+            return jsonify({"success": False, "message": "Session mismatch or invalid session"}), 403
+
+        if hasattr(admin, 'expiry_time') and admin.expiry_time:
+            if datetime.datetime.now() > admin.expiry_time:
+                logger.info("Access token has expired")
+                return jsonify({
+                    "success": False,
+                    "message": "Access token has expired",
+                    "token": "expired"
+                }), 401
 
         start_time_obj = datetime.datetime.strptime(start_time, "%H:%M").time()
         end_time_obj = datetime.datetime.strptime(end_time, "%H:%M").time()

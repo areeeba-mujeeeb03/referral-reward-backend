@@ -207,6 +207,7 @@ def update_push_notification(notification_id):
 
 def delete_push_notification(notification_id):
     try:
+        data = request.get_json()
         admin_uid = data.get("admin_uid")
         access_token = data.get("mode")
         session_id = data.get("log_alt")

@@ -7,7 +7,7 @@ from cryptography.fernet import Fernet
 
 from main_app.models.admin.product_model import Product
 from main_app.models.admin.product_offer_model import Offer
-
+from main_app.models.admin.prize_model import PrizeDetail, AdminPrizes
 
 def generate_otp(length=6):
     return ''.join(random.choices("0123456789", k=length))
@@ -64,3 +64,23 @@ def generate_offer_uid(admin_uid):
         count = 1
     return f"OFR_{str(count).zfill(2)}"
 
+# ---------------------------------------------------------------------------------------
+
+# ---------------------------------Exclusive perks ----------------------------------------#
+
+def generate_prize_uid(admin_uid):
+    # new_prize = PrizeDetail.object(admin_uid=admin_uid).first()
+    # count = 1
+    # if new_prize:
+    #     for prize in new_prize.prizes:
+    #         if prize:
+    #             count = len(new_prize.prizes) + 1
+    # else:
+    #     count = 1        
+      admin_prizes = AdminPrizes.objects(admin_uid=admin_uid).first()
+    
+      if admin_prizes and admin_prizes.prizes:
+        count = len(admin_prizes.prizes) + 1
+      else:
+        count = 1    
+      return f"PRZ_{str(count).zfill(2)}"

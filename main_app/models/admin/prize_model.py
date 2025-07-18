@@ -20,7 +20,7 @@ class PrizeDetail(EmbeddedDocument):
     image = StringField()
     required_meteors = IntField(required=True)
     created_at = DateTimeField(default=datetime.datetime.now)
-    product_id = StringField()
+    product_uid = StringField()
 
 class AdminPrizes(Document):
     admin_uid = StringField(required=True, unique=True)
