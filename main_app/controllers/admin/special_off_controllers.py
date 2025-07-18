@@ -3,7 +3,7 @@ import datetime
 from main_app.models.admin.discount_coupon_model import ProductDiscounts
 import logging
 from main_app.models.admin.admin_model import Admin
-from main_app.models.admin.special_offer_model import SpecialOffer, Offer
+from main_app.models.admin.special_offer_model import SpecialOffer, SOffer
 from main_app.controllers.admin.referral_controllers import parse_date_flexible
 
 # Configure logging for better debugging and monitoring
@@ -83,7 +83,7 @@ def create_special_offer():
             "active": start_timestamp <= datetime.datetime.now()
         }
 
-        existing_offer = Offer.objects(admin_uid=admin_uid).first()
+        existing_offer = SOffer.objects(admin_uid=admin_uid).first()
 
         if existing_offer and existing_offer.special_offer:
             for offer in existing_offer.special_offer:
@@ -98,7 +98,7 @@ def create_special_offer():
                         "success": False
                     }), 400
 
-        Offer.objects(admin_uid=admin_uid).update_one(
+        SOffer.objects(admin_uid=admin_uid).update_one(
             push__special_offer=offer_data
         )
 

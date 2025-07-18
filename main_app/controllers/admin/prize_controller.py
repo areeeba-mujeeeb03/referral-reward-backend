@@ -18,7 +18,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 def add_exciting_prizes():
     try:
         logger.info("Add Exciting Prizes API called")
-        data = request.form
+        data = request.get_json()
         access_token = data.get("mode")
         session_id = data.get("log_alt")
         title = data.get("title")
@@ -66,9 +66,10 @@ def add_exciting_prizes():
         if not Admin.objects(admin_uid=admin_uid).first():
             logger.warning(f"Admin not found for UID: {admin_uid}")
             return jsonify({"message": "Admin not found" }), 400
-        
-        if not Product.objects(uid=product_id).first():
-            return jsonify({"message": "Product Id not found"}), 400
+        # prod = Product.objects(admin_uid=admin_uid).first()
+        # for p in prod.products:
+        #     if p['uid'] == product_id:
+        #         return jsonify({"message": "Product not found"}), 400
 
           # Fetch existing admin prizes
         admin_prize = AdminPrizes.objects(admin_uid=admin_uid).first()
@@ -77,10 +78,10 @@ def add_exciting_prizes():
         if admin_prize:
             # Check if a prize with same title exists → update it
             for prize in admin_prize.prizes:
-                if prize.title == title:
-                    prize.term_conditions = term_conditions
-                    prize.required_meteors = required_meteors
-                    prize.product_id = product_id 
+                if prize['title'] == title:
+                    prize['term_conditions']= term_conditions
+                    prize['required_meteors'] = required_meteors
+                    prize['uid'] = product_id
                     if image:
                         prize.image = image
                     updated = True

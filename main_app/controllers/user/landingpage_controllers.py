@@ -6,7 +6,8 @@ from main_app.models.admin.error_model import Errors
 from main_app.models.admin.galaxy_model import Galaxy
 from main_app.models.admin.how_it_work_model import HowItWork
 from main_app.models.admin.links import ReferralReward
-from main_app.models.admin.special_offer_model import Offer
+from main_app.models.admin.product_offer_model import Offer
+from main_app.models.admin.special_offer_model import SpecialOffer, SOffer
 from main_app.models.user.user import User
 from main_app.models.user.reward import Reward
 from main_app.models.user.referral import Referral
@@ -14,7 +15,6 @@ from main_app.utils.user.error_handling import get_error
 import logging
 from flask import request, jsonify
 from main_app.utils.user.string_encoding import generate_encoded_string
-from main_app.models.admin.product_model import Product
 from main_app.models.admin.prize_model import PrizeDetail, AdminPrizes
 from main_app.models.admin.advertisment_card_model import AdvertisementCardItem, AdminAdvertisementCard
 
@@ -310,11 +310,12 @@ def fetch_data_from_admin():
     prize = AdminPrizes.objects(admin_uid=admin_uid).first()
     prize_data = []
 
-    if prize:
-        prize_dict = prize.to_mongo().to_dict()
-        prize_dict.pop('_id', None)
-        prize_dict.pop('admin_uid', None)
-        prize_dict.pop('created_at', None)
+    for p in prize.prizes:
+        prize_dict = {}
+        prize_dict['prize_id'] = p['prize_id']
+        prize_dict['required_meteors'] = p['required_meteors']
+        prize_dict['title'] = p['title']
+        prize_dict['term_conditions'] = p['term_conditions']
         prize_data.append(prize_dict)
 
     reward = Reward.objects(user_id=user_id).first()
@@ -347,7 +348,7 @@ def fetch_data_from_admin():
                 "title": ad.title,
                 "description": ad.description,
                 "button_txt": ad.button_txt,
-                "image_url": ad.image_url
+                "image": ad.image
             }
             ad_data.append(ad_dict)
 
@@ -364,7 +365,7 @@ def fetch_data_from_admin():
 
     product_data =[]
     special_offer = {}
-    offer = Offer.objects(admin_uid = admin_uid).first()
+    offer = SOffer.objects(admin_uid = admin_uid).first()
     if offer and offer.special_offer:
         for offer in offer.special_offer:
             if offer['active'] is True:
@@ -373,6 +374,38 @@ def fetch_data_from_admin():
                 special_offer['offer_code'] = offer['offer_code']
                 special_offer['pop_up_text'] = offer['pop_up_text']
                 special_offer['offer_desc'] = offer['offer_desc']
+
+    offer = Offer.objects(admin_uid=admin_uid).first()
+    offer_data = []
+
+    for p in offer.offers:
+        offer_dict = {}
+        offer_dict['off_percent'] = p['off_percent']
+        offer_dict['offer_name'] = p['offer_name']
+        offer_dict['button_txt'] = p['button_txt']
+        offer_dict['one_liner'] = p['one_liner']
+        offer_dict['product_id'] = p['product_id']
+        offer_data.append(offer_dict)
+
+    reward = Reward.objects(user_id=user_id).first()
+
+    diction = {
+            "success" : True ,
+            "how_it_works" : data,
+            "exciting_prizes" : prize_data,
+            "home_faqs" : home_faqs,
+            "rewards_faqs" : rewards_faqs,
+            "referrals_faqs" : referrals_faqs,
+            "help_and_support" : help_faqs,
+            "galaxy_data" : galaxy_data,
+            "advertisement_cards" : ad_data,
+            "exclusive_perks" : exclusive_perks,
+            "conversion_data"  :conversion_rate,
+            "product_offer" : product_data,
+            "special_offer" : special_offer,
+            "exclusive_offers" : offer_data
+            }
+    print(diction)
 
     if user:
         return jsonify({
@@ -388,9 +421,9 @@ def fetch_data_from_admin():
             "exclusive_perks" : exclusive_perks,
             "conversion_data"  :conversion_rate,
             "product_offer" : product_data,
-            "special_offer" : special_offer
+            "special_offer" : special_offer,
+            "exclusive_offers" : offer_data
             })
-
 
     return ({"message": "An Unexpected error occurred",
              "success" : False,

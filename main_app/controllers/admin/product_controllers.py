@@ -270,11 +270,8 @@ def add_offer():
                 offers = [off_dic]
             )
             offer.save()
-    #  else:
-    #     # Check for duplicate product under same admin
-    #     for off in admin_exist.offers:
-    #         if off.get("offer_name") == offer_name:
-    #             return jsonify({"message": "offer already exists for this admin"}), 400
+            logger.info(f"Offer saved with ID: ")
+            return jsonify({"success": True, "message": "Offer add successfully"}), 200
 
      else:
         Offer.objects(admin_uid=admin_uid).update(
