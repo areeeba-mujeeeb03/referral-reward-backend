@@ -14,12 +14,13 @@ from mongoengine import Document, StringField, IntField, DateTimeField, Embedded
 import datetime
 
 class PrizeDetail(EmbeddedDocument):
+    prize_id = StringField(required=True, unique=True)
     title = StringField(required=True)
     term_conditions = StringField()
     image = StringField()
     required_meteors = IntField(required=True)
     created_at = DateTimeField(default=datetime.datetime.now)
-    product_id = StringField()
+    product_uid = StringField()
 
 class AdminPrizes(Document):
     admin_uid = StringField(required=True, unique=True)

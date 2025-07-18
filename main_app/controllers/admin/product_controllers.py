@@ -72,7 +72,7 @@ def add_product():
 
          # Save product
          pro_dict =  {
-            "uid" : generate_product_uid(admin_uid),
+            "product_uid" : generate_product_uid(admin_uid),
             "product_name" : product_name,
             "original_amt" : original_amt,
             "short_desc" : short_desc,

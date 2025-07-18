@@ -14,19 +14,6 @@ class Product(Document):
     meta = {"db_alias" : "admin-db", "collection" : "product"}
 
 
-# class Product(EmbeddedDocument):
-#     product_id = StringField(required=True, unique=True)
-#     product_name = StringField()
-#     original_amt = FloatField(required=True)
-#     short_desc = StringField(required=True)
-#     image = StringField()
-#     reward_type = StringField()
-
-# class ProductList(Document):
-#     admin_uid = StringField(required=True)
-#     products = ListField(EmbeddedDocumentField(Product))
-
-#     meta = {"db_alias" : "admin-db", "collection" : "product"}
 
 
 

@@ -123,7 +123,7 @@ def admin_add_product():
 def update_add_product(uid):
     """
     Updates an existing product in the database.
-    Expects: from-data body with updated product details.
+    Expects: JSON body with updated product details.
     Returns: Success message or error response.
     """
     return update_product(uid)
@@ -155,7 +155,7 @@ def admin_add_offer():
 def admin_update_offer():
     """
     Update offers
-    Experts: form-data with offer details including start ans expiry dates.
+    Experts: JSON with offer details including start ans expiry dates.
     Return: Success message or error reponse.
     """
     return update_offer()
