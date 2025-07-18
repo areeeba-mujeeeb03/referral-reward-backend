@@ -1,6 +1,6 @@
 from flask import request, jsonify
 import datetime
-from main_app.models.admin.discount_coupon_model import ProductDiscounts, DiscountCoupon
+from main_app.models.admin.discount_coupon_model import ProductDiscounts
 import logging
 from main_app.models.admin.admin_model import Admin
 from main_app.models.admin.product_model import Product
@@ -24,49 +24,54 @@ def create_discount_coupons():
 
         exist = Admin.objects(admin_uid=admin_uid).first()
 
-        if not exist:
-            return jsonify({"success": False, "message": "User does not exist"})
-
-        if not access_token or not session_id:
-            return jsonify({"message": "Missing token or session", "success": False}), 400
-
-        if exist.access_token != access_token:
-            return ({"success": False,
-                     "message": "Invalid access token"}), 401
-
-        if exist.session_id != session_id:
-            return ({"success": False,
-                     "message": "Session mismatch or invalid session"}), 403
-
-        if hasattr(exist, 'expiry_time') and exist.expiry_time:
-            if datetime.datetime.now() > exist.expiry_time:
-                return ({"success": False,
-                         "message": "Access token has expired",
-                         "token": "expired"}), 401
+        # if not exist:
+        #     return jsonify({"success": False, "message": "User does not exist"})
+        #
+        # if not access_token or not session_id:
+        #     return jsonify({"message": "Missing token or session", "success": False}), 400
+        #
+        # if exist.access_token != access_token:
+        #     return ({"success": False,
+        #              "message": "Invalid access token"}), 401
+        #
+        # if exist.session_id != session_id:
+        #     return ({"success": False,
+        #              "message": "Session mismatch or invalid session"}), 403
+        #
+        # if hasattr(exist, 'expiry_time') and exist.expiry_time:
+        #     if datetime.datetime.now() > exist.expiry_time:
+        #         return ({"success": False,
+        #                  "message": "Access token has expired",
+        #                  "token": "expired"}), 401
 
         if not all([admin_uid, coupon_code]):
             return jsonify({"error": "admin_uid and coupon data are required"}), 400
 
         if not all([coupon_code, product_name]):
-            return jsonify({"error": "Coupon code and product_id are required"}), 400
+            return jsonify({"error": "Coupon code and product name are required"}), 400
+
         product = Product.objects(product_name = product_name).first()
+        print(data['off_percent'])
 
         original_amount = product.original_amt
         discount_amount = original_amount * percent/100
+        now = datetime.datetime.now()
+        expiry = now + datetime.timedelta(days=15)
         coupon_data = {"coupon_code" : coupon_code,
                        "product_id" : product.uid,
                        "validity_till" : validity_till,
                        "off_percent" : percent,
                        "discount_amt" : discount_amount,
                        "original_amt" : original_amount,
-                       "description" : desc_text
+                       "description" : desc_text,
+                       "end_date" : expiry
                        }
         product = ProductDiscounts.objects(admin_uid=admin_uid).first()
         if not product:
             product = ProductDiscounts(admin_uid=admin_uid, coupons=[])
 
         for coupon in product.coupons:
-            if coupon.coupon_code.lower() == coupon_code.lower():
+            if coupon['coupon_code'].lower() == coupon_code.lower():
                 return jsonify({"error": "Coupon code already exists"}), 400
 
         ProductDiscounts.objects(admin_uid=admin_uid).update(

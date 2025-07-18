@@ -1,6 +1,6 @@
 from flask import request, jsonify
 import datetime
-from main_app.models.admin.discount_coupon_model import ProductDiscounts, DiscountCoupon
+from main_app.models.admin.discount_coupon_model import ProductDiscounts
 import logging
 from main_app.models.admin.admin_model import Admin
 from main_app.models.admin.special_offer_model import SpecialOffer, Offer

@@ -1,17 +1,12 @@
-from mongoengine import StringField, Document, ListField ,FloatField, BooleanField, EmbeddedDocument, EmbeddedDocumentField
+from mongoengine import StringField, Document, ListField, FloatField, BooleanField, EmbeddedDocument, \
+    EmbeddedDocumentField, IntField, DictField
 import datetime
 
 class Product(Document):
-    uid = StringField(required=True, unique=True)
-    product_name = StringField(required=True)
-    original_amt = FloatField(required=True)
-    short_desc = StringField(required=True)
-    image = StringField()
-    reward_type = StringField()
-    admin_uid = StringField(required=True)
+    admin_uid = StringField(required=True, unique=True)
+    offers = ListField(DictField())
 
     meta = {"db_alias" : "admin-db", "collection" : "product"}
-
 
 # class Product(EmbeddedDocument):
 #     product_id = StringField(required=True, unique=True)

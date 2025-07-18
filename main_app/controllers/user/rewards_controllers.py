@@ -62,38 +62,36 @@ def win_voucher(user_id):
             logger.error(f"Reward profile not found for user_id: {user_id}")
             return jsonify({'error': 'Reward profile not found'}), 404
 
-        # Get eligible products with live offers
         products = ProductDiscounts.objects(admin_uid = user.admin_uid).first()
-
-        print(products)
 
         valid_coupons = []
 
         for coupon in products.coupons:
-            if coupon.end_date and coupon.end_date >= datetime.datetime.now():
+            if coupon['end_date'] and coupon['end_date'] >= datetime.datetime.now():
                 valid_coupons.append(coupon)
         won_product = random.choice(valid_coupons)
-        print(won_product)
 
         if not won_product['coupon_code']:
             logger.error(f"Product {won_product.product_name} has no voucher_code generated.")
             return jsonify({'error': 'This offer is not properly configured'}), 500
 
         for v in reward.discount_coupons:
-            if v['coupon_code'] == won_product.voucher_code:
+            if v['voucher_code'] == won_product['coupon_code']:
                 already_has_voucher = True
                 if already_has_voucher :
                     return jsonify({"message" : "Already won voucher"})
 
         now = datetime.datetime.now()
         expiry = now + datetime.timedelta(days=7)
+        print(won_product)
 
         voucher_data = {
-            "voucher_code": won_product.coupon_code,
-            "product_id": won_product.product_id,
-            "discounted_amt": won_product.discount_amt,
-            "original_amt": won_product.original_amt,
-            "off_percent": won_product.off_percent,
+            "voucher_code": won_product['coupon_code'],
+            "product_id": won_product['product_id'],
+            "discounted_amt": won_product['discount_amt'],
+            "original_amt": won_product['original_amt'],
+            "off_percent": won_product['off_percent'],
+            "offer_desc" : won_product['description'],
             "status": "active",
             "redeemed": False
         }
@@ -101,14 +99,14 @@ def win_voucher(user_id):
         reward.discount_coupons.append(voucher_data)
         reward.total_vouchers += 1
         reward.unused_vouchers += 1
-        reward.reward_history.append({
-            "action": "voucher_won",
-            "voucher_code": won_product.coupon_code,
-            "timestamp": now
-        })
+        # reward.reward_history.append({
+        #     "action": "voucher_won",
+        #     "voucher_code": won_product.coupon_code,
+        #     "expiry": now
+        # })
         reward.save()
 
-        logger.info(f"User {user_id} won voucher {won_product.coupon_code}")
+        logger.info(f"User {user.username} won voucher {won_product['coupon_code']}")
         return jsonify({
             "message": "Congratulations! You won a voucher.",
             "voucher": voucher_data

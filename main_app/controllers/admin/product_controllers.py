@@ -76,77 +76,14 @@ def add_product():
             original_amt = float(original_amt)
          except ValueError: 
             return jsonify({"message": "Amount must be numeric"}), 400
-    
-        #   # Convert date
-        #  visibility_date = None
-        #  if visibility_till:
-        #     visibility_date = parse_date_flexible(visibility_till)
-        #     if not visibility_date:
-        #         return jsonify({"message": "Date must be in DD/MM/YYYY or DD-MM-YYYY format"}), 400
-       
-        #   # Image upload
-        #  image = request.files.get("image")
-        #  image_url = None
-        #  if image:
-        #     filename = secure_filename(image.filename)
-        #     image_path = os.path.join(UPLOAD_FOLDER, filename)
-        #     image.save(image_path)
-        #     image_url = f"/{image_path}"
-        #  offer_data = {}
-        #  if apply_offer:
-        #     offer_name = data.get("offer_name")
-        #     one_liner = data.get("one_liner")
-        #     button_txt = data.get("button_txt")
-        #     off_percent = data.get("off_percent")
-        #     start_date = data.get("start_date")
-        #     expiry_date = data.get("expiry_date")
-        #     offer_type = data.get("offer_type")
 
-        #     if not all([offer_name, one_liner, button_txt, off_percent, start_date, expiry_date, offer_type]):
-        #         return jsonify({"message": "Missing offer fields"}), 400
-
-        #     try:
-        #         off_percent = float(off_percent)
-        #     except ValueError:
-        #         return jsonify({"message": "off_percent must be numeric"}), 400
-
-        #     start_date_parsed = parse_date_flexible(start_date)
-        #     expiry_date_parsed = parse_date_flexible(expiry_date)
-
-        #     if not start_date_parsed or not expiry_date_parsed:
-        #         return jsonify({"message": "Invalid offer date format"}), 400
-
-        #    #  Determine offer status based on date
-        #     current_date = datetime.datetime.now().date()
-
-        #     if start_date_parsed.date() > current_date:
-        #         offer_status = "Upcoming"
-        #     elif start_date_parsed.date() <= current_date <= expiry_date_parsed.date():
-        #         offer_status = "Live"
-        #     else:
-        #          offer_status = "Pause"
-
-        #   #  Offer Data
-        #     offer_data = {
-        #         "offer_name": offer_name,
-        #         "one_liner": one_liner,
-        #         "button_txt": button_txt,
-        #         "off_percent": off_percent,
-        #         "start_date": start_date_parsed,
-        #         "expiry_date": expiry_date_parsed,
-        #         "offer_type":offer_type,
-        #         "offer_status": offer_status
-        #     }
+         admin_exist = Product.objects(admin_uid = admin_uid).first()
 
          # Save product
          product = Product(
-            uid = generate_product_uid(),
-            product_name = product_name,
-            original_amt = original_amt,
-            short_desc=short_desc,
-            image = image,
-            reward_type = reward_type,
-            admin_uid=admin_uid,
+            admin_uid = generate_product_uid(),
+            offers = [],
+
             # discounted_amt = discounted_amt,
             # status = status,
             # visibility_till = visibility_date,

@@ -110,43 +110,20 @@ def redeem(card_type):
                     "success": True
                 }), 200
 
-        # if card_type == "discount-coupon":
-        #     coupon_code = data.get('coupon_code')
-        #     print(coupon_code)
-        #
-        #     if not user_id or not coupon_code:
-        #         logger.warning("Missing required parameters in redeem request")
-        #         return jsonify({'error': 'user_id and coupon_code are required'}), 400
-        #
-        #     reward = Reward.objects(user_id=user_id).first()
-        #     if not reward:
-        #         logger.error(f"Reward not found for user_id: {user_id}")
-        #         return jsonify({'error': 'Reward profile not updated'}), 404
-        #
-        #     won_coupons = reward.discount_coupons
-        #
-        #     for coupon in won_coupons:
-        #         if coupon.get('voucher_code') == coupon_code:
-        #             reward.update(
-        #                 pull__discount_coupons={"voucher_code": coupon_code}
-        #             )
-        #             break
-        #
-        #         expiry = coupon.get('expiry_date')
-        #
-        #         if expiry < datetime.datetime.now():
-        #             return jsonify({"message": "This Coupon  has expired", "success": False}), 400
-        #
-        #         reward.update(
-        #             dec__unused_vouchers=1,
-        #             inc__used_vouchers=1
-        #         )
-        #         reward.save()
-        #
-        #         return jsonify({
-        #             "congrats_text": "Congratulations! You have claimed your Discount Voucher",
-        #             "success": True
-        #         }), 200
+        if card_type == "offers":
+            off_percent = data.get("off_percent")
+            product_id = data.get("product_id")
+
+            if not user_id or not off_percent or not product_id:
+                logger.warning("Missing required parameters in redeem request")
+                return jsonify({'error': 'Missing required data.'}), 400
+
+
+
+            # return jsonify({
+            #     "congrats_text": "Congratulations! You have claimed your Discount Voucher",
+            #     "success": True
+            # }), 200
         #
         # if card_type == "discount-coupon":
         #     coupon_code = data.get('coupon_code')

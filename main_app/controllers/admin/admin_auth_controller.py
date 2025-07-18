@@ -126,8 +126,7 @@ def initialize_admin_data(admin_uid):
     ReferralReward(
         admin_uid=admin_uid
     ).save()
-    return "done"
-
+    return "done", 200
 
 def handle_authentication():
     data = request.get_json()
@@ -153,4 +152,4 @@ def handle_authentication():
 
     return jsonify({"mode": access_token,
                     "log_alt": session_id,
-                    "success" : True})
+                    "success" : True}),200
