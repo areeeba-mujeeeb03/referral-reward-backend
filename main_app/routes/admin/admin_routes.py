@@ -131,7 +131,7 @@ def update_add_product(uid):
 
 # ==================
 
-#  Add offer
+# 8.  Add offer
 
 # ===================
 
@@ -147,7 +147,7 @@ def admin_add_offer():
 
 # ==========================
 
-# 8. Update Offers
+# 9. Update Offers
 
 # ==========================
 
@@ -163,7 +163,7 @@ def admin_update_offer():
 
 # ===========================
 
-# 9. Exciting Prizes
+# 10. Exciting Prizes
 
 # ===========================
 
@@ -178,7 +178,7 @@ def admin_exciting_prizes():
 
 # ===============
 
-# 10. Check user prize eligibility meteors
+# 11. Check user prize eligibility meteors
 
 # ===============
 
@@ -191,7 +191,7 @@ def prize_check_eligibility():
 
 # ========================
 
-# 11. How It Work
+# 12. How It Work
 
 # ========================
 
@@ -205,7 +205,7 @@ def admin_how_it_work():
 
 # ==========================
 
-# 12. Advertisement Card
+# 13. Advertisement Card
 
 # ==========================
 
@@ -220,7 +220,7 @@ def admin_advertisement_card():
 
 # =======================================
 
-# 13. Participant table
+# 14. Participant table
 
 # =======================================
 
@@ -231,7 +231,7 @@ def admin_reward_participant_table():
 
 # ===============
 
-# 14. Error
+# 15. Error
 
 # ===============
 
@@ -250,7 +250,7 @@ def fetch_stats():
     return dashboard_stats()
 # =============
 
-# 16. Email save
+# 17. Email save
 
 # =============
 @admin_bp.route("/admin/send-email", methods = ["POST"])
@@ -263,7 +263,7 @@ def admin_send_email():
 
 # ==============
 
-# 17. Profile update of ADMIN
+# 18. Profile update of ADMIN
 
 # ==============
 
@@ -277,7 +277,7 @@ def edit_profile():
 
 # ==============
 
-# 18. Add new FAQ
+# 19. Add new FAQ
 
 # ==============
 
@@ -288,7 +288,7 @@ def add_new_faq():
 
 # ==============
 
-# 19. Update existing FAQ
+# 20. Update existing FAQ
 
 # ==============
 
@@ -300,7 +300,7 @@ def update_faq():
 
 # ==============
 
-# 20. Delete Existing FAQ
+# 21. Delete Existing FAQ
 
 # ==============
 
@@ -311,7 +311,7 @@ def remove_faq():
 
 # ==============
 
-# 21. View messages sent by users
+# 22. View messages sent by users
 
 # ==============
 
@@ -322,7 +322,7 @@ def view_msgs():
 
 # ==============
 
-# 22. Generate invitation link with expiry
+# 23. Generate invitation link with expiry
 
 # ==============
 
@@ -333,7 +333,7 @@ def generate_link():
 
 # ==============
 
-# 23. Generate invitation link with expiry
+# 24. Generate invitation link with expiry
 
 # ==============
 
@@ -344,7 +344,7 @@ def special_link_referral():
 
 # ==============
 
-# 24. Sharing platforms
+# 25. Sharing platforms
 
 # ==============
 
@@ -355,7 +355,7 @@ def sharing_apps():
 
 # ==============
 
-# 25. Referral reward
+# 26. Referral reward
 
 # ==============
 
@@ -366,7 +366,7 @@ def set_referral_rewards():
 
 # ==============
 
-# 26. Add New Galaxy
+# 27. Add New Galaxy
 
 # ==============
 
@@ -377,7 +377,7 @@ def add_galaxy():
 
 # ==============
 
-# 27. Add New Milestone
+# 28. Add New Milestone
 
 # ==============
 
@@ -388,7 +388,7 @@ def add_milestone():
 
 # ==================
 
-# 28. Delete milestone
+# 29. Delete milestone
 
 # ===================
 
@@ -399,7 +399,7 @@ def delete_milestone():
 
 # =======================
 
-# 29. Push Notification
+# 30. Push Notification
 
 # ========================
 
@@ -411,7 +411,7 @@ def admin_push_notification():
 
 # ===========================
 
-# 30. List of Notification
+# 31. List of Notification
 
 # ============================
 
@@ -423,7 +423,7 @@ def admin_list_push_notification():
 
 # =================
 
-# 31. Update Notification
+# 32. Update Notification
 
 # ================
 
@@ -436,7 +436,7 @@ def admin_update_push_notification(notification_id):
 
 # =================
 
-# 32. Delete Notification
+# 33. Delete Notification
 
 # ================
 
@@ -448,7 +448,7 @@ def admin_delete_push_notification(notification_id):
 
 # ==============
 
-# 33. Discount Coupons Generation
+# 34. Discount Coupons Generation
 
 # ==============
 
@@ -460,7 +460,7 @@ def admin_create_discount_coupons():
 
 # ==============
 
-# 34. Discount Coupons Generation
+# 35.  Update Discount Coupons Generation
 
 # ==============
 
@@ -472,7 +472,7 @@ def update_coupons():
 
 # ==============
 
-# 35. Discount Coupons Generation
+# 36. Discount Coupons Generation
 
 # ==============
 
@@ -484,7 +484,7 @@ def remove_discount_coupons():
 
 # ===================
 
-# 36. Exclusive Perks
+# 37. Exclusive Perks
 
 # ====================
 
@@ -497,7 +497,7 @@ def admin_create_exclusive_perks():
 
 # ===================
 
-#  37. Footer section
+# 38. Footer section
 
 # ==================
 
@@ -508,7 +508,7 @@ def admin_create_footer():
 
 # ===================
 
-#  37. Authentications
+# 39. Authentications
 
 # ==================
 
@@ -521,6 +521,12 @@ def authentication():
     """
     return handle_authentication()
 
+# =====
+
+# 40.
+
+# =====
+
 @admin_bp.route("/admin/graph-data/<admin_uid>", methods = ["POST"])
 def graph(admin_uid):
     """
@@ -530,7 +536,11 @@ def graph(admin_uid):
     """
     return graph_data(admin_uid)
 
+# =======
 
+# 41.
+
+# ===========
 @admin_bp.route('/admin/special-offer', methods = ['POST'])
 def add_special_offer():
     return create_special_offer()

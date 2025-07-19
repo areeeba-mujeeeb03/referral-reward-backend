@@ -19,7 +19,8 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 def add_exciting_prizes():
     try:
         logger.info("Add Exciting Prizes API called")
-        data = request.form
+        data = request.get_json()
+        # data = request.form
         access_token = data.get("mode")
         session_id = data.get("log_alt")
         title = data.get("title")
@@ -52,7 +53,7 @@ def add_exciting_prizes():
         #                  "token": "expired"}), 401
 
         #  Validation fields
-        if not all ([title , term_conditions, admin_uid, required_meteors]):
+        if not all ([title , term_conditions, admin_uid, required_meteors, product_uid]):
           logger.warning("Missing required fields.")
           return jsonify({"message": "All fields are required"}), 400
         

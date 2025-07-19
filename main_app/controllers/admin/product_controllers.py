@@ -118,32 +118,31 @@ def update_product(uid):
   try:
      logger.info(f"Update Product API called for UID: {uid}")
      data = request.get_json()
-     data = request.form
      admin_uid = data.get("admin_uid")
      access_token = data.get("mode")
      session_id = data.get("log_alt")
 
      exist = Admin.objects(admin_uid=admin_uid).first()
 
-     if not exist:
-         return jsonify({"success": False, "message": "User does not exist"})
+    #  if not exist:
+    #      return jsonify({"success": False, "message": "User does not exist"})
 
-     if not access_token or not session_id:
-         return jsonify({"message": "Missing token or session", "success": False}), 400
+    #  if not access_token or not session_id:
+    #      return jsonify({"message": "Missing token or session", "success": False}), 400
 
-     if exist.access_token != access_token:
-         return ({"success": False,
-                  "message": "Invalid access token"}), 401
+    #  if exist.access_token != access_token:
+    #      return ({"success": False,
+    #               "message": "Invalid access token"}), 401
 
-     if exist.session_id != session_id:
-         return ({"success": False,
-                  "message": "Session mismatch or invalid session"}), 403
+    #  if exist.session_id != session_id:
+    #      return ({"success": False,
+    #               "message": "Session mismatch or invalid session"}), 403
 
-     if hasattr(exist, 'expiry_time') and exist.expiry_time:
-         if datetime.datetime.now() > exist.expiry_time:
-             return ({"success": False,
-                      "message": "Access token has expired",
-                      "token": "expired"}), 401
+    #  if hasattr(exist, 'expiry_time') and exist.expiry_time:
+    #      if datetime.datetime.now() > exist.expiry_time:
+    #          return ({"success": False,
+    #                   "message": "Access token has expired",
+    #                   "token": "expired"}), 401
 
      if not data and not request.files:
             logger.warning("No fields or files provided in request")
@@ -203,7 +202,7 @@ def add_offer():
      admin_uid = data.get("admin_uid")
      image = data.get("image")
 
-     if not offer_name and not one_liner and not button_txt and not off_percent and not  start_date and not expiry_date:
+     if not offer_name and not one_liner and not button_txt and not off_percent and not  start_date and not expiry_date and not admin_uid and not product_id:
          return jsonify({"message": "All fields are required"}), 400
 
      if not start_date or not expiry_date:
@@ -273,7 +272,7 @@ def update_offer():
         logger.info("Update Offer API called")
         data = request.get_json()
         offer_uid = data.get("offer_uid")
-        data = request.form
+        # data = request.form
         admin_uid = data.get("admin_uid")
         access_token = data.get("mode")
         session_id = data.get("log_alt")

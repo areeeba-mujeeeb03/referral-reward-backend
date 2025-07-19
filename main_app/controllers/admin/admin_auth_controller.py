@@ -27,9 +27,9 @@ def admin_register():
             if field not in data or not data[field].strip():
                 return jsonify({"message": f"{field} is required"}), 400
 
-
+      email = data["email"].lower()
      # Additional field-specific validation
-      email_validation = validate_email_format(data["email"])
+      email_validation = validate_email_format(email)
       if email_validation:
             return email_validation
 
@@ -46,7 +46,7 @@ def admin_register():
       if Admin.objects(username=data["username"]).first():
         return jsonify({"message": get_error("username_exists")}), 400
     
-      if Admin.objects(email=data["email"]).first():
+      if Admin.objects(email=email).first():
         return jsonify({"message": get_error("email_exists")}), 400
 
       if Admin.objects(mobile_number=data["mobile_number"]).first():
@@ -56,7 +56,7 @@ def admin_register():
 
       user = Admin(
         username=data["username"],
-        email=data["email"],
+        email=email,
         mobile_number=data["mobile_number"],
         password=hashed_password
       )
