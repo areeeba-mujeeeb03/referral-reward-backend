@@ -27,7 +27,11 @@ def admin_register():
             if field not in data or not data[field].strip():
                 return jsonify({"message": f"{field} is required"}), 400
 
-      email = data["email"].lower()
+      email = data["email"]
+      #  Check for lowercase email
+      if email != email.lower():
+            return jsonify({"message": "Email must be in lowercase only"}), 400
+      
      # Additional field-specific validation
       email_validation = validate_email_format(email)
       if email_validation:

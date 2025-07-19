@@ -4,15 +4,16 @@ import datetime
 class Product(Document):
     admin_uid = StringField(required=True, unique=True)
     products = ListField(DictField())
+
+    meta = {"db_alias" : "admin-db", "collection" : "product"}
+
+    # product_uid = StringField(required=True)
     # product_name = StringField(required=True)
     # original_amt = FloatField(required=True)
     # short_desc = StringField(required=True)
     # image = StringField()
     # reward_type = StringField()
     # admin_uid = StringField(required=True)
-
-    meta = {"db_alias" : "admin-db", "collection" : "product"}
-
 
 
 

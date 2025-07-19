@@ -119,14 +119,14 @@ def admin_add_product():
 
 # ========================
 
-@admin_bp.route("/admin/update-product/<string:uid>", methods = ["PUT"])
-def update_add_product(uid):
+@admin_bp.route("/admin/update-product/<string:product_uid>", methods = ["PUT"])
+def update_add_product(product_uid):
     """
     Updates an existing product in the database.
     Expects: JSON body with updated product details.
     Returns: Success message or error response.
     """
-    return update_product(uid)
+    return update_product(product_uid)
 
 
 # ==================

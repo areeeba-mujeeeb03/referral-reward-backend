@@ -114,9 +114,9 @@ def add_product():
 
 # Update Product 
 
-def update_product(uid):
+def update_product(product_uid):
   try:
-     logger.info(f"Update Product API called for UID: {uid}")
+     logger.info(f"Update Product API called for UID: {product_uid}")
      data = request.get_json()
      admin_uid = data.get("admin_uid")
      access_token = data.get("mode")
@@ -144,37 +144,67 @@ def update_product(uid):
     #                   "message": "Access token has expired",
     #                   "token": "expired"}), 401
 
-     if not data and not request.files:
+     if not data:
             logger.warning("No fields or files provided in request")
             return jsonify({"message": "No fields provided for update"}), 400
 
-     product = Product.objects(uid=uid).first()
-     if not product:
-        logger.warning(f"Product not found for UID: {uid}")
+     product_doc = Product.objects(admin_uid=admin_uid, products__product_uid=product_uid).first()
+     if not product_doc:
+        logger.warning(f"Product not found for UID: {product_uid}")
         return jsonify({"message": "Product not found"}), 400
+     
+     updated = False
+     for prod in product_doc.products:
+            if prod.get("product_uid") == product_uid:
+                if data.get("product_name"):
+                    prod["product_name"] = data.get("product_name")
+                    updated = True
+                if data.get("original_amt"):
+                    try:
+                        prod["original_amt"] = float(data.get("original_amt"))
+                        updated = True
+                    except ValueError:
+                        return jsonify({"message": "Amount must be numeric"}), 400
+                if data.get("short_desc"):
+                    prod["short_desc"] = data.get("short_desc")
+                    updated = True
+                if data.get("reward_type"):
+                    prod["reward_type"] = data.get("reward_type")
+                    updated = True
+                if data.get("image"):
+                    prod["image"] = data.get("image")
+                    updated = True
 
-     if data.get("product_name"):
-        product.product_name = data.get("product_name")
-
-     if data.get("original_amt"):
-        product.original_amt = float(data.get("original_amt"))
-
-     if data.get("short_desc"):
-        product.short_desc = data.get("short_desc")   
-
-     if data.get("reward_type"):
-        product.reward_type = data.get("reward_type")
-
-     if data.get("image"):
-         product.image = data.get("image")
-
-     product.save()
-     logger.info(f"Product updated successfully with UID: {product.uid}")
-     return jsonify({"success": "true" , "message": "Product updated", "uid": str(product.uid)}), 200
+     if updated:
+            product_doc.save()
+            logger.info(f"Product updated successfully with UID: {product_uid}")
+            return jsonify({"success": "true", "message": "Product updated", "uid": product_uid}), 200
+     else:
+            return jsonify({"message": "No valid fields to update"}), 400
 
   except Exception as e:
      logger.error(f"Product update failed : {str(e)}")
      return jsonify({"errro": "Internal server error"}), 500
+
+    #  if data.get("product_name"):
+    #     product_doc.product_name = data.get("product_name")
+
+    #  if data.get("original_amt"):
+    #     product_doc.original_amt = float(data.get("original_amt"))
+
+    #  if data.get("short_desc"):
+    #     product_doc.short_desc = data.get("short_desc")   
+
+    #  if data.get("reward_type"):
+    #     product_doc.reward_type = data.get("reward_type")
+
+    #  if data.get("image"):
+    #      product_doc.image = data.get("image")
+
+    #  product_doc.save()
+    #  logger.info(f"Product updated successfully with UID: {product_doc.product_uid}")
+    #  return jsonify({"success": "true" , "message": "Product updated", "uid": str(product_doc.product_uid)}), 200
+
 
 
 
