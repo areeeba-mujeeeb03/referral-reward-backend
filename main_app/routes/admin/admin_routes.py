@@ -1,6 +1,7 @@
 from flask import Blueprint
 from main_app.controllers.admin.admin_auth_controller import admin_register, handle_authentication
 from main_app.controllers.admin.admin_auth_controller import handle_admin_login
+from main_app.controllers.admin.campaign_controllers import create_new_campaign
 from main_app.controllers.admin.discount_coupons_controllers import create_discount_coupons, update_discount_coupon, \
     delete_discount_coupon
 from main_app.controllers.admin.forgotpassword_controllers import forgot_otp_email, verify_otp, reset_password
@@ -614,3 +615,18 @@ def add_special_offer():
     Returns: Password reset confirmation response
     """
     return create_special_offer()
+
+# ===================
+
+# 40. Create Campaign
+
+# ==================
+
+@admin_bp.route('/admin/create-campaign', methods = ['POST'])
+def create_campaign():
+    """
+    Handle password reset using code(otp) from email
+    Accepts: POST request with new password and reset
+    Returns: Password reset confirmation response
+    """
+    return create_new_campaign()

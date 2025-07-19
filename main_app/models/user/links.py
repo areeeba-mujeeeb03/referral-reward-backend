@@ -6,5 +6,11 @@ class Link(Document):
     expiry = DateTimeField()
     sent_at  = DateTimeField()
     changed_on = DateTimeField()
+    expiry_time = DateTimeField()
+    otp = IntField()
+    otp_expires_at = DateTimeField()
+    otp_requested_at = DateTimeField()
+    link_expiry_time = IntField()
+    generation_time = IntField()
 
     meta = {"db" : "user-db" ,"collection" : "links"}

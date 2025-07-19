@@ -63,7 +63,7 @@ def win_voucher(user_id):
             logger.error(f"Reward profile not found for user_id: {user_id}")
             return jsonify({'error': 'Reward profile not found'}), 404
 
-        products = ProductDiscounts.objects(admin_uid = user.admin_uid).first()
+        products = ProductDiscounts.objects(admin_uid = user.admin_uid, program_id = user.program_id).first()
 
         valid_coupons = []
 
@@ -87,7 +87,7 @@ def win_voucher(user_id):
         print(won_product)
 
         voucher_data = {
-            "voucher_code": won_product['coupon_code'],
+            "coupon_code": won_product['coupon_code'],
             "product_id": won_product['product_id'],
             "discounted_amt": won_product['discount_amt'],
             "original_amt": won_product['original_amt'],

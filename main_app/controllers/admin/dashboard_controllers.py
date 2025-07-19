@@ -1,11 +1,9 @@
 import datetime
-from itertools import count
-
 from flask import request, jsonify
 import logging
 from main_app.models.admin.admin_model import Admin
 from main_app.models.admin.links import AppStats
-from main_app.models.admin.participants_model import UserData
+from main_app.models.admin.participants_model import Participants
 from main_app.models.user.user import User
 from main_app.models.user.referral import Referral
 from main_app.models.user.reward import Reward
@@ -46,15 +44,15 @@ def dashboard_stats():
                      "token": "expired"}), 401
 
     if exist:
-        all_user_data = UserData.objects(admin_uid = admin_uid).first()
+        all_user_data = Participants.objects(admin_uid = admin_uid).first()
         apps_data = AppStats.objects(admin_uid = admin_uid).first()
         sharing_apps_data = []
         if apps_data:
             for app_data in apps_data.apps:
                 userdata = {
-                    "app_name": app_data.get("app_name"),
-                    "total_sent": app_data.get("total_sent"),
-                    "successful_registered": app_data.get("successful_registered"),
+                    "app_name": app_data.get("platform"),
+                    "total_sent": app_data.get("sent"),
+                    "successful_registered": app_data.get("successful"),
                     "referral_leads": app_data.get("accepted")
                 }
                 sharing_apps_data.append(userdata)
@@ -72,7 +70,6 @@ def dashboard_stats():
                 "purchases_earnings" : all_user_data.signup_earnings,
                 "milestones_earnings" : all_user_data.milestones_earnings,
                 "total_earnings" :all_user_data.milestones_earnings + all_user_data.signup_earnings + all_user_data.referral_earnings + all_user_data.game_earnings}
-
         fields_to_encode = ["total_participants","total_referrals","referral_leads","completed_referrals",
                             "currencies_converted","vouchers_won","coupons_used",
                             "sharing_apps_data","games_earnings","referral_earning",
@@ -232,7 +229,6 @@ def error_table():
         for error in errors:
             error_dict = error.to_mongo().to_dict()
             error_dict.pop('_id', None)
-            response = error_dict
             all_errors.append(error_dict)
 
         return jsonify({
@@ -248,5 +244,3 @@ def graph_data(admin_uid):
     registered_user = User.objects(admin_uid = admin_uid).order_by('created_at')
 
     return jsonify({"registrations": registered_user, "success" : True}),200
-
-

@@ -23,6 +23,7 @@ class FAQ(Document):
 
 class Contact(Document):
     admin_uid = StringField(required=True)
+    program_id = StringField()
     user_id = StringField(required= True)
     username = StringField(required=True)
     email = EmailField(required=True)

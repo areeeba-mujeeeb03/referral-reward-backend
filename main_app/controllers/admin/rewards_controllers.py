@@ -1,12 +1,17 @@
 import datetime
 from flask import request, jsonify
 from main_app.models.admin.links import ReferralReward
-from main_app.models.admin.galaxy_model import Galaxy
+from main_app.models.admin.galaxy_model import Galaxy, GalaxyProgram, Milestone
 from main_app.models.admin.admin_model import Admin
 from main_app.models.admin.email_model import EmailTemplate
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+import logging
+
+# Configure logging for better debugging and monitoring
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def set_reward_settings():
     try:
@@ -95,229 +100,91 @@ def send_milestone_email(email, email_template_type):
         return True
 
     except Exception as e:
-        print(f"Error sending email: {str(e)}")
+        logger.error(f"Error sending email: {str(e)}")
         return False
 
 def create_galaxy():
     try:
         data = request.get_json()
         galaxy_name = data.get("galaxy_name")
+        program_id = data.get("program_id")
         admin_uid = data.get("admin_uid")
-        access_token = data.get("mode")
-        session_id = data.get("log_alt")
         total_milestones = data.get("total_milestones")
         highest_reward = data.get("highest_reward")
         stars = data.get("stars")
 
-        exist = Admin.objects(admin_uid=admin_uid).first()
+        admin = Admin.objects(admin_uid=admin_uid).first()
+        if not admin:
+            return jsonify({"success": False, "message": "User does not exist"}), 404
 
-        if not exist:
-            return jsonify({"success": False, "message": "User does not exist"})
+        galaxy_program = GalaxyProgram.objects(program_id=program_id).first()
+        if not galaxy_program:
+            galaxy_program = GalaxyProgram(program_id=program_id, admin_uid=admin_uid, galaxies=[])
 
-        if not access_token or not session_id:
-            return jsonify({"message": "Missing token or session", "success": False}), 400
+        for galaxy in galaxy_program.galaxies:
+            if galaxy.galaxy_name.lower() == galaxy_name.lower():
+                return jsonify({"message": "Galaxy already exists in this program"}), 400
 
-        if exist.access_token != access_token:
-            return ({"success": False,
-                     "message": "Invalid access token"}), 401
+        galaxy_id = f"GXY_{len(galaxy_program.galaxies) + 1}"
 
-        if exist.session_id != session_id:
-            return ({"success": False,
-                     "message": "Session mismatch or invalid session"}), 403
-
-        if hasattr(exist, 'expiry_time') and exist.expiry_time:
-            if datetime.datetime.now() > exist.expiry_time:
-                return ({"success": False,
-                         "message": "Access token has expired",
-                         "token": "expired"}), 401
-
-        if not galaxy_name or not admin_uid:
-            return jsonify({"message": "Galaxy name and admin_uid are required"}), 400
-
-        existing = Galaxy.objects(galaxy_name=galaxy_name, admin_uid=admin_uid).first()
-        if existing:
-            return jsonify({"message": "Galaxy already exists"}), 400
-
-        galaxy = Galaxy(
+        new_galaxy = Galaxy(
+            galaxy_id=galaxy_id,
             galaxy_name=galaxy_name,
             total_meteors_required=0,
+            highest_reward=highest_reward,
             total_milestones=total_milestones,
-            all_milestones=[],
-            admin_uid=admin_uid,
-            highest_reward = highest_reward,
-            stars_to_be_achieved = stars
+            stars_to_be_achieved=stars,
+            milestones=[]
         )
-        galaxy.save()
-        return jsonify({"message": "Galaxy created successfully","success" : True}), 201
+        galaxy_program.galaxies.append(new_galaxy)
+        galaxy_program.save()
+        return jsonify({"message": "Galaxy created successfully", "success": True}), 201
 
     except Exception as e:
-        print(str(e))
-        return jsonify({"message": "Galaxy creation failed"}), 500
+        return jsonify({"message": f"Galaxy creation failed: {str(e)}"}), 500
+
 
 def add_new_milestone():
     try:
         data = request.get_json()
         admin_uid = data.get("admin_uid")
-        access_token = data.get("mode")
-        session_id = data.get("log_alt")
+        program_id = data.get("program_id")
         galaxy_name = data.get("galaxy_name")
         milestone_name = data.get("milestone_name")
         milestone_reward = data.get("milestone_reward")
         meteors_required_to_unlock = int(data.get("meteors_required_to_unlock", 0))
         milestone_description = data.get("milestone_description")
 
-        exist = Admin.objects(admin_uid=admin_uid).first()
+        admin = Admin.objects(admin_uid=admin_uid).first()
+        if not admin:
+            return jsonify({"success": False, "message": "User does not exist"}), 404
 
-        if not exist:
-            return jsonify({"success": False, "message": "User does not exist"})
+        program = GalaxyProgram.objects(program_id=program_id, admin_uid=admin_uid).first()
+        if not program:
+            return jsonify({"message": "Program not found"}), 404
 
-        if not access_token or not session_id:
-            return jsonify({"message": "Missing token or session", "success": False}), 400
+        for galaxy in program.galaxies:
+            if galaxy.galaxy_name == galaxy_name:
+                for m in galaxy.milestones:
+                    if m.milestone_name == milestone_name:
+                        return jsonify({"message": "Milestone already exists"}), 400
 
-        if exist.access_token != access_token:
-            return ({"success": False,
-                     "message": "Invalid access token"}), 401
+                milestone_id = f"MS_{len(galaxy.milestones) + 1}"
+                new_milestone = Milestone(
+                    milestone_id=milestone_id,
+                    milestone_name=milestone_name,
+                    milestone_reward=milestone_reward,
+                    meteors_required_to_unlock=meteors_required_to_unlock,
+                    milestone_description=milestone_description
+                )
+                galaxy.milestones.append(new_milestone)
+                galaxy.total_milestones = len(galaxy.milestones)
+                galaxy.total_meteors_required += meteors_required_to_unlock
 
-        if exist.session_id != session_id:
-            return ({"success": False,
-                     "message": "Session mismatch or invalid session"}), 403
+                program.save()
+                return jsonify({"message": "Milestone added successfully"}), 200
 
-        if hasattr(exist, 'expiry_time') and exist.expiry_time:
-            if datetime.datetime.now() > exist.expiry_time:
-                return ({"success": False,
-                         "message": "Access token has expired",
-                         "token": "expired"}), 401
-
-        if not all([milestone_name, milestone_reward, milestone_description, meteors_required_to_unlock]):
-            return jsonify({"message": "All milestone fields are required"}), 400
-
-        galaxy = Galaxy.objects(admin_uid=admin_uid, galaxy_name=galaxy_name).first()
-        if not galaxy:
-            return jsonify({"message": "Galaxy not found"}), 404
-
-        for m in galaxy.all_milestones:
-            if m.milestone_name == milestone_name:
-                return jsonify({"message": "Milestone with this name already exists"}), 400
-
-        milestone_id = f"GS_MID_{len(galaxy.all_milestones) + 1}"
-
-        new_milestone = {
-            "milestone_id": milestone_id,
-            "milestone_name": milestone_name,
-            "milestone_reward": milestone_reward,
-            "meteors_required_to_unlock": meteors_required_to_unlock,
-            "milestone_description": milestone_description
-        }
-
-        galaxy.update(push__all_milestones=new_milestone)
-        galaxy.update(
-            total_meteors_required=meteors_required_to_unlock,
-            set__total_milestones=len(galaxy.all_milestones) + 1
-        )
-
-        return jsonify({"message": "Milestone added successfully"}), 200
+        return jsonify({"message": "Galaxy not found in this program"}), 404
 
     except Exception as e:
         return jsonify({"message": f"Failed to add milestone: {str(e)}"}), 500
-
-
-def update_milestone():
-    try:
-        data = request.get_json()
-        admin_uid = data.get("admin_uid")
-        access_token = data.get("mode")
-        session_id = data.get("log_alt")
-        galaxy_name = data.get("galaxy_name")
-        milestone_id = data.get("milestone_id")
-        milestone_name = data.get("milestone_name")
-        milestone_reward = data.get("milestone_reward")
-        meteors_required_to_unlock = int(data.get("meteors_required_to_unlock", 0))
-        milestone_description = data.get("milestone_description")
-
-        exist = Admin.objects(admin_uid=admin_uid).first()
-
-        if not exist:
-            return jsonify({"success": False, "message": "User does not exist"})
-
-        if not access_token or not session_id:
-            return jsonify({"message": "Missing token or session", "success": False}), 400
-
-        if exist.access_token != access_token:
-            return ({"success": False,
-                     "message": "Invalid access token"}), 401
-
-        if exist.session_id != session_id:
-            return ({"success": False,
-                     "message": "Session mismatch or invalid session"}), 403
-
-        if hasattr(exist, 'expiry_time') and exist.expiry_time:
-            if datetime.datetime.now() > exist.expiry_time:
-                return ({"success": False,
-                         "message": "Access token has expired",
-                         "token": "expired"}), 401
-
-        galaxy = Galaxy.objects(admin_uid=admin_uid, galaxy_name=galaxy_name).first()
-        if not galaxy:
-            return jsonify({"message": "Galaxy not found"}), 404
-
-        updated = False
-        for i, milestone in enumerate(galaxy.all_milestones):
-            if milestone.milestone_id == milestone_id:
-                galaxy.all_milestones[i] = {
-                    "milestone_id": milestone_id,
-                    "milestone_name": milestone_name,
-                    "milestone_reward": milestone_reward,
-                    "meteors_required_to_unlock": meteors_required_to_unlock,
-                    "milestone_description": milestone_description
-                }
-                updated = True
-                break
-        if updated:
-            galaxy.save()
-            return jsonify({"message": "Milestone updated successfully"}), 200
-        else:
-            return jsonify({"message": "Milestone not found"}), 404
-
-    except Exception as e:
-        return jsonify({"message": f"Milestone update failed: {str(e)}"}), 500
-
-def remove_milestone():
-    data = request.get_json()
-    admin_uid = data.get("admin_uid")
-    access_token = data.get("mode")
-    session_id = data.get("log_alt")
-    galaxy_name = data.get("galaxy_name")
-    milestone_name = data.get("milestone_name")
-
-    exist = Admin.objects(admin_uid=admin_uid).first()
-
-    if not exist:
-        return jsonify({"success": False, "message": "User does not exist"})
-
-    if not access_token or not session_id:
-        return jsonify({"message": "Missing token or session", "success": False}), 400
-
-    if exist.access_token != access_token:
-        return ({"success": False,
-                 "message": "Invalid access token"}), 401
-
-    if exist.session_id != session_id:
-        return ({"success": False,
-                 "message": "Session mismatch or invalid session"}), 403
-
-    if hasattr(exist, 'expiry_time') and exist.expiry_time:
-        if datetime.datetime.now() > exist.expiry_time:
-            return ({"success": False,
-                     "message": "Access token has expired",
-                     "token": "expired"}), 401
-
-    exist_galaxy = Galaxy.objects(galaxy_name=galaxy_name).first()
-    if not exist_galaxy:
-        return jsonify({"message": "Galaxy with this name does not exist"})
-
-    for milestone in exist_galaxy.all_milestones:
-        if not milestone.get("milestone_name") == milestone_name:
-            return jsonify({"message" : "milestone not found"})
-        if milestone.get("milestone_name") == milestone_name:
-           milestone_name.delete(admin_uid = admin_uid, milestone_name = milestone_name)
-        return jsonify({"message": "Milestone with this name already exists"})

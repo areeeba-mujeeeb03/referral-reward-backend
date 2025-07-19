@@ -3,7 +3,7 @@ import logging
 from main_app.controllers.user.rewards_controllers import win_voucher
 from main_app.models.admin.error_model import Errors
 from main_app.models.admin.links import Link, ReferralReward
-from main_app.models.admin.participants_model import UserData
+from main_app.models.admin.participants_model import Participants
 from main_app.models.user.reward import Reward
 from main_app.models.user.referral import Referral
 from main_app.models.user.user import User
@@ -69,7 +69,7 @@ def process_referral_code_and_reward(referral_code, new_user_id, new_username):
             reward_record.update(
                 inc__total_meteors_earned = PENDING_REFERRAL_REWARD_POINTS
             )
-            UserData.objects().first()
+            Participants.objects().first()
             if reward_record:
                 reward_record.total_meteors += PENDING_REFERRAL_REWARD_POINTS
                 reward_record.reward_history.append({
@@ -80,7 +80,7 @@ def process_referral_code_and_reward(referral_code, new_user_id, new_username):
                     "referred_on": date.strftime('%d-%m-%y'),
                     "transaction_type": "credit"})
                 reward_record.save()
-            admin = UserData.objects(admin_uid=referrer.admin_uid).first()
+            admin = Participants.objects(admin_uid=referrer.admin_uid, program_id = referrer.program_id).first()
             if admin:
                 admin.update(inc__total_referrals=1,
                              inc__referral_leads = 1,
@@ -135,7 +135,7 @@ def process_referrer_by_tag_id(tag_id, new_user_id, new_username):
         reward.unused_vouchers = getattr(reward, "unused_vouchers", 0)
         reward.save()
 
-    admin = UserData.objects(admin_uid=user.admin_uid).first()
+    admin = Participants.objects(admin_uid=user.admin_uid, program_id = user.program_id).first()
     if admin:
         admin.update(
             inc__total_participants=1,
@@ -248,20 +248,20 @@ def update_referral_status_and_reward(referrer_id, user_id):
 
     user = User.objects(user_id=user_id).first()
     if user:
-        update_referrer_stats(user.admin_uid)
+        update_referrer_stats(user.admin_uid, user)
 
     voucher_given = win_voucher(referrer_id)
     logger.info(f"Voucher reward {'granted' if voucher_given else 'not granted'} to {referrer_id}")
 
 
-def update_referrer_stats(admin_uid):
+def update_referrer_stats(admin_uid, user):
     """
     Update global admin referral statistics after a successful referral.
 
     Args:
         admin_uid (str): Admin UID under whom the referrer and referee are registered
     """
-    admin = UserData.objects(admin_uid=admin_uid).first()
+    admin = Participants.objects(admin_uid=admin_uid, program_id = user.program_id).first()
     if not admin:
         logger.warning(f"Admin not found for UID: {admin_uid}")
         return
@@ -291,14 +291,14 @@ def initialize_user_records(user_id):
     reward.save()
     reward.update(
         set__redeemed_meteors=0,
-        push__galaxy_name='Milky Way Galaxy',
-        push__current_planet='Planet A'
+        push__galaxy_name=[],
+        push__current_planet=[]
     )
 
     Referral(user_id=user_id, all_referrals=[]).save()
 
     user = User.objects(user_id=user_id).first()
-    admin = UserData.objects(admin_uid=user.admin_uid).first()
+    admin = Participants.objects(admin_uid=user.admin_uid, program_id = user.program_id).first()
     if admin:
         admin.update(inc__total_participants=1, inc__signup_earnings=SIGN_UP_REWARD)
 
@@ -393,12 +393,6 @@ def change_invite_link():
 
     return jsonify({"success" : True, "message" : "Invitation Link Changed"})
 
-def update_meteors_and_stars():
-
-
-    return jsonify({})
-
-
 # ==================
 
 # Handles rewards for special offer
@@ -466,6 +460,7 @@ def reward_referrer_by_tag(tag_id):
     except Exception as e:
         Errors(username=user.user_id, email=user.email, error_source="Sign Up Form",
                error_type=f" Invalid invitation link {user.user_id}").save()
+        logger.info(f"str{e}")
         return jsonify({"message" : "Invalid link"})
 
 def handle_invitation_visit(encoded_gen_str, tag_id, encoded_exp_str):

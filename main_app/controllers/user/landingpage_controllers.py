@@ -6,6 +6,7 @@ from main_app.models.admin.error_model import Errors
 from main_app.models.admin.galaxy_model import Galaxy
 from main_app.models.admin.how_it_work_model import HowItWork
 from main_app.models.admin.links import ReferralReward
+from main_app.models.admin.participants_model import Participants
 from main_app.models.admin.product_offer_model import Offer
 from main_app.models.admin.special_offer_model import SpecialOffer, SOffer
 from main_app.models.user.user import User
@@ -285,7 +286,7 @@ def fetch_data_from_admin():
     data = request.get_json()
     user_id = data.get("user_id")
     user = User.objects(user_id = user_id).first()
-    admin = Admin.objects(admin_uid = user.admin_uid).first()
+    admin = Participants.objects(admin_uid = user.admin_uid, program_id = user.program_id).first()
 
 
     if not user:
@@ -297,7 +298,7 @@ def fetch_data_from_admin():
     referrals_faqs = get_faqs_by_category_name(admin_uid, "Referrals") or []
     help_faqs = get_faqs_by_category_name(admin_uid, "Help and Support FAQs") or []
 
-    how_it_works_text = HowItWork.objects(admin_uid=admin_uid).first()
+    how_it_works_text = HowItWork.objects(admin_uid=admin_uid, program_id = user.program_id).first()
 
     if not how_it_works_text:
         return ({"message": "No 'how it works' data found", "success": False}), 404
@@ -308,7 +309,7 @@ def fetch_data_from_admin():
     how_text.pop('admin_uid', None)
     data.append(how_text)
 
-    prize = AdminPrizes.objects(admin_uid=admin_uid).first()
+    prize = AdminPrizes.objects(admin_uid=admin_uid, program_id = user.program_id).first()
     prize_data = []
 
     for p in prize.prizes:
@@ -342,7 +343,7 @@ def fetch_data_from_admin():
         galaxy_data["milestones"].append(milestones)
 
     ad_data = []
-    ad_record = AdminAdvertisementCard.objects(admin_uid=admin_uid).first()
+    ad_record = AdminAdvertisementCard.objects(admin_uid=admin_uid, program_id = user.program_id).first()
     if ad_record:
         for ad in ad_record.advertisement_cards:
             ad_dict = {
@@ -354,7 +355,7 @@ def fetch_data_from_admin():
             ad_data.append(ad_dict)
 
     conversion_rate = []
-    rates = ReferralReward.objects(admin_uid = admin_uid).first()
+    rates = ReferralReward.objects(admin_uid=admin_uid, program_id = user.program_id).first()
     conversion_data = {
         "conversion_rates" : rates.conversion_rates,
         "referrer_reward" : rates.referrer_reward,
@@ -366,7 +367,7 @@ def fetch_data_from_admin():
 
     product_data =[]
     special_offer = {}
-    offer = SOffer.objects(admin_uid = admin_uid).first()
+    offer = SOffer.objects(admin_uid=admin_uid, program_id = user.program_id).first()
     if offer and offer.special_offer:
         for offer in offer.special_offer:
             if offer['active'] is True:
@@ -376,7 +377,7 @@ def fetch_data_from_admin():
                 special_offer['pop_up_text'] = offer['pop_up_text']
                 special_offer['offer_desc'] = offer['offer_desc']
 
-    offer = Offer.objects(admin_uid=admin_uid).first()
+    offer = Offer.objects(admin_uid=admin_uid, program_id = user.program_id).first()
     offer_data = []
 
     for p in offer.offers:

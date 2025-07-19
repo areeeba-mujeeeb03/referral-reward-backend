@@ -90,7 +90,7 @@ def generate_invite_link_with_expiry():
     encoded_gen_str = encode_timestamp(gen_str)
     encoded_exp_str = encode_timestamp(exp_str)
 
-    base_url = "http://localhost:5173/invite_link"
+    base_url = "https://siwtestpanel.com/invite_link"
 
     invitation_link = f"{base_url}/{encoded_gen_str}/{encoded_exp_str}"
     is_active = gen_str <= int(datetime.datetime.now().strftime("%Y%m%d%H%M%S"))

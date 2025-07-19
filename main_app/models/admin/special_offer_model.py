@@ -18,6 +18,7 @@ class SpecialOffer(EmbeddedDocument):
 
 class SOffer(Document):
     admin_uid = StringField()
+    program_id = StringField()
     special_offer = ListField(EmbeddedDocumentField(SpecialOffer))
 
     meta = {"db_alias" : "admin-db", "collection" : "SpecialOffer"}

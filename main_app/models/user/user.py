@@ -2,12 +2,14 @@ from mongoengine import StringField, IntField, EmailField, Document, DateTimeFie
 from main_app.utils.user.helpers import generate_tag_id, generate_invite_link
 
 class User(Document):
+    admin_uid = StringField()
+    program_id = StringField(required=True)
+    tag_id = StringField(required=True, unique=True)
     user_id = StringField(required=True, unique=True)
     username = StringField(required=True, unique=True)
     email = EmailField(required=True, unique=True)
     mobile_number = StringField(required=True, unique=True)
     password = StringField(required=True)
-    tag_id = StringField()
     invitation_link = StringField()
     invitation_code = StringField()
     access_token = StringField()
@@ -15,16 +17,8 @@ class User(Document):
     referred_by = StringField(default=None)
     joining_status = StringField(default="pending")
     created_at = DateTimeField()
-    is_active = BooleanField()
-    expiry_time = DateTimeField()
-    otp = IntField()
-    otp_expires_at = DateTimeField()
-    otp_requested_at = DateTimeField()
     login_count = IntField()
-    generation_time = IntField()
     profile_picture = StringField()
-    link_expiry_time = IntField()
-    admin_uid = StringField()
     is_member = BooleanField(default= False)
     joined_via = StringField(defaul = None)
 

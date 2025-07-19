@@ -231,6 +231,9 @@ def handle_email_login():
             "user_id": user.user_id
         }), 200
 
+    Errors(admin_uid=user.admin_uid, program_id=user.program_id, username=user.username, email=user.email,
+           error_source="Reset Password",
+           error_type=get_error("code validation failed")).save()
     return jsonify({"error": get_error("login_failed")}), 500
 
 # ==================

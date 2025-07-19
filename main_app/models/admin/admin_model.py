@@ -1,4 +1,5 @@
-from mongoengine import StringField, Document, EmailField, DateTimeField
+from mongoengine import StringField, Document, EmailField, DateTimeField, ListField, DictField
+
 
 class Admin(Document):
     admin_uid = StringField(required=True, unique=True)
@@ -13,7 +14,7 @@ class Admin(Document):
     # OTP Fields
     code = StringField()
     code_expiry = DateTimeField()
-
+    all_campaigns = ListField(DictField())
 
     meta = {"db_alias" : "admin-db", 'collection': 'admin'}
 

@@ -37,7 +37,7 @@ def meteors_to_stars():
 
     rewards = Reward.objects(user_id = user_id).first()
 
-    conversions = ReferralReward.objects(admin_uid = user.admin_uid).first()
+    conversions = ReferralReward.objects(admin_uid = user.admin_uid, program_id = user.program_id).first()
 
     rate = conversions.conversion_rates["meteor_to_star"]
 
@@ -85,7 +85,7 @@ def stars_to_currency():
                      "message": "Access token has expired"}), 401
 
     rewards = Reward.objects(user_id=user_id).first()
-    conversions = ReferralReward.objects(admin_uid = user.admin_uid).first()
+    conversions = ReferralReward.objects(admin_uid = user.admin_uid, program_id = user.program_id).first()
 
     rate = conversions.conversion_rates["star_to_meteor"]
 
