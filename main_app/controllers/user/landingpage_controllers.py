@@ -126,6 +126,7 @@ def my_rewards():
                 "discount_coupons" : reward.discount_coupons
 
             }
+            print(info['reward_history'])
 
             fields_to_encode = ["total_stars",
                                 "total_meteors",
@@ -405,7 +406,6 @@ def fetch_data_from_admin():
             "special_offer" : special_offer,
             "exclusive_offers" : offer_data
             }
-    print(diction)
 
     if user:
         return jsonify({

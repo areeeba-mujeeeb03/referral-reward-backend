@@ -2,6 +2,7 @@ import logging
 from flask import jsonify, request
 
 from main_app.controllers.user.rewards_controllers import update_planet_and_galaxy
+from main_app.controllers.user.user_profile_controllers import update_app_stats
 from main_app.models.admin.error_model import Errors
 from main_app.models.user.reward import Reward
 from main_app.utils.user.helpers import (check_password,generate_access_token,create_user_session)
@@ -218,6 +219,8 @@ def handle_email_login():
                     "referred_on": date.strftime('%d-%m-%y'),
                     "transaction_type": "credit"
                 })
+        app_name = user.joined_via
+        update_app_stats(app_name, user)
 
         # Step 9: Return success
         logger.info(f"Successful login for user: {user.user_id}")

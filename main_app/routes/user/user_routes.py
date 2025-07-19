@@ -431,9 +431,4 @@ def update(user_id):
     """
     return update_planet_and_galaxy(user_id)
 
-@user_bp.route('/win/<user_id>', methods = ['POST'])
-def win(user_id):
-
-    return win_voucher(user_id)
-
 

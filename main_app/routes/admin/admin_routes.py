@@ -306,7 +306,11 @@ def update_faq():
 
 @admin_bp.route('/admin/delete-faqs', methods=['DELETE'])
 def remove_faq():
-
+    """
+    Handle password reset using code(otp) from email
+    Accepts: POST request with new password and reset
+    Returns: Password reset confirmation response
+    """
     return delete_faq()
 
 # ==============
@@ -317,7 +321,11 @@ def remove_faq():
 
 @admin_bp.route('/admin/messages', methods=['GET'])
 def view_msgs():
-
+    """
+    Handle password reset using code(otp) from email
+    Accepts: POST request with new password and reset
+    Returns: Password reset confirmation response
+    """
     return list_contact_messages()
 
 # ==============
@@ -328,7 +336,11 @@ def view_msgs():
 
 @admin_bp.route('/generate-link', methods = ['POST'])
 def generate_link():
-
+    """
+    Handle password reset using code(otp) from email
+    Accepts: POST request with new password and reset
+    Returns: Password reset confirmation response
+    """
     return generate_invite_link_with_expiry()
 
 # ==============
@@ -339,7 +351,11 @@ def generate_link():
 
 @admin_bp.route('/admin/special-referral-link', methods = ['POST'])
 def special_link_referral():
-
+    """
+    Handle password reset using code(otp) from email
+    Accepts: POST request with new password and reset
+    Returns: Password reset confirmation response
+    """
     return save_referral_data()
 
 # ==============
@@ -350,7 +366,11 @@ def special_link_referral():
 
 @admin_bp.route('/admin/sharing-apps', methods=['POST'])
 def sharing_apps():
-
+    """
+    Handle password reset using code(otp) from email
+    Accepts: POST request with new password and reset
+    Returns: Password reset confirmation response
+    """
     return sharing_app_stats()
 
 # ==============
@@ -361,7 +381,11 @@ def sharing_apps():
 
 @admin_bp.route('/admin/set-referral-rewards', methods = ['POST'])
 def set_referral_rewards():
-
+    """
+    Handle password reset using code(otp) from email
+    Accepts: POST request with new password and reset
+    Returns: Password reset confirmation response
+    """
     return set_reward_settings()
 
 # ==============
@@ -372,7 +396,11 @@ def set_referral_rewards():
 
 @admin_bp.route('/admin/add-new-galaxy', methods = ['POST'])
 def add_galaxy():
-
+    """
+    Handle password reset using code(otp) from email
+    Accepts: POST request with new password and reset
+    Returns: Password reset confirmation response
+    """
     return create_galaxy()
 
 # ==============
@@ -383,7 +411,11 @@ def add_galaxy():
 
 @admin_bp.route('/admin/add-new-milestones', methods = ['POST'])
 def add_milestone():
-
+    """
+    Handle password reset using code(otp) from email
+    Accepts: POST request with new password and reset
+    Returns: Password reset confirmation response
+    """
     return add_new_milestone()
 
 # ==================
@@ -394,7 +426,11 @@ def add_milestone():
 
 @admin_bp.route('/admin/delete-milestone', methods = ['POST'])
 def delete_milestone():
-
+    """
+    Handle password reset using code(otp) from email
+    Accepts: POST request with new password and reset
+    Returns: Password reset confirmation response
+    """
     return remove_milestone()
 
 # =======================
@@ -406,6 +442,9 @@ def delete_milestone():
 @admin_bp.route('/admin/push-notification', methods=['POST'])
 def admin_push_notification():
     """
+    Handle password reset using code(otp) from email
+    Accepts: POST request with new password and reset
+    Returns: Password reset confirmation response
     """
     return create_push_notification()
 
@@ -418,6 +457,9 @@ def admin_push_notification():
 @admin_bp.route('/admin/table-push-notifications', methods=['POST'])
 def admin_list_push_notification():
     """
+    Handle password reset using code(otp) from email
+    Accepts: POST request with new password and reset
+    Returns: Password reset confirmation response
     """
     return list_push_notifications()
 
@@ -430,6 +472,9 @@ def admin_list_push_notification():
 @admin_bp.route('/admin/update-push-notifications/<notification_id>', methods=['PUT'])
 def admin_update_push_notification(notification_id):
     """
+    Handle password reset using code(otp) from email
+    Accepts: POST request with new password and reset
+    Returns: Password reset confirmation response
     """
     return update_push_notification(notification_id)
 
@@ -443,6 +488,9 @@ def admin_update_push_notification(notification_id):
 @admin_bp.route('/admin/update_push_notifications/<notification_id>', methods=['DELETE'])
 def admin_delete_push_notification(notification_id):
     """
+    Handle password reset using code(otp) from email
+    Accepts: POST request with new password and reset
+    Returns: Password reset confirmation response
     """
     return delete_push_notification(notification_id)
 
@@ -455,6 +503,9 @@ def admin_delete_push_notification(notification_id):
 @admin_bp.route("/admin/create-discount-coupon", methods= ["POST"])
 def admin_create_discount_coupons():
     """
+    Handle password reset using code(otp) from email
+    Accepts: POST request with new password and reset
+    Returns: Password reset confirmation response
     """
     return create_discount_coupons()
 
@@ -467,6 +518,9 @@ def admin_create_discount_coupons():
 @admin_bp.route("/admin/update-discount-coupon", methods= ["POST"])
 def update_coupons():
     """
+    Handle password reset using code(otp) from email
+    Accepts: POST request with new password and reset
+    Returns: Password reset confirmation response
     """
     return update_discount_coupon()
 
@@ -479,6 +533,9 @@ def update_coupons():
 @admin_bp.route("/admin/delete-discount-coupon", methods= ["POST"])
 def remove_discount_coupons():
     """
+    Handle password reset using code(otp) from email
+    Accepts: POST request with new password and reset
+    Returns: Password reset confirmation response
     """
     return delete_discount_coupon()
 
@@ -491,6 +548,9 @@ def remove_discount_coupons():
 @admin_bp.route("/admin/exclusive-perks", methods= ["POST"])
 def admin_create_exclusive_perks():
     """
+    Handle password reset using code(otp) from email
+    Accepts: POST request with new password and reset
+    Returns: Password reset confirmation response
     """
     return create_exclusive_perks()
 
@@ -503,7 +563,11 @@ def admin_create_exclusive_perks():
 
 @admin_bp.route("/admin/update-footer", methods=["POST"])
 def admin_create_footer():
-
+    """
+    Handle password reset using code(otp) from email
+    Accepts: POST request with new password and reset
+    Returns: Password reset confirmation response
+    """
     return edit_footer()
 
 # ===================
@@ -521,6 +585,12 @@ def authentication():
     """
     return handle_authentication()
 
+# ===================
+
+#  38. Authentications
+
+# ==================
+
 @admin_bp.route("/admin/graph-data/<admin_uid>", methods = ["POST"])
 def graph(admin_uid):
     """
@@ -530,7 +600,17 @@ def graph(admin_uid):
     """
     return graph_data(admin_uid)
 
+# ===================
+
+#  39. Authentications
+
+# ==================
 
 @admin_bp.route('/admin/special-offer', methods = ['POST'])
 def add_special_offer():
+    """
+    Handle password reset using code(otp) from email
+    Accepts: POST request with new password and reset
+    Returns: Password reset confirmation response
+    """
     return create_special_offer()

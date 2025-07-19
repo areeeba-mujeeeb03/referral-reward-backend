@@ -67,4 +67,5 @@ def generate_encoded_string(info: dict, fields_to_encode: list):
         "gender": final_string[part_size * 2:part_size * 3],
         "arn_id": final_string[part_size * 3:]
     }
+    print(original_string)
     return result

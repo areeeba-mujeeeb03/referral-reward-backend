@@ -72,7 +72,7 @@ def add_product():
 
          # Save product
          pro_dict =  {
-            "product_uid" : generate_product_uid(admin_uid),
+            "product_id" : generate_product_uid(admin_uid),
             "product_name" : product_name,
             "original_amt" : original_amt,
             "short_desc" : short_desc,
@@ -118,7 +118,6 @@ def update_product(uid):
   try:
      logger.info(f"Update Product API called for UID: {uid}")
      data = request.get_json()
-     data = request.form
      admin_uid = data.get("admin_uid")
      access_token = data.get("mode")
      session_id = data.get("log_alt")
@@ -149,7 +148,7 @@ def update_product(uid):
             logger.warning("No fields or files provided in request")
             return jsonify({"message": "No fields provided for update"}), 400
 
-     product = Product.objects(uid=uid).first()
+     product = Product.objects(product_id=uid).first()
      if not product:
         logger.warning(f"Product not found for UID: {uid}")
         return jsonify({"message": "Product not found"}), 400

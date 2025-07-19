@@ -1,10 +1,7 @@
-import os
 from main_app.models.admin.error_model import Errors
 from main_app.models.admin.help_model import FAQ, Contact
 from main_app.models.admin.links import AppStats
 from main_app.models.user.user import User
-# from main_app.controllers.user.auth_controllers import validate_session_token
-from main_app.models.admin.product_model import Product
 from main_app.utils.user.error_handling import get_error
 import logging
 import datetime
@@ -163,13 +160,20 @@ def submit_msg():
 
 def update_app_stats(app_name, user):
     if app_name:
-        app_col = AppStats.objects(admin_uid = user.admin_uid).first()
-        for app in app_col.apps:
-            print(app['platform'])
-            if app['platform'].strip('').lower() == app_name.strip('').lower():
-                print(app)
-                app['accepted'] += 1
-                app_col.save()
-                return "done"
+        app_col = AppStats.objects(admin_uid=user.admin_uid).first()
+        if user.joined_via == app_name:
+            if user.login_count == 1:
+                for app in app_col.apps:
+                    if app['platform'].strip('').lower() == app_name.strip('').lower():
+                        app['successful'] += 1
+                        app_col.save()
+                        return "done"
+            if user.login_count == 0:
+                for app in app_col.apps:
+                    if app['platform'].strip('').lower() == app_name.strip('').lower():
+                        print(app)
+                        app['accepted'] += 1
+                        app_col.save()
+                        return "done"
 
     return jsonify({"message" : "failed to update app status"}),400

@@ -26,6 +26,7 @@ class User(Document):
     link_expiry_time = IntField()
     admin_uid = StringField()
     is_member = BooleanField(default= False)
+    joined_via = StringField(defaul = None)
 
     meta = {"db" : "user-db", 'collection': 'users'}
 

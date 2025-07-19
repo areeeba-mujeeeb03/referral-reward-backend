@@ -61,12 +61,11 @@ def redeem_discount_coupon(data, user):
 
     for coupon in reward.discount_coupons:
         if coupon.get('voucher_code') == coupon_code:
-            # Optional: check expiry
-            # expiry = coupon.get('expiry_date')
-            # if expiry and expiry < datetime.datetime.now():
-            #     return jsonify({"message": "This coupon has expired", "success": False}), 400
+            expiry = coupon.get('expiry_date')
+            if expiry and expiry < datetime.datetime.now():
+                return jsonify({"message": "This coupon has expired", "success": False}), 400
 
-            coupon['redeem'] = True
+            coupon['redeemed'] = True
             reward.update(
                 pull__discount_coupons={"voucher_code": coupon_code},
                 dec__unused_vouchers=1,
@@ -107,7 +106,7 @@ def redeem_offer(data, user):
                     return jsonify({'error': 'Product list not found'}), 404
 
                 for p in prod.products:
-                    if p['uid'] == product_id:
+                    if p['product_id'] == product_id:
                         amt = p['original_amt']
                         disc_amt = round(amt * off_percent / 100, 2)
                         return jsonify({
@@ -134,7 +133,6 @@ def redeem_exciting_prize(data, user):
 
     for prize in prize_data.prizes:
         if prize['prize_id'] != prize_id:
-            required_meteors = prize['required_meteors']
             continue
 
         product_id = prize['product_id']
@@ -144,7 +142,7 @@ def redeem_exciting_prize(data, user):
             return jsonify({'error': 'Product list not found'}), 404
 
         for p in prod.products:
-            if p['uid'] == product_id:
+            if p['product_id'] == product_id:
                 reward = Reward.objects(user_id=user_id).first()
                 required_meteors = prize['required_meteors']
                 if not reward:
@@ -153,7 +151,7 @@ def redeem_exciting_prize(data, user):
                 if reward.current_meteors < required_meteors:
                     needed = required_meteors - reward.current_meteors
                     return jsonify({
-                        "message": f"You need {needed} more meteors to unlock this prize.",
+                        "error": f"You need {needed} more meteors to unlock this prize.",
                         "success": False
                     }), 400
                 if reward.current_meteors > required_meteors:

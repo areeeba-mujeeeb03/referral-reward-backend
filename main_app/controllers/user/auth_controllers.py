@@ -99,6 +99,9 @@ def handle_registration():
     }
 
     if app:
+        user.update(
+            set__joined_via = app
+        )
         update_app_stats(app, user)
     initialize_user_records(user.user_id)
 

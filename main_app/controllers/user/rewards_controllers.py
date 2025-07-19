@@ -40,7 +40,8 @@ def update_planet_and_galaxy(user_id):
                 return jsonify({"milestones": reward.current_planet, "galaxy": reward.galaxy_name, "meteors": reward.current_meteors,"success": True}), 200
 
         if not milestone_unlocked:
-            return jsonify({"milestones": reward.current_planet, "galaxy": reward.galaxy_name,"meteors": reward.current_meteors,}), 200
+            return jsonify({"milestones": reward.current_planet,
+                            "galaxy": reward.galaxy_name,"meteors": reward.current_meteors, "total_meteors" : reward.total_meteors_earned}), 200
 
     except Exception as e:
         return jsonify({"message": f"Failed to update progress: {str(e)}"}), 500

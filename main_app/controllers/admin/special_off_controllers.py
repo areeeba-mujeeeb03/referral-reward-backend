@@ -15,10 +15,8 @@ def create_special_offer():
     try:
         data = request.get_json()
         logger.info("Running Special Offer Generation")
-
-        # Extract required data
         admin_uid = data.get("admin_uid")
-        access_token = data.get("mode")  # Assuming "mode" is being used as access_token
+        access_token = data.get("mode")
         session_id = data.get("log_alt")
         offer_title = data.get('offer_title')
         offer_desc = data.get('offer_desc')
