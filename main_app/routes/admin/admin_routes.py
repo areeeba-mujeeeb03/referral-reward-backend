@@ -12,7 +12,7 @@ from main_app.controllers.admin.prize_controller import add_exciting_prizes, che
 from main_app.controllers.admin.how_it_work_controller import add_how_it_work, advertisement_card
 from main_app.controllers.admin.referral_controllers import generate_invite_link_with_expiry, sharing_app_stats, \
     save_referral_data
-from main_app.controllers.admin.rewards_controllers import create_galaxy, remove_milestone, add_new_milestone,set_reward_settings
+from main_app.controllers.admin.rewards_controllers import create_galaxy, add_new_milestone,set_reward_settings
 from main_app.controllers.admin.dashboard_controllers import error_table, dashboard_participants, dashboard_stats, \
     graph_data
 from main_app.controllers.admin.email_controller import create_email
@@ -425,14 +425,14 @@ def add_milestone():
 
 # ===================
 
-@admin_bp.route('/admin/delete-milestone', methods = ['POST'])
-def delete_milestone():
-    """
-    Handle password reset using code(otp) from email
-    Accepts: POST request with new password and reset
-    Returns: Password reset confirmation response
-    """
-    return remove_milestone()
+# @admin_bp.route('/admin/delete-milestone', methods = ['POST'])
+# def delete_milestone():
+#     """
+#     Handle password reset using code(otp) from email
+#     Accepts: POST request with new password and reset
+#     Returns: Password reset confirmation response
+#     """
+#     return remove_milestone()
 
 # =======================
 

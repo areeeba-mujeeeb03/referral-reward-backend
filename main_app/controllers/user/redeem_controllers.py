@@ -7,10 +7,7 @@ from main_app.models.admin.product_offer_model import Offer
 from main_app.models.user.reward import Reward
 import datetime
 import logging
-import _strptime
-
 from main_app.models.user.user import User
-from main_app.routes.admin.admin_routes import admin_bp
 
 # Configure logging for OTP operations
 logging.basicConfig(level=logging.INFO)
