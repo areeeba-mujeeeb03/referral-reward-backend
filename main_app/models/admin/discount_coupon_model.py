@@ -10,6 +10,7 @@ class DiscountCoupon(EmbeddedDocument):
     off_percent = IntField()
     description = StringField()
     validity_till = StringField()
+    end_date = DateTimeField()
 
 
 class ProductDiscounts(Document):

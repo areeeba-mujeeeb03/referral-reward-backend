@@ -15,6 +15,7 @@ import logging
 from flask import request, jsonify
 from main_app.utils.user.string_encoding import generate_encoded_string
 from main_app.models.admin.product_model import Product
+from main_app.models.admin.product_offer_model import ProductOffer
 from main_app.models.admin.prize_model import PrizeDetail, AdminPrizes
 from main_app.models.admin.advertisment_card_model import AdvertisementCardItem, AdminAdvertisementCard
 
@@ -308,13 +309,16 @@ def fetch_data_from_admin():
     data.append(how_text)
 
     prize = AdminPrizes.objects(admin_uid=admin_uid).first()
+    pri = prize.prizes
     prize_data = []
 
-    if prize:
-        prize_dict = prize.to_mongo().to_dict()
-        prize_dict.pop('_id', None)
-        prize_dict.pop('admin_uid', None)
-        prize_dict.pop('created_at', None)
+    for priz in prize.prizes:
+        prize_dict = {}
+        prize_dict['prize_id'] = priz['prize_id']
+        prize_dict['title'] = priz['title']
+        prize_dict['term_conditions'] = priz['term_conditions']
+        prize_dict['required_meteors'] = priz['required_meteors']
+        prize_dict['product_uid'] = priz['product_uid']
         prize_data.append(prize_dict)
 
     reward = Reward.objects(user_id=user_id).first()
@@ -347,12 +351,12 @@ def fetch_data_from_admin():
                 "title": ad.title,
                 "description": ad.description,
                 "button_txt": ad.button_txt,
-                "image_url": ad.image_url
+                "image_url": ad.image
             }
             ad_data.append(ad_dict)
 
     conversion_rate = []
-    rates = ReferralReward.objects(admin_uid = admin_uid).first()
+    rates = ReferralReward.objects(admin_uid = user.admin_uid).first()
     conversion_data = {
         "conversion_rates" : rates.conversion_rates,
         "referrer_reward" : rates.referrer_reward,
@@ -374,23 +378,54 @@ def fetch_data_from_admin():
                 special_offer['pop_up_text'] = offer['pop_up_text']
                 special_offer['offer_desc'] = offer['offer_desc']
 
-    if user:
-        return jsonify({
+    offer = ProductOffer.objects(admin_uid=admin_uid).first()
+    offer_data = []
+
+    for p in offer.offers:
+        offer_dict = {}
+        offer_dict['off_percent'] = p['off_percent']
+        offer_dict['offer_name'] = p['offer_name']
+        offer_dict['button_txt'] = p['button_txt']
+        offer_dict['one_liner'] = p['one_liner']
+        offer_dict['product_uid'] = p['product_uid']
+        offer_data.append(offer_dict)
+
+    reward = Reward.objects(user_id=user_id).first()
+
+    diction = {
             "success" : True ,
             "how_it_works" : data,
             "exciting_prizes" : prize_data,
             "home_faqs" : home_faqs,
             "rewards_faqs" : rewards_faqs,
             "referrals_faqs" : referrals_faqs,
-            "help_and_support" : help_faqs,
-            "galaxy_data" : galaxy_data,
-            "advertisement_cards" : ad_data,
-            "exclusive_perks" : exclusive_perks,
-            "conversion_data"  :conversion_rate,
-            "product_offer" : product_data,
-            "special_offer" : special_offer
-            })
+    "help_and_support" : help_faqs,
+    "galaxy_data" : galaxy_data,
+    "advertisement_cards" : ad_data,
+    "exclusive_perks" : exclusive_perks,
+    "conversion_data"  :conversion_rate,
+    "product_offer" : product_data,
+    "special_offer" : special_offer,
+    "exclusive_offers" : offer_data
+    }
 
+    if user:
+        return jsonify({
+        "success" : True ,
+        "how_it_works" : data,
+        "exciting_prizes" : prize_data,
+        "home_faqs" : home_faqs,
+        "rewards_faqs" : rewards_faqs,
+        "referrals_faqs" : referrals_faqs,
+        "help_and_support" : help_faqs,
+        "galaxy_data" : galaxy_data,
+        "advertisement_cards" : ad_data,
+        "exclusive_perks" : exclusive_perks,
+        "conversion_data"  :conversion_rate,
+        "product_offer" : product_data,
+        "special_offer" : special_offer,
+        "exclusive_offers" : offer_data
+        })
 
     return ({"message": "An Unexpected error occurred",
              "success" : False,

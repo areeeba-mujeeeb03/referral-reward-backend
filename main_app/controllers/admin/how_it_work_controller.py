@@ -25,25 +25,25 @@ def add_how_it_work():
 
         exist = Admin.objects(admin_uid=admin_uid).first()
 
-        if not exist:
-            return jsonify({"success": False, "message": "User does not exist"})
+        # if not exist:
+        #     return jsonify({"success": False, "message": "User does not exist"})
 
-        if not access_token or not session_id:
-            return jsonify({"message": "Missing token or session", "success": False}), 400
+        # if not access_token or not session_id:
+        #     return jsonify({"message": "Missing token or session", "success": False}), 400
 
-        if exist.access_token != access_token:
-            return ({"success": False,
-                     "message": "Invalid access token"}), 401
+        # if exist.access_token != access_token:
+        #     return ({"success": False,
+        #              "message": "Invalid access token"}), 401
 
-        if exist.session_id != session_id:
-            return ({"success": False,
-                     "message": "Session mismatch or invalid session"}), 403
+        # if exist.session_id != session_id:
+        #     return ({"success": False,
+        #              "message": "Session mismatch or invalid session"}), 403
 
-        if hasattr(exist, 'expiry_time') and exist.expiry_time:
-            if datetime.datetime.now() > exist.expiry_time:
-                return ({"success": False,
-                         "message": "Access token has expired",
-                         "token": "expired"}), 401
+        # if hasattr(exist, 'expiry_time') and exist.expiry_time:
+        #     if datetime.datetime.now() > exist.expiry_time:
+        #         return ({"success": False,
+        #                  "message": "Access token has expired",
+        #                  "token": "expired"}), 401
 
         if not data:
             logger.warning("No data received in request")
@@ -139,25 +139,25 @@ def advertisement_card():
 
       exist = Admin.objects(admin_uid=admin_uid).first()
 
-      if not exist:
-          return jsonify({"success": False, "message": "User does not exist"})
+    #   if not exist:
+    #       return jsonify({"success": False, "message": "User does not exist"}), 200
 
-      if not access_token or not session_id:
-          return jsonify({"message": "Missing token or session", "success": False}), 400
+    #   if not access_token or not session_id:
+    #       return jsonify({"message": "Missing token or session", "success": False}), 400
 
-      if exist.access_token != access_token:
-          return ({"success": False,
-                   "message": "Invalid access token"}), 401
+    #   if exist.access_token != access_token:
+    #       return ({"success": False,
+    #                "message": "Invalid access token"}), 400
 
-      if exist.session_id != session_id:
-          return ({"success": False,
-                   "message": "Session mismatch or invalid session"}), 403
+    #   if exist.session_id != session_id:
+    #       return ({"success": False,
+    #                "message": "Session mismatch or invalid session"}), 400
 
-      if hasattr(exist, 'expiry_time') and exist.expiry_time:
-          if datetime.datetime.now() > exist.expiry_time:
-              return ({"success": False,
-                       "message": "Access token has expired",
-                       "token": "expired"}), 401
+    #   if hasattr(exist, 'expiry_time') and exist.expiry_time:
+    #       if datetime.datetime.now() > exist.expiry_time:
+    #           return ({"success": False,
+    #                    "message": "Access token has expired",
+    #                    "token": "expired"}), 400
 
       if not all([title, description, button_txt, admin_uid]):
          logger.warning("Missing required fields")

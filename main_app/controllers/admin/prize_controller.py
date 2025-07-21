@@ -20,7 +20,6 @@ def add_exciting_prizes():
     try:
         logger.info("Add Exciting Prizes API called")
         data = request.get_json()
-        # data = request.form
         access_token = data.get("mode")
         session_id = data.get("log_alt")
         title = data.get("title")
@@ -57,22 +56,22 @@ def add_exciting_prizes():
           logger.warning("Missing required fields.")
           return jsonify({"message": "All fields are required"}), 400
         
-          # Validate meteors is numeric
+        # Validate meteors is numeric
         try:
             required_meteors = int(required_meteors)
         except ValueError:
             logger.warning("Invalid required_meteors: must be an integer.")
             return jsonify({"message": "required_meteors must be a number"}), 400
 
-         # Check user found or not 
+        # Check user found or not 
         if not Admin.objects(admin_uid=admin_uid).first():
             logger.warning(f"Admin not found for UID: {admin_uid}")
             return jsonify({"message": "Admin not found" }), 400
         
-        # if not Product.objects(id=product_uid).first():
-        #     return jsonify({"message": "Product Id not found"}), 400
+        if not Product.objects(products__product_uid=product_uid).first():
+            return jsonify({"message": "Product Id not found"}), 400
 
-          # Fetch existing admin prizes
+        # Fetch existing admin prizes
         admin_prize = AdminPrizes.objects(admin_uid=admin_uid).first()
         updated = False
 
@@ -138,25 +137,25 @@ def check_eligibility():
 
         exist = Admin.objects(admin_uid=admin_uid).first()
 
-        if not exist:
-            return jsonify({"success": False, "message": "User does not exist"})
+        # if not exist:
+        #     return jsonify({"success": False, "message": "User does not exist"})
 
-        if not access_token or not session_id:
-            return jsonify({"message": "Missing token or session", "success": False}), 400
+        # if not access_token or not session_id:
+        #     return jsonify({"message": "Missing token or session", "success": False}), 400
 
-        if exist.access_token != access_token:
-            return ({"success": False,
-                     "message": "Invalid access token"}), 401
+        # if exist.access_token != access_token:
+        #     return ({"success": False,
+        #              "message": "Invalid access token"}), 401
 
-        if exist.session_id != session_id:
-            return ({"success": False,
-                     "message": "Session mismatch or invalid session"}), 403
+        # if exist.session_id != session_id:
+        #     return ({"success": False,
+        #              "message": "Session mismatch or invalid session"}), 403
 
-        if hasattr(exist, 'expiry_time') and exist.expiry_time:
-            if datetime.datetime.now() > exist.expiry_time:
-                return ({"success": False,
-                         "message": "Access token has expired",
-                         "token": "expired"}), 401
+        # if hasattr(exist, 'expiry_time') and exist.expiry_time:
+        #     if datetime.datetime.now() > exist.expiry_time:
+        #         return ({"success": False,
+        #                  "message": "Access token has expired",
+        #                  "token": "expired"}), 401
 
         record = AdminPrizes.objects(admin_uid=admin_uid).first()
         if not record:
@@ -172,7 +171,7 @@ def check_eligibility():
                     "required_meteors": prize.required_meteors,
                     "image": prize.image,
                     "term_conditions": prize.term_conditions,
-                    "product_id": prize.product_id,
+                    "product_uid": prize.product_uid,
                     "created_at": str(prize.created_at),
                 })
 

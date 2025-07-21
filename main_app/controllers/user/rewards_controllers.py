@@ -80,7 +80,7 @@ def win_voucher(user_id):
             return jsonify({'error': 'This offer is not properly configured'}), 500
 
         for v in reward.discount_coupons:
-            if v['coupon_code'] == won_product.voucher_code:
+            if v['coupon_code'] == won_product.coupon_code:
                 already_has_voucher = True
                 if already_has_voucher :
                     return jsonify({"message" : "Already won voucher"})
@@ -89,23 +89,25 @@ def win_voucher(user_id):
         expiry = now + datetime.timedelta(days=7)
 
         voucher_data = {
-            "voucher_code": won_product.coupon_code,
+            "coupon_code": won_product.coupon_code,
+            "offer_desc" : won_product.description,
             "product_id": won_product.product_id,
             "discounted_amt": won_product.discount_amt,
             "original_amt": won_product.original_amt,
             "off_percent": won_product.off_percent,
             "status": "active",
-            "redeemed": False
+            "redeemed": False,
+            "end_date" : won_product.validity_till
         }
 
         reward.discount_coupons.append(voucher_data)
         reward.total_vouchers += 1
         reward.unused_vouchers += 1
-        reward.reward_history.append({
-            "action": "voucher_won",
-            "voucher_code": won_product.coupon_code,
-            "timestamp": now
-        })
+        # reward.reward_history.append({
+        #     "action": "voucher_won",
+        #     "voucher_code": won_product.coupon_code,
+        #     "timestamp": now
+        # })
         reward.save()
 
         logger.info(f"User {user_id} won voucher {won_product.coupon_code}")

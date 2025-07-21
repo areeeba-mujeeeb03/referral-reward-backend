@@ -111,25 +111,25 @@ def create_galaxy():
 
         exist = Admin.objects(admin_uid=admin_uid).first()
 
-        if not exist:
-            return jsonify({"success": False, "message": "User does not exist"})
+        # if not exist:
+        #     return jsonify({"success": False, "message": "User does not exist"})
 
-        if not access_token or not session_id:
-            return jsonify({"message": "Missing token or session", "success": False}), 400
+        # if not access_token or not session_id:
+        #     return jsonify({"message": "Missing token or session", "success": False}), 400
 
-        if exist.access_token != access_token:
-            return ({"success": False,
-                     "message": "Invalid access token"}), 401
+        # if exist.access_token != access_token:
+        #     return ({"success": False,
+        #              "message": "Invalid access token"}), 401
 
-        if exist.session_id != session_id:
-            return ({"success": False,
-                     "message": "Session mismatch or invalid session"}), 403
+        # if exist.session_id != session_id:
+        #     return ({"success": False,
+        #              "message": "Session mismatch or invalid session"}), 403
 
-        if hasattr(exist, 'expiry_time') and exist.expiry_time:
-            if datetime.datetime.now() > exist.expiry_time:
-                return ({"success": False,
-                         "message": "Access token has expired",
-                         "token": "expired"}), 401
+        # if hasattr(exist, 'expiry_time') and exist.expiry_time:
+        #     if datetime.datetime.now() > exist.expiry_time:
+        #         return ({"success": False,
+        #                  "message": "Access token has expired",
+        #                  "token": "expired"}), 401
 
         if not galaxy_name or not admin_uid:
             return jsonify({"message": "Galaxy name and admin_uid are required"}), 400
@@ -168,25 +168,25 @@ def add_new_milestone():
 
         exist = Admin.objects(admin_uid=admin_uid).first()
 
-        if not exist:
-            return jsonify({"success": False, "message": "User does not exist"})
+        # if not exist:
+        #     return jsonify({"success": False, "message": "User does not exist"})
 
-        if not access_token or not session_id:
-            return jsonify({"message": "Missing token or session", "success": False}), 400
+        # if not access_token or not session_id:
+        #     return jsonify({"message": "Missing token or session", "success": False}), 400
 
-        if exist.access_token != access_token:
-            return ({"success": False,
-                     "message": "Invalid access token"}), 401
+        # if exist.access_token != access_token:
+        #     return ({"success": False,
+        #              "message": "Invalid access token"}), 401
 
-        if exist.session_id != session_id:
-            return ({"success": False,
-                     "message": "Session mismatch or invalid session"}), 403
+        # if exist.session_id != session_id:
+        #     return ({"success": False,
+        #              "message": "Session mismatch or invalid session"}), 403
 
-        if hasattr(exist, 'expiry_time') and exist.expiry_time:
-            if datetime.datetime.now() > exist.expiry_time:
-                return ({"success": False,
-                         "message": "Access token has expired",
-                         "token": "expired"}), 401
+        # if hasattr(exist, 'expiry_time') and exist.expiry_time:
+        #     if datetime.datetime.now() > exist.expiry_time:
+        #         return ({"success": False,
+        #                  "message": "Access token has expired",
+        #                  "token": "expired"}), 401
 
         if not all([milestone_name, milestone_reward, milestone_description, meteors_required_to_unlock]):
             return jsonify({"message": "All milestone fields are required"}), 400

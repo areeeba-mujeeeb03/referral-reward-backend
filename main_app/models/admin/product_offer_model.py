@@ -1,6 +1,6 @@
 from mongoengine import (StringField, Document,DictField, DateTimeField, IntField, ListField, EmbeddedDocument, EmbeddedDocumentField)
 import datetime
-class Offer(Document):
+class ProductOffer(Document):
     admin_uid = StringField()
     offers = ListField(DictField())
     # offer_uid = StringField(required = True)

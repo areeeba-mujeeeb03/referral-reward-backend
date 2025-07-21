@@ -24,6 +24,7 @@ class PrizeDetail(EmbeddedDocument):
 
 class AdminPrizes(Document):
     admin_uid = StringField(required=True, unique=True)
+    product_uid = StringField()
     prizes = ListField(EmbeddedDocumentField(PrizeDetail))
 
 

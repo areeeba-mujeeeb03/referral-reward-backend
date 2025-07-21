@@ -43,6 +43,9 @@ def handle_registration():
     validation_result = _validate_required_fields(data, required_fields)
     if validation_result:
         return validation_result
+    
+    if data['email'] != data['email'].lower():
+            return jsonify({"message": "Email must be in lowercase only"}), 400
 
     if validate_email_format(data["email"]):
         return validate_email_format(data["email"])
@@ -55,7 +58,7 @@ def handle_registration():
 
     if validate_password_strength(data["password"]):
         return validate_password_strength(data["password"])
-    username = data["username"].strip('').lower()
+    username = data["username"]
     conflict_check = _check_user_conflicts(username, data["email"], data['mobile_number'])
     if conflict_check:
         return conflict_check

@@ -6,7 +6,7 @@ from cryptography.fernet import Fernet
 # fernet = Fernet(FERNET_SECRET_KEY)
 
 from main_app.models.admin.product_model import Product
-from main_app.models.admin.product_offer_model import Offer
+from main_app.models.admin.product_offer_model import ProductOffer
 from main_app.models.admin.prize_model import PrizeDetail, AdminPrizes
 
 def generate_otp(length=6):
@@ -54,7 +54,7 @@ def generate_product_uid(admin_uid):
   
 
 def generate_offer_uid(admin_uid):
-    offer_doc = Offer.objects(admin_uid=admin_uid).first()
+    offer_doc = ProductOffer.objects(admin_uid=admin_uid).first()
     count = 1
     if offer_doc:
         for offer in offer_doc.offers:
