@@ -440,7 +440,7 @@ def admin_update_push_notification(notification_id):
 
 # ================
 
-@admin_bp.route('/admin/update_push_notifications/<notification_id>', methods=['DELETE'])
+@admin_bp.route('/admin/delete_push_notifications/<notification_id>', methods=['DELETE'])
 def admin_delete_push_notification(notification_id):
     """
     """
