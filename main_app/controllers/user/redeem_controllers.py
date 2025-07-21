@@ -57,14 +57,14 @@ def redeem_discount_coupon(data, user):
         return jsonify({'error': 'Reward profile not updated'}), 404
 
     for coupon in reward.discount_coupons:
-        if coupon.get('voucher_code') == coupon_code:
+        if coupon.get('coupon_code') == coupon_code:
             expiry = coupon.get('expiry_date')
             if expiry and expiry < datetime.datetime.now():
                 return jsonify({"message": "This coupon has expired", "success": False}), 400
 
             coupon['redeemed'] = True
             reward.update(
-                pull__discount_coupons={"voucher_code": coupon_code},
+                pull__discount_coupons={"coupon_code": coupon_code},
                 dec__unused_vouchers=1,
                 inc__used_vouchers=1
             )
@@ -97,13 +97,13 @@ def redeem_offer(data, user):
         for o in offer.offers:
             if o['expiry_date'] < datetime.datetime.now():
                 continue
-            if o['product_id'] == product_id:
+            if o['product_uid'] == product_id:
                 prod = Product.objects(admin_uid=user.admin_uid).first()
                 if not prod:
                     return jsonify({'error': 'Product list not found'}), 404
 
                 for p in prod.products:
-                    if p['product_id'] == product_id:
+                    if p['product_uid'] == product_id:
                         amt = p['original_amt']
                         disc_amt = round(amt * off_percent / 100, 2)
                         return jsonify({
@@ -132,14 +132,14 @@ def redeem_exciting_prize(data, user):
         if prize['prize_id'] != prize_id:
             continue
 
-        product_id = prize['product_id']
+        product_id = prize['product_uid']
         prod = Product.objects(admin_uid=user.admin_uid).first()
 
         if not prod:
             return jsonify({'error': 'Product list not found'}), 404
 
         for p in prod.products:
-            if p['product_id'] == product_id:
+            if p['product_uid'] == product_id:
                 reward = Reward.objects(user_id=user_id).first()
                 required_meteors = prize['required_meteors']
                 if not reward:

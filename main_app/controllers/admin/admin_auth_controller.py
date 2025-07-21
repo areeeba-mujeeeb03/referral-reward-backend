@@ -6,6 +6,7 @@ import logging
 import datetime
 import re
 from main_app.controllers.user.auth_controllers import validate_password_strength, validate_email_format
+from main_app.utils.user.string_encoding import generate_encoded_string
 
 # Configure logging for better debugging and monitoring
 logging.basicConfig(level=logging.INFO)
@@ -137,6 +138,45 @@ def handle_authentication():
     existing.last_login = datetime.datetime.now()
     existing.save()
 
-    return jsonify({"access_token": access_token,
-                    "session_id": session_id,
+    info = {"access_token": access_token,
+            "session_id": session_id}
+
+    fields_to_encode = ["access_token", "session_id"]
+
+    res = generate_encoded_string(info, fields_to_encode)
+    return jsonify({"logs" : res,
                     "success" : True}),200
+
+def dashboard_all_campaigns():
+    try:
+        data = request.get_json()
+        admin_uid = data.get("admin_uid")
+        access_token = data.get("mode")
+        session_id = data.get("log_alt")
+
+        exist = Admin.objects(admin_uid=admin_uid).first()
+
+        if not exist:
+            return jsonify({"success": False, "message": "User does not exist"})
+
+        if not access_token or not session_id:
+            return jsonify({"message": "Missing token or session", "success": False}), 400
+
+        if exist.access_token != access_token:
+            return ({"success": False,
+                     "message": "Invalid access token"}), 401
+
+        if exist.session_id != session_id:
+            return ({"success": False,
+                     "message": "Session mismatch or invalid session"}), 403
+
+        if hasattr(exist, 'expiry_time') and exist.expiry_time:
+            if datetime.datetime.now() > exist.expiry_time:
+                return ({"success": False,
+                         "message": "Access token has expired",
+                         "token": "expired"}), 401
+
+        return jsonify({"success" : True, "all_campaigns" : exist.all_campaigns}), 200
+    except Exception as e:
+        logger.error(f"Failed to fetch data as {str(e)}")
+        return jsonify({"success" : False, "message" : "Something Went Wrong"}), 500

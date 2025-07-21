@@ -2,7 +2,7 @@ from flask import jsonify
 
 from main_app.models.admin.discount_coupon_model import ProductDiscounts
 from main_app.models.admin.error_model import Errors
-from main_app.models.admin.galaxy_model import Galaxy
+from main_app.models.admin.galaxy_model import Galaxy, GalaxyProgram
 from main_app.models.user.reward import Reward
 from main_app.models.admin.product_model import Product
 import datetime
@@ -21,7 +21,7 @@ def update_planet_and_galaxy(user_id):
         all_galaxies = reward.galaxy_name
 
         current_galaxy_name = all_galaxies[-1]
-        current_galaxy = Galaxy.objects(galaxy_name=current_galaxy_name).first()
+        current_galaxy = GalaxyProgram.objects(galaxy_name=current_galaxy_name).first()
 
         total_meteors = reward.current_meteors
         milestone_unlocked = False
@@ -34,7 +34,7 @@ def update_planet_and_galaxy(user_id):
                     return jsonify({"milestones": reward.current_planet, "galaxy": reward.galaxy_name,"meteors": reward.current_meteors,"success": True}), 200
 
         if total_meteors >= current_galaxy.total_meteors_required:
-            next_galaxy = Galaxy.objects(galaxy_name__nin=all_galaxies).first()
+            next_galaxy = GalaxyProgram.objects(galaxy_name__nin=all_galaxies).first()
             if next_galaxy:
                 reward.update(push__galaxy_name=next_galaxy.galaxy_name)
                 return jsonify({"milestones": reward.current_planet, "galaxy": reward.galaxy_name, "meteors": reward.current_meteors,"success": True}), 200

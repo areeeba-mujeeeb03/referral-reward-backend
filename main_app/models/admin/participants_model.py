@@ -15,5 +15,7 @@ class Participants(Document):
     vouchers_won = IntField(default=0)
     used_coupons = IntField(default=0)
     currencies_converted = IntField(default=0)
+    login_reward = IntField(default=0)
+    signup_reward = IntField(default=0)
 
     meta = {"db_alias": "admin-db", "collection": "participants"}

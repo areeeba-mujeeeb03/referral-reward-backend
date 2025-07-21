@@ -6,6 +6,7 @@ from main_app.controllers.user.user_profile_controllers import update_app_stats
 from main_app.models.admin.campaign_model import Campaign
 from main_app.models.admin.error_model import Errors
 from main_app.models.admin.links import ReferralReward
+from main_app.models.admin.participants_model import Participants
 from main_app.models.user.user import User
 from main_app.controllers.user.referral_controllers import (initialize_user_records ,process_referrer_by_tag_id,
                                                             update_referral_status_and_reward)
@@ -38,7 +39,7 @@ def handle_registration():
             logger.warning("Registration attempt with empty request body")
             return jsonify({"error": get_error("invalid_data")}), 400
 
-        required_fields = ["username", "email", "mobile_number", "password", "confirm_password","prog_id"]
+        required_fields = ["username", "email", "mobile_number", "password", "confirm_password"]
         validation_result = _validate_required_fields(data, required_fields)
         if validation_result:
             return validation_result
@@ -63,6 +64,7 @@ def handle_registration():
         find_url = Campaign.objects(base_url = url).first()
         if not find_url:
             return jsonify({"message" : "URL not found", "success" : False}),400
+        print(data)
 
         hashed_password = hash_password(data["password"])
         user = User(
@@ -72,7 +74,7 @@ def handle_registration():
             program_id = find_url.program_id,
             password=hashed_password,
             created_at=datetime.datetime.now(),
-            is_active=True,
+            admin_uid = find_url.admin_uid
         )
 
         # Save user early if referral via tag_id
@@ -96,13 +98,15 @@ def handle_registration():
         if not user.pk:
             user.save()
         app = data.get("accepted_via")
+        user.save()
 
         rates = ReferralReward.objects(admin_uid=user.admin_uid, program_id = user.program_id).first() or {}
-        rewards_info = {
-            "signup_reward": getattr(rates, "signup_reward"),
-            "login_reward": getattr(rates, "login_reward")
-        }
+        rewards_info = Participants.objects(admin_uid=user.admin_uid, program_id = user.program_id).first()
+        rewards = {
+            "signup_reward" : rewards_info.signup_reward,
+            "login_reward": rewards_info.login_reward
 
+        }
         if app:
             user.update(
                 set__joined_via = app
@@ -114,7 +118,7 @@ def handle_registration():
             "message": "User registered successfully",
             "user_id": user.user_id,
             "registration_date": user.created_at.isoformat(),
-            "rewards": [rewards_info]
+            "rewards": [rewards]
         }), 200
     except Exception as e:
         logger.info(f"Registration failed as {str(e)}")

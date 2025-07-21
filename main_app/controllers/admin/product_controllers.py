@@ -72,7 +72,7 @@ def add_product():
 
          # Save product
          pro_dict =  {
-            "product_id" : generate_product_uid(admin_uid),
+            "product_uid" : generate_product_uid(admin_uid),
             "product_name" : product_name,
             "original_amt" : original_amt,
             "short_desc" : short_desc,
@@ -148,7 +148,7 @@ def update_product(uid):
             logger.warning("No fields or files provided in request")
             return jsonify({"message": "No fields provided for update"}), 400
 
-     product = Product.objects(product_id=uid).first()
+     product = Product.objects(product_uid=uid).first()
      if not product:
         logger.warning(f"Product not found for UID: {uid}")
         return jsonify({"message": "Product not found"}), 400
@@ -231,7 +231,7 @@ def add_offer():
         "button_txt": button_txt,
         "off_percent": off_percent,
         "status": status,
-        "product_id": product_id,
+        "product_uid": product_id,
         # "admin_uid": admin_uid,
         "start_date": start_date,
         "expiry_date": expiry_date

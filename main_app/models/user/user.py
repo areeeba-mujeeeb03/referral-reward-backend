@@ -21,6 +21,12 @@ class User(Document):
     profile_picture = StringField()
     is_member = BooleanField(default= False)
     joined_via = StringField(defaul = None)
+    expiry_time = DateTimeField()
+    otp = IntField()
+    otp_expires_at = DateTimeField()
+    otp_requested_at = DateTimeField()
+    link_expiry_time = IntField()
+    generation_time = IntField()
 
     meta = {"db" : "user-db", 'collection': 'users'}
 

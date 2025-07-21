@@ -57,25 +57,25 @@ def generate_invite_link_with_expiry():
 
     exist = Admin.objects(admin_uid=admin_uid).first()
 
-    if not exist:
-        return jsonify({"success": False, "message": "User does not exist"})
-
-    if not access_token or not session_id:
-        return jsonify({"message": "Missing token or session", "success": False}), 400
-
-    if exist.access_token != access_token:
-        return ({"success": False,
-                 "message": "Invalid access token"}), 401
-
-    if exist.session_id != session_id:
-        return ({"success": False,
-                 "message": "Session mismatch or invalid session"}), 403
-
-    if hasattr(exist, 'expiry_time') and exist.expiry_time:
-        if datetime.datetime.now() > exist.expiry_time:
-            return ({"success": False,
-                     "message": "Access token has expired",
-                     "token": "expired"}), 401
+    # if not exist:
+    #     return jsonify({"success": False, "message": "User does not exist"})
+    #
+    # if not access_token or not session_id:
+    #     return jsonify({"message": "Missing token or session", "success": False}), 400
+    #
+    # if exist.access_token != access_token:
+    #     return ({"success": False,
+    #              "message": "Invalid access token"}), 401
+    #
+    # if exist.session_id != session_id:
+    #     return ({"success": False,
+    #              "message": "Session mismatch or invalid session"}), 403
+    #
+    # if hasattr(exist, 'expiry_time') and exist.expiry_time:
+    #     if datetime.datetime.now() > exist.expiry_time:
+    #         return ({"success": False,
+    #                  "message": "Access token has expired",
+    #                  "token": "expired"}), 401
 
     if not admin_uid:
         return jsonify({"error": "admin_uid is required", "success" : False}), 400
@@ -99,6 +99,7 @@ def generate_invite_link_with_expiry():
 def save_referral_data():
     data = request.get_json()
     admin_uid = data.get("admin_uid")
+    program_id = data.get("program_id")
     access_token = data.get("mode")
     session_id = data.get("log_alt")
     start_date = data.get("start_date")
@@ -109,30 +110,30 @@ def save_referral_data():
     referee_reward_value = data.get("referee_reward_value")
     reward_condition = data.get("reward_condition")
     success_reward = data.get("success_reward")
-    invite_link = data.get("invitation_link")
+    invite_link = data.get("link")
     active = data.get("active")
 
     exist = Admin.objects(admin_uid=admin_uid).first()
 
-    if not exist:
-        return jsonify({"success": False, "message": "User does not exist"})
-
-    if not access_token or not session_id:
-        return jsonify({"message": "Missing token or session", "success": False}), 400
-
-    if exist.access_token != access_token:
-        return ({"success": False,
-                 "message": "Invalid access token"}), 401
-
-    if exist.session_id != session_id:
-        return ({"success": False,
-                 "message": "Session mismatch or invalid session"}), 403
-
-    if hasattr(exist, 'expiry_time') and exist.expiry_time:
-        if datetime.datetime.now() > exist.expiry_time:
-            return ({"success": False,
-                     "message": "Access token has expired",
-                     "token": "expired"}), 401
+    # if not exist:
+    #     return jsonify({"success": False, "message": "User does not exist"})
+    #
+    # if not access_token or not session_id:
+    #     return jsonify({"message": "Missing token or session", "success": False}), 400
+    #
+    # if exist.access_token != access_token:
+    #     return ({"success": False,
+    #              "message": "Invalid access token"}), 401
+    #
+    # if exist.session_id != session_id:
+    #     return ({"success": False,
+    #              "message": "Session mismatch or invalid session"}), 403
+    #
+    # if hasattr(exist, 'expiry_time') and exist.expiry_time:
+    #     if datetime.datetime.now() > exist.expiry_time:
+    #         return ({"success": False,
+    #                  "message": "Access token has expired",
+    #                  "token": "expired"}), 401
 
     missing_fields = [admin_uid, start_date, access_token, session_id, start_date,
                 end_date, referrer_reward_type, referrer_reward_value, referee_reward_type,
@@ -143,9 +144,25 @@ def save_referral_data():
             "success": False,
             "error": "Missing required field"
         }), 400
+    existing_link = Link.objects(admin_uid=admin_uid,program_id=program_id).first()
+    if existing_link:
+        existing_link.update(
+            start_date=start_date,
+            end_date=end_date,
+            invitation_link=invite_link,
+            created_at=datetime.datetime.now(),
+            referrer_reward_type=referrer_reward_type,
+            referrer_reward_value=referrer_reward_value,
+            referee_reward_type=referee_reward_type,
+            referee_reward_value=referee_reward_value,
+            reward_condition=reward_condition,
+            success_reward=success_reward,
+            active=active
+        )
 
     data = Link(
         admin_uid=admin_uid,
+        program_id=program_id,
         start_date=start_date,
         end_date=end_date,
         invitation_link=invite_link,
@@ -171,7 +188,8 @@ def sharing_app_stats():
     admin_uid = data.get("admin_uid")
     access_token = data.get("mode")
     session_id = data.get("log_alt")
-    platforms = data.get("platforms", []) # app_name,invite_message
+    platforms = data.get("platforms", [])
+    program_id = data.get("program_id")
     primary_platform = data.get("primary_platform")
 
     exist = Admin.objects(admin_uid=admin_uid).first()
@@ -202,10 +220,10 @@ def sharing_app_stats():
             "error": "admin_uid and platform are required"
         }), 400
 
-    stats = AppStats.objects(admin_uid=admin_uid).first()
+    stats = AppStats.objects(admin_uid=admin_uid, program_id = program_id).first()
 
     if not stats:
-        stats = AppStats(admin_uid=admin_uid, apps=[])
+        stats = AppStats(admin_uid=admin_uid,program_id = program_id, apps=[])
 
     existing_platforms = []
     for app in stats.apps:

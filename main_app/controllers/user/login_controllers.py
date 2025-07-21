@@ -1,16 +1,16 @@
 import logging
 from flask import jsonify, request
-
 from main_app.controllers.user.rewards_controllers import update_planet_and_galaxy
 from main_app.controllers.user.user_profile_controllers import update_app_stats
 from main_app.models.admin.error_model import Errors
+from main_app.models.admin.participants_model import Participants
 from main_app.models.user.reward import Reward
 from main_app.utils.user.helpers import (check_password,generate_access_token,create_user_session)
-from main_app.controllers.user.referral_controllers import update_referral_status_and_reward, Login_Reward
+from main_app.controllers.user.referral_controllers import update_referral_status_and_reward
 from main_app.utils.user.error_handling import get_error
 import datetime
 from main_app.models.user.user import User
-
+from main_app.utils.user.string_encoding import generate_encoded_string
 
 # Referral reward points configuration
 REFERRAL_REWARD_POINTS = 400
@@ -139,12 +139,14 @@ def handle_email_login():
 
         user_name.save()
         reward = Reward.objects(user_id = user_name.user_id).first()
+        reward_earn = Participants.objects(admin_uid=user.admin_uid, program_id=user.program_id).first()
+        login_reward = reward_earn.login_reward
         date = datetime.datetime.now()
         for referral in reward.reward_history:
             if not referral.get("earned_by_action") == "Log In":
                 reward.reward_history.append({
                     "earned_by_action": "Log In",
-                    "earned_meteors": Login_Reward,
+                    "earned_meteors": login_reward,
                     "referred_to": user_name.username,
                     "referral_status": "pending",
                     "referred_on": date.strftime('%d-%m-%y'),
@@ -207,13 +209,14 @@ def handle_email_login():
 
         user.save()
         reward = Reward.objects(user_id = user.user_id).first()
-
+        reward_earn= Participants.objects(admin_uid=user.admin_uid, program_id=user.program_id).first()
+        login_reward = reward_earn.login_reward
         date = datetime.datetime.now()
         for referral in reward.reward_history:
             if not referral.get("earned_by_action") == "Log In":
                 reward.reward_history.append({
                     "earned_by_action": "Log In",
-                    "earned_meteors": Login_Reward,
+                    "earned_meteors": login_reward,
                     "referred_to": user.username,
                     "referral_status": "pending",
                     "referred_on": date.strftime('%d-%m-%y'),
@@ -235,6 +238,40 @@ def handle_email_login():
            error_source="Reset Password",
            error_type=get_error("code validation failed")).save()
     return jsonify({"error": get_error("login_failed")}), 500
+
+
+
+def handle_authentication():
+    data = request.get_json()
+    user_id = data.get("user_id")
+
+    existing = User.objects(user_id = user_id).first()
+
+    if not existing:
+        logger.warning("User not found")
+        return jsonify({"message": get_error("user_not_found")}), 404
+
+    #  Generate tokens
+    access_token = generate_access_token(existing.admin_uid)
+    session_id = create_user_session(existing.admin_uid)
+    expiry_time = datetime.datetime.now() + datetime.timedelta(minutes=SESSION_EXPIRY_MINUTES)
+
+    #  Update user session info in DB
+    existing.access_token = access_token
+    existing.session_id = session_id
+    existing.expiry_time = expiry_time
+    existing.last_login = datetime.datetime.now()
+    existing.save()
+
+    info = {"access_token": access_token,
+            "session_id": session_id,
+            "user_id" : user_id}
+
+    fields_to_encode = ["access_token", "session_id", "user_id"]
+
+    res = generate_encoded_string(info, fields_to_encode)
+    return jsonify({"logs" : res,
+                    "success" : True}),200
 
 # ==================
 

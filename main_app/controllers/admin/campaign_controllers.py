@@ -1,9 +1,11 @@
+import datetime
+
 from flask import Flask, request, jsonify
 import logging
 from main_app.models.admin.admin_model import Admin
 from main_app.models.admin.campaign_model import Campaign
-from main_app.models.admin.galaxy_model import Galaxy
-from main_app.models.admin.links import AppStats, ReferralReward
+from main_app.models.admin.galaxy_model import Galaxy, GalaxyProgram
+from main_app.models.admin.links import AppStats, ReferralReward, Link
 from main_app.models.admin.participants_model import Participants
 
 # Configure logging for better debugging and monitoring
@@ -26,37 +28,169 @@ def create_new_campaign():
         logger.info("Initializing New Campaign")
         data = request.get_json()
 
+        ##Create campaign
         admin_uid = data.get("admin_uid")
-        program_name = data.get("program_name")
+        campaign_name = data.get("campaign_name")
         base_url = data.get("url")
+        image = data.get("image")
+        access_token = data.get("mode")
+        session_id = data.get("log_alt")
+
+        admin = Admin.objects(admin_uid=admin_uid).first()
+
+        # if not admin_uid or not access_token or not session_id:
+        #     return jsonify({"message": "Missing required fields", "success": False}), 400
+        #
+        # if not admin:
+        #     return jsonify({"success": False, "message": "User does not exist"}), 404
+        #
+        # if hasattr(admin, 'expiry_time') and admin.expiry_time:
+        #     if datetime.datetime.now() > admin.expiry_time:
+        #         return jsonify({"success": False, "message": "Access token has expired"}), 401
 
         find = Campaign.objects(admin_uid = admin_uid)
-        find_admin = Admin.objects(admin_uid=admin_uid).first()
-        if not find_admin:
-            return jsonify({"message": "User Not Found", "success": False}), 400
-
-        if find == program_name:
-            return jsonify({"message": "Campaign with this name already exists", "success": False}), 400
+        for campa in find:
+            if campa['program_name'] == campaign_name:
+                return jsonify({"message": "Campaign with this name already exists", "success": False}), 400
 
         camp = Campaign(
             admin_uid = admin_uid,
-            program_name = program_name,
-            base_url = base_url
-        ).save()
+            program_name = campaign_name,
+            base_url = base_url,
+            image = image
+        )
 
-        for campaign in find_admin.all_campaigns:
-            if campaign['program_name'].strip().lower() == program_name.strip().lower():
+
+        for campaign in admin.all_campaigns:
+            if campaign['program_name'].strip().lower() == campaign_name.strip().lower():
                 return jsonify({"message": "Campaign with this name already exists", "success": False}), 400
 
+        #referral Rewards
+        required_fields = ['referrer_reward', 'invitee_reward', 'conversion_rates']
+
+        if not all(required_fields):
+            return jsonify({"error": "Missing required fields"}), 400
+
+        # if type('referrer_reward') != int and type('invitee_reward') != int:
+        #     return jsonify({"message": "The type of referral and invitee reward must be an integer"})
+
+        cr = data['conversion_rates']
+        if not all(k in cr for k in ["meteors_to_stars", "stars", "stars_to_currency", "currency"]):
+            return jsonify({"error": "Invalid conversion rates format"}), 400
+
+        ## Add Bonus rewards
+        signup_reward = data.get("signup_reward")
+        login_reward = data.get("login_reward")
+
+        ## Special Link Generation
+        start_date = data.get("start_date")
+        end_date = data.get("end_date")
+        referrer_reward_type = data.get("referrer_reward_type")
+        referrer_reward_value = data.get("referrer_reward_value")
+        referee_reward_type = data.get("referee_reward_type")
+        referee_reward_value = data.get("referee_reward_value")
+        reward_condition = data.get("reward_condition")
+        success_reward = data.get("success_reward")
+        invite_link = data.get("link")
+        active = data.get("active", False)
+
+        # missing_fields = [admin_uid, start_date, start_date,
+        #                   end_date, referrer_reward_type, referrer_reward_value, referee_reward_type,
+        #                   referee_reward_value, reward_condition, success_reward, invite_link]
+        #
+        # if not all(missing_fields):
+        #     return jsonify({
+        #         "success": False,
+        #         "error": "Missing required field"
+        #     }), 400
+
+        existing_link = Link.objects(admin_uid=admin_uid, program_id=camp.program_id).first()
+        if existing_link:
+            existing_link.update(
+                start_date=start_date,
+                end_date=end_date,
+                invitation_link=invite_link,
+                created_at=datetime.datetime.now(),
+                referrer_reward_type=referrer_reward_type,
+                referrer_reward_value=referrer_reward_value,
+                referee_reward_type=referee_reward_type,
+                referee_reward_value=referee_reward_value,
+                reward_condition=reward_condition,
+                success_reward=success_reward,
+                active=active
+            )
+
+        datas = Link(
+            admin_uid=admin_uid,
+            program_id=camp.program_id,
+            start_date=start_date,
+            end_date=end_date,
+            invitation_link=invite_link,
+            created_at=datetime.datetime.now(),
+            referrer_reward_type=referrer_reward_type,
+            referrer_reward_value=referrer_reward_value,
+            referee_reward_type=referee_reward_type,
+            referee_reward_value=referee_reward_value,
+            reward_condition=reward_condition,
+            success_reward=success_reward,
+            active=active
+        )
+
+
+        ##Sharing Apps Data
+        platforms = data.get("platforms", [])
+        primary_platform = data.get("primary_platform")
+
+        stats = AppStats.objects(admin_uid=admin_uid, program_id=camp.program_id).first()
+
+        if not stats:
+            stats = AppStats(admin_uid=admin_uid, program_id=camp.program_id, apps=[])
+
+        existing_platforms = []
+        for app in stats.apps:
+            platform = app.get("platform")
+            if platform:
+                existing_platforms[platform] = app
+
+        for platform in platforms:
+            if platform not in existing_platforms:
+                stats.apps.append({
+                    "platform": platform['platform'],
+                    "message": platform['message'],
+                    "sent": 0,
+                    "accepted": 0,
+                    "successful": 0
+                })
+
+        if primary_platform:
+            stats.primary_platform = primary_platform
+        ## save Data
         new_campaign = {
-            "program_name": program_name,
+            "program_name": campaign_name,
             "program_id": camp.program_id,
-            "base_url": base_url
+            "base_url": base_url,
+            "image" : image
         }
 
-        find_admin.all_campaigns.append(new_campaign)
-        find_admin.save()
+        admin.all_campaigns.append(new_campaign)
+        camp.save()
+        admin.save()
         initialize_admin_data(admin_uid, camp.program_id)
+        ReferralReward.objects(admin_uid=admin_uid, program_id=camp.program_id).update_one(
+            set__referrer_reward=data['referrer_reward'],
+            set__invitee_reward=data['invitee_reward'],
+            set__conversion_rates=data['conversion_rates'],
+            set__updated_at=datetime.datetime.now(),
+            upsert=True
+        )
+        Participants.objects(admin_uid=admin_uid, program_id=camp.program_id).update(
+            login_reward=login_reward,
+            signup_reward=signup_reward
+        )
+        datas.save()
+        stats.save()
+
+
         return jsonify({"message": "Successfully Created a Campaign", "success": True}), 201
 
     except Exception as e:
@@ -76,7 +210,7 @@ def initialize_admin_data(admin_uid, program_id):
         admin_uid=admin_uid,
         program_id = program_id
     ).save()
-    Galaxy(
+    GalaxyProgram(
         admin_uid=admin_uid,
         program_id = program_id
     ).save()

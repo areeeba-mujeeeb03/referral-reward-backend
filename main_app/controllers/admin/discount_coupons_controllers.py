@@ -46,38 +46,35 @@ def create_discount_coupons():
         if not all([admin_uid, coupon_code]):
             return jsonify({"error": "admin_uid and coupon data are required"}), 400
 
-        if not all([coupon_code, product_name]):
-            return jsonify({"error": "Coupon code and product name are required"}), 400
-
         product = Product.objects(product_name = product_name).first()
-        print(data['off_percent'])
+        for pro in product.products:
+            if pro['product_name'] == product_name:
+                original_amount = pro['original_amt']
+                discount_amount = original_amount * percent/100
+                now = datetime.datetime.now()
+                expiry = now + datetime.timedelta(days=15)
+                coupon_data = {"coupon_code" : coupon_code,
+                               "product_id" : product.uid,
+                               "validity_till" : validity_till,
+                               "off_percent" : percent,
+                               "discount_amt" : discount_amount,
+                               "original_amt" : original_amount,
+                               "description" : desc_text,
+                               "end_date" : expiry
+                               }
+                product = ProductDiscounts.objects(admin_uid=admin_uid).first()
+                if not product:
+                    product = ProductDiscounts(admin_uid=admin_uid, coupons=[])
 
-        original_amount = product.original_amt
-        discount_amount = original_amount * percent/100
-        now = datetime.datetime.now()
-        expiry = now + datetime.timedelta(days=15)
-        coupon_data = {"coupon_code" : coupon_code,
-                       "product_id" : product.uid,
-                       "validity_till" : validity_till,
-                       "off_percent" : percent,
-                       "discount_amt" : discount_amount,
-                       "original_amt" : original_amount,
-                       "description" : desc_text,
-                       "end_date" : expiry
-                       }
-        product = ProductDiscounts.objects(admin_uid=admin_uid).first()
-        if not product:
-            product = ProductDiscounts(admin_uid=admin_uid, coupons=[])
+                for coupon in product.coupons:
+                    if coupon['coupon_code'].lower() == coupon_code.lower():
+                        return jsonify({"error": "Coupon code already exists"}), 400
 
-        for coupon in product.coupons:
-            if coupon['coupon_code'].lower() == coupon_code.lower():
-                return jsonify({"error": "Coupon code already exists"}), 400
-
-        ProductDiscounts.objects(admin_uid=admin_uid).update(
-            push__coupons = coupon_data
-        )
-        product.save()
-        return jsonify({"message": "Discount coupon added successfully"}), 201
+                ProductDiscounts.objects(admin_uid=admin_uid).update(
+                    push__coupons = coupon_data
+                )
+                product.save()
+                return jsonify({"message": "Discount coupon added successfully"}), 201
     except Exception as e:
         logger.error(f"Failed to add Special offer as {str(e)}")
         return jsonify({"message": "Something Went Wrong"}), 500

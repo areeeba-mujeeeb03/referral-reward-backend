@@ -8,6 +8,7 @@ class Campaign(Document):
     program_id = StringField()
     program_name = StringField()
     base_url = StringField()
+    image = StringField()
 
     def save(self, *args, **kwargs):
         if not self.program_id:

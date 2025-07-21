@@ -18,11 +18,6 @@ PENDING_REFERRAL_REWARD_POINTS = 400
 SUCCESS_REFERRAL_REWARD_POINTS = 400
 SESSION_EXPIRY_MINUTES = 30
 
-# admin_bonus = ReferralReward.objects(admin_uid= "AD_UID_2").first()
-# print(admin_bonus)
-SIGN_UP_REWARD = 500
-Login_Reward = 500
-
 # ==================
 
 # Referral Code Processing Utility
@@ -265,11 +260,13 @@ def update_referrer_stats(admin_uid, user):
     if not admin:
         logger.warning(f"Admin not found for UID: {admin_uid}")
         return
+    reward = Participants.objects(admin_uid=user.admin_uid, program_id=user.program_id).first()
+    signup_reward = reward.signup_reward
 
     try:
         admin.update(
             inc__successful_referrals=1,
-            inc__signup_earnings=SIGN_UP_REWARD,
+            inc__signup_earnings=signup_reward,
             inc__total_participants=1
         )
         logger.info(f"Admin stats updated for UID: {admin_uid}")
@@ -279,12 +276,14 @@ def update_referrer_stats(admin_uid, user):
 def initialize_user_records(user_id):
     if Reward.objects(user_id=user_id).first() or Referral.objects(user_id=user_id).first():
         return
-
-    reward = Reward(user_id=user_id, total_meteors_earned=SIGN_UP_REWARD,
-                    current_meteors=SIGN_UP_REWARD, reward_history=[])
-    reward.reward_history.append({
+    user = User.objects(user_id=user_id).first()
+    reward = Participants.objects(admin_uid=user.admin_uid, program_id=user.program_id).first()
+    signup_reward  =reward.signup_reward
+    reward = Reward(user_id=user_id, total_meteors_earned=signup_reward,
+                    current_meteors=signup_reward, reward_history=[])
+    res = reward.reward_history.append({
         "earned_by_action": "signup",
-        "earned_meteors": SIGN_UP_REWARD,
+        "earned_meteors": signup_reward,
         "transaction_type": "credit",
         "referred_on": datetime.datetime.utcnow().strftime("%Y-%m-%d")
     })
@@ -297,10 +296,9 @@ def initialize_user_records(user_id):
 
     Referral(user_id=user_id, all_referrals=[]).save()
 
-    user = User.objects(user_id=user_id).first()
     admin = Participants.objects(admin_uid=user.admin_uid, program_id = user.program_id).first()
     if admin:
-        admin.update(inc__total_participants=1, inc__signup_earnings=SIGN_UP_REWARD)
+        admin.update(inc__total_participants=1, inc__signup_earnings=signup_reward)
 
 # ==================
 
