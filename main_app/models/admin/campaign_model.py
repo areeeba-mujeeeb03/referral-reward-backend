@@ -1,12 +1,13 @@
 import uuid
 
-from mongoengine import StringField, Document, EmailField, DateTimeField, ListField, DictField
+from mongoengine import StringField, Document, EmailField, DateTimeField, ListField, DictField, IntField
 
 
 class Campaign(Document):
-    admin_uid = StringField(required=True, unique=True)
+    admin_uid = StringField(required=True)
     program_id = StringField()
     program_name = StringField()
+    total_participants = IntField()
     base_url = StringField()
     image = StringField()
 

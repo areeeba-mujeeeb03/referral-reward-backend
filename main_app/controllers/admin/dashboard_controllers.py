@@ -16,6 +16,50 @@ from main_app.utils.user.string_encoding import generate_encoded_string
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
+def dashboard_all_campaigns():
+    try:
+        data = request.get_json()
+        admin_uid = data.get("admin_uid")
+        access_token = data.get("mode")
+        session_id = data.get("log_alt")
+
+        exist = Admin.objects(admin_uid=admin_uid).first()
+
+        if not exist:
+            return jsonify({"success": False, "message": "User does not exist"})
+
+        if not access_token or not session_id:
+            return jsonify({"message": "Missing token or session", "success": False}), 400
+
+        if exist.access_token != access_token:
+            return ({"success": False,
+                     "message": "Invalid access token"}), 401
+
+        if exist.session_id != session_id:
+            return ({"success": False,
+                     "message": "Session mismatch or invalid session"}), 403
+
+        if hasattr(exist, 'expiry_time') and exist.expiry_time:
+            if datetime.datetime.now() > exist.expiry_time:
+                return ({"success": False,
+                         "message": "Access token has expired",
+                         "token": "expired"}), 401
+
+        camps = Campaign.objects(admin_uid=admin_uid)
+
+        all_campaigns = []
+
+        for c in camps:
+            c = c.to_mongo().to_dict()
+            c.pop('_id', None)
+            all_campaigns.append(c)
+
+        return jsonify({"success": True, "all_campaigns": all_campaigns}), 200
+    except Exception as e:
+        logger.error(f"Failed to fetch data as {str(e)}")
+        return jsonify({"success": False, "message": "Something Went Wrong"}), 500
+
 def dashboard_stats():
     data = request.get_json()
     admin_uid = data.get("admin_uid")

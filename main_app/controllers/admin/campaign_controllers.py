@@ -1,10 +1,10 @@
 import datetime
 
-from flask import Flask, request, jsonify
+from flask import request, jsonify
 import logging
 from main_app.models.admin.admin_model import Admin
 from main_app.models.admin.campaign_model import Campaign
-from main_app.models.admin.galaxy_model import Galaxy, GalaxyProgram
+from main_app.models.admin.galaxy_model import GalaxyProgram
 from main_app.models.admin.links import AppStats, ReferralReward, Link
 from main_app.models.admin.participants_model import Participants
 
@@ -31,6 +31,7 @@ def create_new_campaign():
         ##Create campaign
         admin_uid = data.get("admin_uid")
         campaign_name = data.get("campaign_name")
+        subtitle = data.get("subtitle")
         base_url = data.get("url")
         image = data.get("image")
         access_token = data.get("mode")
@@ -38,15 +39,23 @@ def create_new_campaign():
 
         admin = Admin.objects(admin_uid=admin_uid).first()
 
-        # if not admin_uid or not access_token or not session_id:
-        #     return jsonify({"message": "Missing required fields", "success": False}), 400
-        #
-        # if not admin:
-        #     return jsonify({"success": False, "message": "User does not exist"}), 404
-        #
-        # if hasattr(admin, 'expiry_time') and admin.expiry_time:
-        #     if datetime.datetime.now() > admin.expiry_time:
-        #         return jsonify({"success": False, "message": "Access token has expired"}), 401
+        if not admin:
+            return jsonify({"success": False, "message": "User does not exist"}), 404
+
+        if not admin_uid or not access_token or not session_id:
+            return jsonify({"message": "Missing required fields", "success": False}), 400
+
+        if admin.access_token != access_token:
+            return ({"success": False,
+                     "message": "Invalid access token"}), 401
+
+        if admin.session_id != session_id:
+            return ({"success": False,
+                     "message": "Session mismatch or invalid session"}), 403
+
+        if hasattr(admin, 'expiry_time') and admin.expiry_time:
+            if datetime.datetime.now() > admin.expiry_time:
+                return jsonify({"success": False, "message": "Access token has expired"}), 401
 
         find = Campaign.objects(admin_uid = admin_uid)
         for campa in find:
@@ -56,17 +65,17 @@ def create_new_campaign():
         camp = Campaign(
             admin_uid = admin_uid,
             program_name = campaign_name,
+            total_participants = 0,
             base_url = base_url,
             image = image
         )
-
 
         for campaign in admin.all_campaigns:
             if campaign['program_name'].strip().lower() == campaign_name.strip().lower():
                 return jsonify({"message": "Campaign with this name already exists", "success": False}), 400
 
         #referral Rewards
-        required_fields = ['referrer_reward', 'invitee_reward', 'conversion_rates']
+        required_fields = ['refer_reward_type','referrer_reward','invitee_reward' ,'invitee_reward_type', 'conversion_rates']
 
         if not all(required_fields):
             return jsonify({"error": "Missing required fields"}), 400
@@ -80,7 +89,9 @@ def create_new_campaign():
 
         ## Add Bonus rewards
         signup_reward = data.get("signup_reward")
+        signup_reward_type = data.get("signup_reward_type")
         login_reward = data.get("login_reward")
+        login_reward_type = data.get("login_reward_type")
 
         ## Special Link Generation
         start_date = data.get("start_date")
@@ -93,16 +104,6 @@ def create_new_campaign():
         success_reward = data.get("success_reward")
         invite_link = data.get("link")
         active = data.get("active", False)
-
-        # missing_fields = [admin_uid, start_date, start_date,
-        #                   end_date, referrer_reward_type, referrer_reward_value, referee_reward_type,
-        #                   referee_reward_value, reward_condition, success_reward, invite_link]
-        #
-        # if not all(missing_fields):
-        #     return jsonify({
-        #         "success": False,
-        #         "error": "Missing required field"
-        #     }), 400
 
         existing_link = Link.objects(admin_uid=admin_uid, program_id=camp.program_id).first()
         if existing_link:
@@ -135,7 +136,6 @@ def create_new_campaign():
             success_reward=success_reward,
             active=active
         )
-
 
         ##Sharing Apps Data
         platforms = data.get("platforms", [])
@@ -180,16 +180,19 @@ def create_new_campaign():
             set__referrer_reward=data['referrer_reward'],
             set__invitee_reward=data['invitee_reward'],
             set__conversion_rates=data['conversion_rates'],
+            set__referrer_reward_type = data['refer_reward_type'],
+            set__invitee_reward_type = data['invitee_reward_type'],
             set__updated_at=datetime.datetime.now(),
             upsert=True
         )
         Participants.objects(admin_uid=admin_uid, program_id=camp.program_id).update(
             login_reward=login_reward,
-            signup_reward=signup_reward
+            signup_reward=signup_reward,
+            signup_reward_type = signup_reward_type,
+            login_reward_type = login_reward_type
         )
         datas.save()
         stats.save()
-
 
         return jsonify({"message": "Successfully Created a Campaign", "success": True}), 201
 

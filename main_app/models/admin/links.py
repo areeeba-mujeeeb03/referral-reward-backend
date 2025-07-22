@@ -30,7 +30,9 @@ class AppStats(Document):
 class ReferralReward(Document):
     admin_uid = StringField()
     program_id = StringField()
+    referrer_reward_type = StringField()
     referrer_reward  = IntField(required=True, default=0)
+    invitee_reward_type = StringField()
     invitee_reward = IntField(required=True, default=0)
     conversion_rates = DictField()
     signup_reward = IntField(required=True, default=0)
