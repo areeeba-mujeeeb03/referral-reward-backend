@@ -136,11 +136,11 @@ def handle_authentication():
     existing.last_login = datetime.datetime.now()
     existing.save()
 
-    # info = {"access_token": access_token,
-    #         "session_id": session_id}
-    #
-    # fields_to_encode = ["access_token", "session_id"]
-    # print(info)
+    info = {"access_token": access_token,
+            "session_id": session_id}
+
+    fields_to_encode = ["access_token", "session_id"]
+    print(info)
 
     # res = generate_encoded_string(info, fields_to_encode)
     return jsonify({"log_alt" : session_id,

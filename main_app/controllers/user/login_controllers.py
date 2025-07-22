@@ -239,40 +239,6 @@ def handle_email_login():
            error_type=get_error("code validation failed")).save()
     return jsonify({"error": get_error("login_failed")}), 500
 
-
-
-def handle_authentication():
-    data = request.get_json()
-    user_id = data.get("user_id")
-
-    existing = User.objects(user_id = user_id).first()
-
-    if not existing:
-        logger.warning("User not found")
-        return jsonify({"message": get_error("user_not_found")}), 404
-
-    #  Generate tokens
-    access_token = generate_access_token(existing.admin_uid)
-    session_id = create_user_session(existing.admin_uid)
-    expiry_time = datetime.datetime.now() + datetime.timedelta(minutes=SESSION_EXPIRY_MINUTES)
-
-    #  Update user session info in DB
-    existing.access_token = access_token
-    existing.session_id = session_id
-    existing.expiry_time = expiry_time
-    existing.last_login = datetime.datetime.now()
-    existing.save()
-
-    info = {"access_token": access_token,
-            "session_id": session_id,
-            "user_id" : user_id}
-
-    fields_to_encode = ["access_token", "session_id", "user_id"]
-
-    res = generate_encoded_string(info, fields_to_encode)
-    return jsonify({"logs" : res,
-                    "success" : True}),200
-
 # ==================
 
 # User Logout Controller
@@ -308,3 +274,39 @@ def logout_user():
         Errors(username=user.username, email=user.email, error_type=get_error("logout_failed"),
                error_source="Logout form").save()
         return jsonify({"message": "Something went wrong", "success" : False}), 400
+
+def handle_user_authentication():
+    data = request.get_json()
+    user_id = data.get("user_id")
+
+    existing = User.objects(user_id = user_id).first()
+
+    if not existing:
+        logger.warning("User not found")
+        return jsonify({"message": get_error("user_not_found")}), 404
+
+    #  Generate tokens
+    access_token = generate_access_token(existing.admin_uid)
+    session_id = create_user_session(existing.admin_uid)
+    expiry_time = datetime.datetime.now() + datetime.timedelta(minutes=SESSION_EXPIRY_MINUTES)
+
+    #  Update user session info in DB
+    existing.access_token = access_token
+    existing.session_id = session_id
+    existing.expiry_time = expiry_time
+    existing.last_login = datetime.datetime.now()
+    existing.save()
+
+    info = {"access_token": access_token,
+            "session_id": session_id,
+            "user_id" : user_id}
+
+    fields_to_encode = ["access_token", "session_id", "user_id"]
+
+    res = generate_encoded_string(info, fields_to_encode)
+    return jsonify({"logs" : res,
+                    "success" : True}),200
+
+def check_auths(token, session, user_id):
+    data = request.get_json()
+    return jsonify({"message" : "Successfully", "success" : True})

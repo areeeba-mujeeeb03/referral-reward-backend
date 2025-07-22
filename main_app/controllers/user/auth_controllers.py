@@ -12,6 +12,7 @@ from main_app.controllers.user.referral_controllers import (initialize_user_reco
                                                             update_referral_status_and_reward)
 from main_app.utils.user.helpers import hash_password
 from main_app.utils.user.error_handling import get_error
+from main_app.utils.user.string_encoding import generate_encoded_string
 
 # ================
 

@@ -254,7 +254,7 @@ def error_table():
         access_token = data.get("mode")
         session_id = data.get("log_alt")
 
-        exist = Campaign.objects(admin_uid=admin_uid, program_id = program_id).first()
+        exist = Admin.objects(admin_uid=admin_uid).first()
 
         if not exist:
             return jsonify({"success": False, "message": "User does not exist"})
@@ -276,21 +276,30 @@ def error_table():
                          "message": "Access token has expired",
                          "token": "expired"}), 401
 
+        camp = Campaign.objects(admin_uid = admin_uid, program_id = program_id).first()
+
+        if not camp:
+            return jsonify({"message" : "Campaign Not Found", "success" : False})
+
         errors = Errors.objects(admin_uid=admin_uid, program_id = program_id)
         all_errors = []
         for error in errors:
             error_dict = error.to_mongo().to_dict()
             error_dict.pop('_id', None)
             all_errors.append(error_dict)
+            print(error_dict)
+
+        print(all_errors)
 
         return jsonify({
             "message": "Data retrieved successfully",
             "data": all_errors
         }), 200
 
+
     except Exception as e:
         logger.error(f"Internal Server Error while saving email.{str(e)}")
-        return jsonify({"error": "Internal server error"})
+        return jsonify({"error": "Internal server error"}),500
 
 def graph_data(admin_uid):
     registered_user = User.objects(admin_uid = admin_uid).order_by('created_at')

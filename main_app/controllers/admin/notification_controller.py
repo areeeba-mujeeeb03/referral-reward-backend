@@ -17,12 +17,14 @@ def create_push_notification():
         admin_uid = data.get("admin_uid")
         access_token = data.get("mode")
         session_id = data.get("log_alt")
+        program_id = data.get("program_id")
         title = data.get("title")
         message = data.get("message")
         button_text = data.get("button_text")
         button_url = data.get("button_url")
         segment = data.get("segment", "All")
         specific_users = data.get("specific_users", [])
+        notification_type = data.get("notification_type")
         date_str = data.get("date")  # Format: DD/MM/YYYY or DD-MM-YYYY
         time_str = data.get("time")  # Format: HH:MM (24h)
 
@@ -63,12 +65,14 @@ def create_push_notification():
 
         notification = PushNotification(
             admin_uid=admin_uid,
+            program_id = program_id,
             title=title,
             message=message,
             button_text=button_text,
             button_url=button_url,
             segment=segment,
-            specific_users=specific_users,
+            notification_type = notification_type,
+            specific_users=[specific_users],
             schedule_date=schedule_date
         )
         notification.save()
@@ -87,11 +91,11 @@ def create_push_notification():
 def list_push_notifications():
     try:
         logger.info(f"List push notification API called:")
-        admin_uid = request.args.get("admin_uid")
         data = request.get_json()
         admin_uid = data.get("admin_uid")
         access_token = data.get("mode")
         session_id = data.get("log_alt")
+        program_id = data.get("program_id")
         exist = Admin.objects(admin_uid=admin_uid).first()
 
         if not exist:
@@ -116,22 +120,17 @@ def list_push_notifications():
         if not admin_uid:
             return jsonify({"error": "Missing admin_uid"}), 400
 
-        notifications = PushNotification.objects(admin_uid=admin_uid).order_by('-created_at')
+        notifications = PushNotification.objects(admin_uid=admin_uid, program_id = program_id).order_by('-created_at')
+        print(notifications)
         result = []
 
         for n in notifications:
-            result.append({
-                "title": n.title,
-                "message": n.message,
-                "button_text": n.button_text,
-                "button_url": n.button_url,
-                "segment": n.segment,
-                "specific_users": n.specific_users,
-                "schedule_date": n.schedule_date.strftime("%d/%m/%Y %H:%M") if n.schedule_date else "",
-                "created_at": n.created_at.strftime("%d/%m/%Y %H:%M")
-            })
+            no = n.to_mongo().to_dict()
+            result.append(no)
+        print(result)
 
-        return jsonify({"success": True, "notifications": result}), 200
+        return jsonify({"success": True,
+                        "notifications": result}), 200
 
     except Exception as e:
         logger.error(f"list push notification failed: {str(e)}")
@@ -148,6 +147,7 @@ def update_push_notification(notification_id):
         admin_uid = data.get("admin_uid")
         access_token = data.get("mode")
         session_id = data.get("log_alt")
+        program_id = data.get("program_id")
         exist = Admin.objects(admin_uid=admin_uid).first()
 
         if not exist:
@@ -199,7 +199,6 @@ def update_push_notification(notification_id):
     except Exception as e:
         logger.error(f"Update push notification failed: {str(e)}")
         return jsonify({"error": "Internal server error"}), 500
-
 
 # ----------------------------------------------------------
 
