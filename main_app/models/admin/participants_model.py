@@ -1,7 +1,7 @@
 from mongoengine import Document, IntField, StringField
 
 class UserData(Document):
-    admin_uid = StringField(required=True,unique=True)
+    admin_uid = StringField(required=True)
     total_participants  = IntField(default=0)
     total_referrals = IntField(default=0)
     successful_referrals = IntField(default=0)

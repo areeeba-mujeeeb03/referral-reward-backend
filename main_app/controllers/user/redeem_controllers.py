@@ -58,7 +58,7 @@ def redeem_discount_coupon(data, user):
             return jsonify({'error': 'Reward profile not updated'}), 404
 
         for coupon in reward.discount_coupons:
-            if coupon.get('voucher_code') == coupon_code:
+            if coupon.get('coupon_code') == coupon_code:
                 expiry = coupon.get('expiry_date')
                 if expiry and expiry < datetime.datetime.now():
                     return jsonify({"message": "This coupon has expired", "success": False}), 400

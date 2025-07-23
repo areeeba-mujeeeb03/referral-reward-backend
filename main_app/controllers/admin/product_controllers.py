@@ -63,6 +63,7 @@ def add_product():
          #                  "token": "expired"}), 401
 
          if not all([product_name, original_amt, short_desc, admin_uid]):
+             logger.warning(f"Missing required fields")
              return jsonify({"message": "Missing required fields"}), 400
 
          try:
@@ -233,6 +234,7 @@ def add_offer():
      image = data.get("image")
 
      if not all ([offer_name, one_liner, button_txt, off_percent, start_date, expiry_date, admin_uid, product_id]):
+         logger.warning(f"All fields are required")
          return jsonify({"message": "All fields are required"}), 400
 
      if not start_date or not expiry_date:

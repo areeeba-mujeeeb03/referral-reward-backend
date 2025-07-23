@@ -25,11 +25,13 @@ def admin_register():
       required_fields = ["username", "email", "mobile_number", "password"]
       for field in required_fields:
             if field not in data or not data[field].strip():
+                logger.error("Missing Required fields in registration")
                 return jsonify({"message": f"{field} is required"}), 400
 
       email = data["email"]
       #  Check for lowercase email
       if email != email.lower():
+            logger.error("Invalid email format")
             return jsonify({"message": "Email must be in lowercase only"}), 400
       
      # Additional field-specific validation
@@ -39,6 +41,7 @@ def admin_register():
 
      # Mobile number validation  
       if not re.match(r'^\d{10}$',data["mobile_number"]):
+            logger.error("Mobile number length is less than or greater than 10")
             return jsonify({"message": "Mobile must be 10 digits"}), 400
 
     # Password validation
@@ -48,12 +51,15 @@ def admin_register():
 
     # Check username exists or not   
       if Admin.objects(username=data["username"]).first():
+        logger.error("Registration with existing username")
         return jsonify({"message": get_error("username_exists")}), 400
     
       if Admin.objects(email=email).first():
+        logger.error("Registration with existing email")
         return jsonify({"message": get_error("email_exists")}), 400
 
       if Admin.objects(mobile_number=data["mobile_number"]).first():
+        logger.error("Registration with existing mobile_number")
         return jsonify({"message": "mobile number already exists", "success" : False}), 400
 
       hashed_password = hash_password(data["password"])
@@ -66,6 +72,7 @@ def admin_register():
       )
       user.save()
       initialize_admin_data(user.admin_uid)
+      logger.info("Registration Successful")
       return jsonify({"success": "true" , "message": "User registered successfully"}), 200
  
  except Exception as e:
@@ -134,6 +141,7 @@ def initialize_admin_data(admin_uid):
 
 
 def handle_authentication():
+    logger.info(f"Authentication API called")
     data = request.get_json()
     admin_uid = data.get("admin_uid")
 

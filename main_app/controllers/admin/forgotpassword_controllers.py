@@ -69,9 +69,11 @@ def verify_otp():
       return jsonify({"message": get_error("user_not_found")}), 400
 
     if user.code != code:
+        logger.warning(f"Invalid code:")
         return jsonify({"error": "Invalid code"}), 400
 
     if user.code_expiry < datetime.now():
+        logger.warning(f"Code expired:")
         return jsonify({"message": "Code expired"}), 400
 
     logger.info(f"OTP verified successfully for user: {email}")
@@ -98,11 +100,12 @@ def reset_password():
      confirm_password = data.get("confirm_password", "")
 
      if not data:
-         logger.warning("No data provided in request")
+         logger.warning(f"No data provided in request")
          return jsonify({"message": "No fields provided."}), 400
 
      user = Admin.objects(email = email).first()
      if not user:
+        logger.warning(f"User not found:")
         return jsonify({"error": "user_not_found"}), 400
 
      password_validation = validate_password_strength(data["new_password"])
@@ -110,7 +113,7 @@ def reset_password():
             return password_validation
 
      if new_password != confirm_password:
-      logger.warning("Passwords do not match")
+      logger.warning(f"Passwords do not match")
       return jsonify({"message": "Password do not match"}), 400
     
     
@@ -118,6 +121,7 @@ def reset_password():
      hashed = bcrypt.hashpw(new_password.encode(), salt)
 
      if user.code != code:
+         logger.warning(f"Invalid code for this email")
          return jsonify({"error": "Invalid code for this email"}), 400
 
 

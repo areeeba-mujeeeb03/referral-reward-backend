@@ -8,6 +8,7 @@ from cryptography.fernet import Fernet
 from main_app.models.admin.product_model import Product
 from main_app.models.admin.product_offer_model import ProductOffer
 from main_app.models.admin.prize_model import PrizeDetail, AdminPrizes
+# from main_app.models.admin.notification_model import PushNotification
 
 def generate_otp(length=6):
     return ''.join(random.choices("0123456789", k=length))
@@ -84,3 +85,14 @@ def generate_prize_uid(admin_uid):
       else:
         count = 1    
       return f"PRZ_{str(count).zfill(2)}"
+
+
+# -----------------------------------------------
+# Notification
+
+# # Example NOTI_01, OFR_02, .....
+
+# def generate_notification_uid(admin_uid):
+#     count = PushNotification.objects(admin_uid=admin_uid).count() + 1
+#     return f"NOTI_{str(count).zfill(2)}"
+  

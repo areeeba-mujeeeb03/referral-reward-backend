@@ -187,7 +187,7 @@ def submit_msg():
             error_source="send contact message",
             error_type=f"Failed to save attachments {str(e)}"
         ).save()
-        return jsonify({"message": "Failed to send query" , "success" : True}), 201
+        return jsonify({"message": "Failed to send query" , "success" : False}), 400
 
 def update_app_stats(app_name, user):
     if app_name:

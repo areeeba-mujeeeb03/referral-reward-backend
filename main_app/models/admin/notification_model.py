@@ -4,6 +4,7 @@ import datetime
 
 class PushNotification(Document):
     admin_uid = StringField(required=True)
+    # notification_uid = StringField(required=True)
     title = StringField(required=True)
     message = StringField(required=True)
     button_text = StringField()

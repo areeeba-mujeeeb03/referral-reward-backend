@@ -134,9 +134,8 @@ def save_referral_data():
                      "message": "Access token has expired",
                      "token": "expired"}), 401
 
-    missing_fields = [admin_uid, start_date, access_token, session_id, start_date,
-                end_date, referrer_reward_type, referrer_reward_value, referee_reward_type,
-                referee_reward_value, reward_condition, success_reward, invite_link, active]
+    missing_fields = [admin_uid, start_date,end_date, referrer_reward_type, referrer_reward_value, referee_reward_type,
+                referee_reward_value, reward_condition, success_reward, invite_link]
 
     if not all(missing_fields):
         return jsonify({
@@ -163,7 +162,7 @@ def save_referral_data():
     return jsonify({
         "success": True,
         "message": "Referral setup saved successfully"
-    }), 200
+    }),200
 
 
 def sharing_app_stats():
