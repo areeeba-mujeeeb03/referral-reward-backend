@@ -302,7 +302,6 @@ def graph_data(admin_uid):
 
     return jsonify({"registrations": registered_user, "success" : True}),200
 
-
 def reward_history():
     data = request.get_json()
     admin_uid = data.get("admin_uid")
@@ -359,7 +358,7 @@ def reward_history():
         rank_data.append(user_dict)
 
     top_referrers = []
-    top_ref_data = Referrals.objects(admin_uid=admin_uid, program_id=program_id).order_by('-total_referrals').limit(3)
+    top_ref_data = Referral.objects(admin_uid=admin_uid, program_id=program_id).order_by('-total_referrals').limit(3)
     for ref in top_ref_data:
         user = User.objects(user_id=ref.user_id).first()
         if user:
