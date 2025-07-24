@@ -15,6 +15,7 @@ class SpecialOffer(EmbeddedDocument):
     start_timestamp = DateTimeField()
     expiry_timestamp = DateTimeField()
     active = BooleanField()
+    hide = BooleanField()
 
 class SOffer(Document):
     admin_uid = StringField()

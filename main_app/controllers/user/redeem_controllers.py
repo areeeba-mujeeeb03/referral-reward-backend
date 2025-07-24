@@ -157,6 +157,10 @@ def redeem_exciting_prize(data, user):
                         dec__current_meteors = required_meteors
                     )
 
+                    reward.reward_history.append({"reward_type" : "exciting_prizes",
+                                                  "used_meteors" : required_meteors,
+                                                  "date" : datetime.datetime.now().strftime('%d-%m-%y')})
+
                     return jsonify({
                         "congrats_text": "Congratulations! You have claimed your Prize",
                         "success": True

@@ -46,7 +46,6 @@ try:
     twilio_client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
     # Test authentication on startup
     twilio_client.api.accounts(TWILIO_ACCOUNT_SID).fetch()
-    print("done")
     logger.info("Twilio authentication successful")
 except TwilioException as e:
     logger.error(f"Twilio authentication failed: {e}")

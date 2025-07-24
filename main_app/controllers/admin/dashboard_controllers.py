@@ -160,7 +160,6 @@ def dashboard_participants():
     user = User.objects(admin_uid=admin_uid, program_id=program_id)
     for u in user:
         data = []
-
         referral_earnings = Referral.objects().order_by('-referral_earning')
         for earnings in referral_earnings:
             user_sort = User.objects(user_id = earnings.user_id).first()
@@ -185,7 +184,6 @@ def dashboard_participants():
             userdata = {}
             # userdata['rank'] =  "#" + (len(redemption_data) + 1)
             userdata['rank'] = "#" + str(len(redemption_data) + 1)
-            print(userdata['rank'])
             userdata['username'] = user_sort.username
             userdata['email'] = user_sort.email
             userdata['rewards_redeemed'] = redemption.total_meteors_earned,
@@ -286,16 +284,14 @@ def error_table():
         for error in errors:
             error_dict = error.to_mongo().to_dict()
             error_dict.pop('_id', None)
+            error_dict.pop('program_id', None)
+            error_dict.pop('admin_uid', None)
             all_errors.append(error_dict)
-            print(error_dict)
-
-        print(all_errors)
 
         return jsonify({
             "message": "Data retrieved successfully",
             "data": all_errors
         }), 200
-
 
     except Exception as e:
         logger.error(f"Internal Server Error while saving email.{str(e)}")
@@ -305,3 +301,95 @@ def graph_data(admin_uid):
     registered_user = User.objects(admin_uid = admin_uid).order_by('created_at')
 
     return jsonify({"registrations": registered_user, "success" : True}),200
+
+
+def reward_history():
+    data = request.get_json()
+    admin_uid = data.get("admin_uid")
+    program_id = data.get("program_id")
+    access_token = data.get("mode")
+    session_id = data.get("log_alt")
+
+    exist = Admin.objects(admin_uid=admin_uid).first()
+
+    if not exist:
+        return jsonify({"success": False, "message": "User does not exist"})
+
+    if not access_token or not session_id:
+        return jsonify({"message": "Missing token or session", "success": False}), 400
+
+    if exist.access_token != access_token:
+        return ({"success": False,
+                 "message": "Invalid access token"}), 401
+
+    if exist.session_id != session_id:
+        return ({"success": False,
+                 "message": "Session mismatch or invalid session"}), 403
+
+    if hasattr(exist, 'expiry_time') and exist.expiry_time:
+        if datetime.datetime.now() > exist.expiry_time:
+            return ({"success": False,
+                     "message": "Access token has expired",
+                     "token": "expired"}), 401
+
+    registered_users = User.objects(admin_uid = admin_uid, program_id = program_id)
+
+    reward_data = []
+
+    for registered_user in registered_users:
+        user_dict = {}
+        user_dict['username'] = registered_user.username
+        user_dict['email'] = registered_user.email
+        rewards = Reward.objects(user_id = registered_user.user_id).first()
+        user_dict['total_rewards'] = len(rewards.reward_history)
+        user_dict['earnings'] = rewards.total_meteors_earned
+        user_dict['reward_history'] = rewards.reward_history
+        reward_data.append(user_dict)
+
+    rank_data = []
+
+    for registered_user in registered_users:
+        user_dict = {}
+        user_dict['username'] = registered_user.username
+        user_dict['email'] = registered_user.email
+        rewards = Reward.objects(user_id=registered_user.user_id).first()
+        user_dict['total_rewards'] = len(rewards.reward_history)
+        user_dict['earnings'] = rewards.total_meteors_earned
+        user_dict['reward_history'] = rewards.reward_history
+        rank_data.append(user_dict)
+
+    top_referrers = []
+    top_ref_data = Referrals.objects(admin_uid=admin_uid, program_id=program_id).order_by('-total_referrals').limit(3)
+    for ref in top_ref_data:
+        user = User.objects(user_id=ref.user_id).first()
+        if user:
+            top_referrers.append({
+                "username": user.username,
+                "email": user.email,
+                "total_referrals": ref.total_referrals
+            })
+
+    # Get top 3 earners
+    top_earners = []
+    top_earnings = Reward.objects().order_by('-total_meteors_earned').limit(3)
+    for reward in top_earnings:
+        user = User.objects(user_id=reward.user_id).first()
+        if user and user.admin_uid == admin_uid and user.program_id == program_id:
+            top_earners.append({
+                "username": user.username,
+                "email": user.email,
+                "total_meteors_earned": reward.total_meteors_earned
+            })
+
+    info = {"rewards": reward_data,
+        "top_referrers": top_referrers,
+        "top_earners": top_earners}
+    fields_to_encode = ["rewards", "top_referrers", "top_earners"]
+
+    generate_encoded_string(info, fields_to_encode)
+    return jsonify({
+        "rewards": reward_data,
+        "top_referrers": top_referrers,
+        "top_earners": top_earners,
+        "success": True
+    }), 200

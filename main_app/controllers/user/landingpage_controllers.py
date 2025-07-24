@@ -84,8 +84,6 @@ def my_rewards():
     session_id = data.get("log_alt")
 
     user = User.objects(user_id=user_id).first()
-
-    print(user)
     try:
         if not user:
             return jsonify({"success" : False, "message" : "User does not exist"}),400

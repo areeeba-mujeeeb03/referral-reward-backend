@@ -1,5 +1,7 @@
 from flask import request, jsonify
 import datetime
+
+from main_app.models.admin.campaign_model import Campaign
 from main_app.models.admin.discount_coupon_model import ProductDiscounts
 import logging
 from main_app.models.admin.admin_model import Admin
@@ -18,6 +20,7 @@ def create_special_offer():
         admin_uid = data.get("admin_uid")
         access_token = data.get("mode")
         session_id = data.get("log_alt")
+        program_id = data.get("program_id")
         offer_title = data.get('offer_title')
         offer_desc = data.get('offer_desc')
         tag = data.get('tag')
@@ -27,6 +30,7 @@ def create_special_offer():
         end_time = data.get('end_time')
         offer_code = data.get('code')
         pop_up_text = data.get('pop_up_text')
+        hide = data.get("hide")
 
         admin = Admin.objects(admin_uid=admin_uid).first()
         if not admin:
@@ -54,6 +58,12 @@ def create_special_offer():
                     "token": "expired"
                 }), 401
 
+        check_prog = Campaign.objects(admin_uid = admin_uid, program_id = program_id).first()
+        if not check_prog:
+            return jsonify({"message" : "Campaign Not Found"}), 404
+
+        check_existing = SOffer.objects(admin_uid = admin_uid, program_id=program_id).first()
+
         start_time_obj = datetime.datetime.strptime(start_time, "%H:%M").time()
         end_time_obj = datetime.datetime.strptime(end_time, "%H:%M").time()
 
@@ -65,6 +75,7 @@ def create_special_offer():
 
         if expiry_timestamp <= start_timestamp:
             return jsonify({"error": "End date and time must be after start date and time"}), 400
+
 
         offer_data = {
             "offer_title": offer_title,
@@ -78,10 +89,11 @@ def create_special_offer():
             "end_time": end_time,
             "start_timestamp": start_timestamp,
             "expiry_timestamp": expiry_timestamp,
+            "hide" : hide,
             "active": start_timestamp <= datetime.datetime.now()
         }
 
-        existing_offer = SOffer.objects(admin_uid=admin_uid).first()
+        existing_offer = SOffer.objects(admin_uid=admin_uid, program_id= program_id).first()
 
         if existing_offer and existing_offer.special_offer:
             for offer in existing_offer.special_offer:
@@ -96,7 +108,7 @@ def create_special_offer():
                         "success": False
                     }), 400
 
-        SOffer.objects(admin_uid=admin_uid).update_one(
+        SOffer.objects(admin_uid=admin_uid,program_id= program_id).update_one(
             push__special_offer=offer_data
         )
 

@@ -12,11 +12,12 @@ from main_app.controllers.admin.prize_controller import add_exciting_prizes, che
 from main_app.controllers.admin.how_it_work_controller import add_how_it_work, advertisement_card
 from main_app.controllers.admin.referral_controllers import generate_invite_link_with_expiry, sharing_app_stats, \
     save_referral_data
-from main_app.controllers.admin.rewards_controllers import create_galaxy, add_new_milestone,set_reward_settings
+from main_app.controllers.admin.rewards_controllers import create_galaxy,set_reward_settings
 from main_app.controllers.admin.dashboard_controllers import error_table, dashboard_participants, dashboard_stats, \
-    graph_data, dashboard_all_campaigns
+    graph_data, dashboard_all_campaigns, reward_history
 from main_app.controllers.admin.email_controller import create_email
-from main_app.controllers.admin.notification_controller import create_push_notification, list_push_notifications, update_push_notification, delete_push_notification
+from main_app.controllers.admin.notification_controller import create_push_notification, list_push_notifications, \
+    update_push_notification, delete_push_notification, get_push_notification
 from main_app.controllers.admin.perks_controller import create_exclusive_perks, edit_footer
 from main_app.controllers.admin.special_off_controllers import create_special_offer
 
@@ -410,14 +411,14 @@ def add_galaxy():
 
 # ==============
 
-@admin_bp.route('/admin/add-new-milestones', methods = ['POST'])
-def add_milestone():
-    """
-    Handle password reset using code(otp) from email
-    Accepts: POST request with new password and reset
-    Returns: Password reset confirmation response
-    """
-    return add_new_milestone()
+# @admin_bp.route('/admin/add-new-milestones', methods = ['POST'])
+# def add_milestone():
+#     """
+#     Handle password reset using code(otp) from email
+#     Accepts: POST request with new password and reset
+#     Returns: Password reset confirmation response
+#     """
+#     return add_new_milestone()
 
 # ==================
 
@@ -640,3 +641,21 @@ def list_campaign():
     Returns: Password reset confirmation response
     """
     return dashboard_all_campaigns()
+
+
+@admin_bp.route("/admin/get-push-notification/<notification_id>", methods=["GET"])
+def admin_get_push_notification(notification_id):
+
+    return get_push_notification(notification_id)
+
+@admin_bp.route('/admin/reward-history', methods = ['POST'])
+def user_rewards():
+
+    return reward_history()
+
+
+# @admin_bp.route('/admin/check-auths', methods = ['POST'])
+# def
+
+
+

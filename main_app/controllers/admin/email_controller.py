@@ -60,7 +60,7 @@ def create_email():
             return jsonify({"message": "email_type is required"}), 400
         
         if not all([name, email, subject, reply_to, content, button_text]):
-            return jsonify({"message": "All feilds are required"}), 400
+            return jsonify({"message": "All fields are required"}), 400
 
         template =EmailTemplate.objects(email_type=email_type).first()
         if not template:

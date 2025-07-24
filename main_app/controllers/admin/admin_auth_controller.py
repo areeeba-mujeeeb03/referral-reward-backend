@@ -1,3 +1,4 @@
+import bcrypt
 from flask import request, jsonify
 from main_app.models.admin.admin_model import Admin
 from main_app.models.admin.campaign_model import Campaign
@@ -114,12 +115,11 @@ def handle_admin_login():
         logger.error(f"Login failed for email with error: {str(e)}")
         return jsonify({"error": get_error("login_failed")}), 500
 
-
 def handle_authentication():
     data = request.get_json()
     admin_uid = data.get("admin_uid")
 
-    existing = Admin.objects(admin_uid = admin_uid).first()
+    existing = Admin.objects(admin_uid=admin_uid).first()
 
     if not existing:
         logger.warning("User not found")
@@ -136,13 +136,87 @@ def handle_authentication():
     existing.last_login = datetime.datetime.now()
     existing.save()
 
-    info = {"access_token": access_token,
-            "session_id": session_id}
-
-    fields_to_encode = ["access_token", "session_id"]
-    print(info)
+    # part1 = access_token[:10]
+    # part2 = access_token[10:]
+    #
+    # info = {"access_token": access_token,
+    #         "session_id": session_id}
+    #
+    # fields_to_encode = ["access_token", "session_id",]
 
     # res = generate_encoded_string(info, fields_to_encode)
     return jsonify({"log_alt" : session_id,
                     "mode" : access_token,
-                    "success" : True}),200
+                    "success": True}), 200
+
+
+# def handle_authentication():
+#     data = request.get_json()
+#     admin_uid = data.get("admin_uid")
+#
+#     existing = Admin.objects(admin_uid = admin_uid).first()
+#
+#     if not existing:
+#         logger.warning("User not found")
+#         return jsonify({"message": get_error("user_not_found")}), 404
+#
+#     #  Generate tokens
+#     access_token = generate_access_token(existing.admin_uid)
+#     session_id = create_user_session(existing.admin_uid)
+#     expiry_time = datetime.datetime.now() + datetime.timedelta(minutes=SESSION_EXPIRY_MINUTES)
+#     #  Update user session info in DB
+#     existing.access_token = access_token
+#     existing.session_id = session_id
+#     existing.expiry_time = expiry_time
+#     existing.last_login = datetime.datetime.now()
+#     existing.save()
+#
+#     part1 = access_token[:10]
+#     part2 = access_token [10:]
+#
+#     info = {"access_token": bcrypt.hashpw((part2+part1).encode('utf-8'), bcrypt.gensalt()).decode('utf-8'),
+#             "session_id": session_id,
+#             "admin_uid" : admin_uid}
+#
+#     fields_to_encode = ["access_token", "session_id"]
+#     print(info)
+#
+#     res = generate_encoded_string(info, fields_to_encode)
+#     return jsonify({"logs": res,
+#                     "success" : True}),200
+
+# def check_authentication(admin_uid, access_token, session_id):
+#     data = request.get_json()
+#
+#     existing = Admin.objects(admin_uid = admin_uid).first()
+#
+#     if not existing:
+#         logger.warning("User not found")
+#         return jsonify({"message": get_error("user_not_found")}), 404
+#
+#     ## Generate tokens
+#     access_token = generate_access_token(existing.admin_uid)
+#     session_id = create_user_session(existing.admin_uid)
+#     expiry_time = datetime.datetime.now() + datetime.timedelta(minutes=SESSION_EXPIRY_MINUTES)
+#     ## Update user session info in DB
+#     existing.access_token = access_token
+#     existing.session_id = session_id
+#     existing.expiry_time = expiry_time
+#     existing.last_login = datetime.datetime.now()
+#     existing.save()
+#
+#     part1 = access_token[:len(access_token)/2]
+#     part2 = access_token [len(access_token)/2:]
+#     print(part1)
+#     print(part2)
+#
+#     info = {"access_token": bcrypt.hashpw((part1+part2).encode('utf-8'), bcrypt.gensalt()).decode('utf-8'),
+#             "session_id": session_id,
+#             "admin_uid" : admin_uid}
+#
+#     fields_to_encode = ["access_token", "session_id"]
+#     print(info)
+#
+#     res = generate_encoded_string(info, fields_to_encode)
+#     return jsonify({"logs": res,
+#                     "success" : True}),200

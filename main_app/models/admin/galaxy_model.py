@@ -18,7 +18,7 @@ class Galaxy(EmbeddedDocument):
     milestones = ListField(EmbeddedDocumentField(Milestone))
 
 class GalaxyProgram(Document):
-    program_id = StringField(required=True, unique=True)
+    program_id = StringField(required=True)
     admin_uid = StringField(required=True)
     galaxies = ListField(EmbeddedDocumentField(Galaxy))
 

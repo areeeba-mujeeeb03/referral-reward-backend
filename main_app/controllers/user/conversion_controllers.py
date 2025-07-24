@@ -1,6 +1,5 @@
 from flask import request, jsonify
 import datetime
-
 from main_app.models.admin.links import ReferralReward
 from main_app.models.user.reward import Reward
 from main_app.models.user.user import User

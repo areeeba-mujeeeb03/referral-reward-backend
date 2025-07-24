@@ -277,6 +277,7 @@ def update_user_profile():
 # Invitation Links
 
 # ====================
+
 # ==============
 
 # 17. WhatsAPP
@@ -440,5 +441,3 @@ def send_logs():
 @user_bp.route('/rewards/<token>/<session>/<user_id>', methods = ['POST'])
 def check_user_logs(token, session, user_id):
     return check_auths(token, session, user_id)
-
-
