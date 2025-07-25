@@ -2,7 +2,6 @@ from mongoengine import StringField, Document, ListField, IntField, \
 EmbeddedDocumentField, EmbeddedDocument
 
 class Milestone(EmbeddedDocument):
-    milestone_id = StringField(required=True)
     milestone_name = StringField()
     meteors_required_to_unlock = IntField()
     milestone_reward = IntField()

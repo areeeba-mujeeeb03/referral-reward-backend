@@ -3,9 +3,16 @@ from flask import request, jsonify
 import logging
 from main_app.models.admin.admin_model import Admin
 from main_app.models.admin.campaign_model import Campaign
+from main_app.models.admin.discount_coupon_model import ProductDiscounts
 from main_app.models.admin.galaxy_model import GalaxyProgram, Milestone, Galaxy
 from main_app.models.admin.links import AppStats, ReferralReward, Link
 from main_app.models.admin.participants_model import Participants
+from main_app.models.admin.perks_model import ExclusivePerks
+from main_app.models.admin.prize_model import AdminPrizes
+from main_app.models.admin.product_model import Product
+from main_app.models.admin.product_offer_model import Offer
+from main_app.models.admin.special_offer_model import SOffer
+from main_app.utils.user.string_encoding import generate_encoded_string
 
 # Configure logging for better debugging and monitoring
 logging.basicConfig(level=logging.INFO)
@@ -221,7 +228,6 @@ def create_new_campaign():
             milestone_objects = []
             for m in milestones_data:
                 milestone = Milestone(
-                    milestone_id=m.get("milestone_id"),
                     milestone_name=m.get("milestone_name"),
                     meteors_required_to_unlock=m.get("meteors_required_to_unlock", 0),
                     milestone_reward=m.get("milestone_reward", 0),
@@ -260,4 +266,183 @@ def initialize_admin_data(admin_uid, program_id):
     if not ReferralReward.objects(admin_uid=admin_uid, program_id=program_id):
         ReferralReward(admin_uid=admin_uid, program_id=program_id).save()
 
+    if not Product.objects(admin_uid=admin_uid, program_id=program_id):
+        Product(admin_uid=admin_uid, program_id=program_id).save()
+
+    if not SOffer.objects(admin_uid=admin_uid, program_id=program_id):
+        SOffer(admin_uid=admin_uid, program_id=program_id).save()
+
+    if not Offer.objects(admin_uid=admin_uid, program_id=program_id):
+        Offer(admin_uid=admin_uid, program_id=program_id).save()
+
+    if not ExclusivePerks.objects(admin_uid=admin_uid, program_id=program_id):
+        ExclusivePerks(admin_uid=admin_uid, program_id=program_id).save()
+
+    if not AdminPrizes.objects(admin_uid=admin_uid, program_id=program_id):
+        AdminPrizes(admin_uid=admin_uid, program_id=program_id).save()
+
+    if not ProductDiscounts.objects(admin_uid=admin_uid, program_id=program_id):
+        ProductDiscounts(admin_uid=admin_uid, program_id=program_id).save()
+
     return "done", 200
+
+def edit_campaign(program_id):
+    try:
+        data = request.get_json()
+        admin_uid = data.get("admin_uid")
+        if not admin_uid:
+            return jsonify({"success": False, "message": "admin_uid is required"}), 400
+
+        campaign = Campaign.objects(admin_uid=admin_uid, program_id=program_id).first()
+        if not campaign:
+            return jsonify({"success": False, "message": "Campaign not found"}), 404
+
+        referral_data = ReferralReward.objects(admin_uid=admin_uid, program_id=program_id).first()
+        referral_info = referral_data.to_mongo().to_dict() if referral_data else {}
+
+        participant = Participants.objects(admin_uid=admin_uid, program_id=program_id).first()
+        participant_info = participant.to_mongo().to_dict() if participant else {}
+
+        galaxy_program = GalaxyProgram.objects(admin_uid=admin_uid, program_id=program_id).first()
+        galaxy_info = galaxy_program.to_mongo().to_dict() if galaxy_program else {}
+
+        result = {
+            "campaign": {
+                "program_name": campaign.program_name,
+                "base_url": campaign.base_url,
+                "image": campaign.image,
+                "program_id": campaign.program_id,
+            },
+            "referral_reward": referral_info,
+            "participant_rewards": participant_info,
+            "galaxy_data": galaxy_info
+        }
+
+        return jsonify({"success": True, "data": result}), 200
+    except Exception as e:
+        logger.error(f"Error editing campaign: {e}")
+        return jsonify({"success": False, "message": "Something went wrong"}), 500
+
+
+def update_campaign(program_id):
+    try:
+        data = request.get_json()
+        admin_uid = data.get("admin_uid")
+
+        if not admin_uid or not program_id:
+            return jsonify({"success": False, "message": "admin_uid and program_id are required"}), 400
+
+        campaign = Campaign.objects(admin_uid=admin_uid, program_id=program_id).first()
+        admin = Admin.objects(admin_uid=admin_uid).first()
+        if not campaign or not admin:
+            return jsonify({"success": False, "message": "Campaign or Admin not found"}), 404
+
+        campaign.program_name = data.get("campaign_name", campaign.program_name)
+        campaign.base_url = data.get("base_url", campaign.base_url)
+        campaign.image = data.get("image", campaign.image)
+        campaign.save()
+
+        for c in admin.all_campaigns:
+            if c.get("program_id") == program_id:
+                c["program_name"] = campaign.program_name
+                c["base_url"] = campaign.base_url
+                c["image"] = campaign.image
+        admin.save()
+
+        conversion_rates = data.get("conversion_rates", {})
+        if not all(k in conversion_rates for k in ["meteors_to_stars", "stars", "stars_to_currency", "currency"]):
+            return jsonify({"error": "Invalid conversion_rates format"}), 400
+
+        ReferralReward.objects(admin_uid=admin_uid, program_id=program_id).update_one(
+            set__referrer_reward=data.get("referrer_reward"),
+            set__invitee_reward=data.get("invitee_reward"),
+            set__conversion_rates=conversion_rates,
+            set__referrer_reward_type=data.get("refer_reward_type"),
+            set__invitee_reward_type=data.get("invitee_reward_type"),
+            set__updated_at=datetime.datetime.now()
+        )
+
+        Participants.objects(admin_uid=admin_uid, program_id=program_id).update_one(
+            set__signup_reward=data.get("signup_reward"),
+            set__signup_reward_type=data.get("signup_reward_type"),
+            set__login_reward=data.get("login_reward"),
+            set__login_reward_type=data.get("login_reward_type")
+        )
+
+        link_data = {
+            "start_date": data.get("start_date"),
+            "end_date": data.get("end_date"),
+            "invitation_link": data.get("link"),
+            "referrer_reward_type": data.get("refer_reward_type"),
+            "referrer_reward_value": data.get("referrer_reward_value"),
+            "referee_reward_type": data.get("referee_reward_type"),
+            "referee_reward_value": data.get("referee_reward_value"),
+            "reward_condition": data.get("reward_condition"),
+            "success_reward": data.get("success_reward"),
+            "active": data.get("active", False),
+            "created_at": datetime.datetime.now()
+        }
+
+        link = Link.objects(admin_uid=admin_uid, program_id=program_id).first()
+        if link:
+            link.update(**{f"set__{k}": v for k, v in link_data.items()})
+        else:
+            Link(admin_uid=admin_uid, program_id=program_id, **link_data).save()
+
+        platforms = data.get("platforms", [])
+        primary_platform = data.get("primary_platform")
+
+        stats = AppStats.objects(admin_uid=admin_uid, program_id=program_id).first()
+        if not stats:
+            stats = AppStats(admin_uid=admin_uid, program_id=program_id, apps=[])
+
+        existing_platforms = {app["platform"] for app in stats.apps}
+        for platform in platforms:
+            if platform["platform"] not in existing_platforms:
+                stats.apps.append({
+                    "platform": platform["platform"],
+                    "message": platform["message"],
+                    "sent": 0,
+                    "accepted": 0,
+                    "successful": 0
+                })
+
+        if primary_platform:
+            stats.primary_platform = primary_platform
+        stats.save()
+
+        galaxies_data = data.get("galaxies", [])
+        galaxy_program = GalaxyProgram.objects(admin_uid=admin_uid, program_id=program_id).first()
+        if not galaxy_program:
+            galaxy_program = GalaxyProgram(admin_uid=admin_uid, program_id=program_id, galaxies=[])
+        else:
+            galaxy_program.galaxies = []
+
+        for idx, galaxy_data in enumerate(galaxies_data, start=1):
+            milestones = [
+                Milestone(
+                    milestone_name=m.get("milestone_name"),
+                    meteors_required_to_unlock=m.get("meteors_required_to_unlock", 0),
+                    milestone_reward=m.get("milestone_reward", 0),
+                    milestone_description=m.get("milestone_description", "")
+                ) for m in galaxy_data.get("milestones", [])
+            ]
+
+            galaxy_program.galaxies.append(Galaxy(
+                galaxy_id=f"GXY_{idx}",
+                galaxy_name=galaxy_data.get("galaxy_name"),
+                total_milestones=galaxy_data.get("total_milestones"),
+                highest_reward=galaxy_data.get("highest_reward"),
+                stars_to_be_achieved=galaxy_data.get("stars"),
+                milestones=milestones
+            ))
+
+        galaxy_program.save()
+
+        initialize_admin_data(admin_uid, program_id)
+
+        return jsonify({"success": True, "message": "Campaign updated successfully"}), 200
+
+    except Exception as e:
+        logger.error(f"Error updating campaign: {e}")
+        return jsonify({"success": False, "message": "Failed to update campaign"}), 500

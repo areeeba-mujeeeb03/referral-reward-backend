@@ -1,7 +1,7 @@
 from flask import Blueprint
 from main_app.controllers.admin.admin_auth_controller import admin_register, handle_authentication
 from main_app.controllers.admin.admin_auth_controller import handle_admin_login
-from main_app.controllers.admin.campaign_controllers import create_new_campaign
+from main_app.controllers.admin.campaign_controllers import create_new_campaign, edit_campaign, update_campaign
 from main_app.controllers.admin.discount_coupons_controllers import create_discount_coupons, update_discount_coupon, \
     delete_discount_coupon
 from main_app.controllers.admin.forgotpassword_controllers import forgot_otp_email, verify_otp, reset_password
@@ -654,8 +654,15 @@ def user_rewards():
     return reward_history()
 
 
-# @admin_bp.route('/admin/check-auths', methods = ['POST'])
-# def
+@admin_bp.route('/admin/edit-campaign/<program_id>', methods = ['POST'])
+def edit_program(program_id):
+
+    return edit_campaign(program_id)
+
+@admin_bp.route('/admin/update-campaign/<program_id>', methods = ['POST'])
+def update_program(program_id):
+
+    return update_campaign(program_id)
 
 
 

@@ -3,11 +3,12 @@ from mongoengine import Document, StringField, ListField , EmbeddedDocument, Emb
 import datetime
 
 class ExclusivePerks(Document):
+    admin_uid = StringField()
+    program_id = StringField(required=True)
     title = StringField()
     information = StringField()
     image = StringField()
     term_conditions = StringField()
-    admin_uid = StringField()
 
     meta = {"db_alias" : "admin-db", "collection" : "exclusive_perks"}
 

@@ -64,11 +64,10 @@ def handle_registration():
         find_url = Campaign.objects(base_url = url).first()
         if not find_url:
             return jsonify({"message" : "URL not found", "success" : False}),400
-        print(data)
 
         hashed_password = hash_password(data["password"])
         user = User(
-            name=data["name"],
+            name = data['name'],
             email=data["email"],
             mobile_number=data["mobile_number"],
             program_id = find_url.program_id,
@@ -76,7 +75,8 @@ def handle_registration():
             created_at=datetime.datetime.now(),
             admin_uid = find_url.admin_uid
         )
-        print(user)
+        user.save()
+
         # Save user early if referral via tag_id
         tag_id = data.get("tag_id")
         if tag_id:
@@ -95,23 +95,25 @@ def handle_registration():
             update_referral_status_and_reward(inviter.user_id, user.user_id)
             process_referrer_by_tag_id(inviter.tag_id, user.user_id, user.name)
 
-        if not user.pk:
-            user.save()
+        # if not user.pk:
+        #     user.save()
+
         app = data.get("accepted_via")
-        user.save()
-
-        rates = ReferralReward.objects(admin_uid=user.admin_uid, program_id = user.program_id).first() or {}
-        rewards_info = Participants.objects(admin_uid=user.admin_uid, program_id = user.program_id).first()
-        rewards = {
-            "signup_reward" : rewards_info.signup_reward,
-            "login_reward": rewards_info.login_reward
-
-        }
         if app:
             user.update(
                 set__joined_via = app
             )
             update_app_stats(app, user)
+
+        rates = ReferralReward.objects(admin_uid=user.admin_uid, program_id = user.program_id).first() or {}
+        rewards_info = Participants.objects(admin_uid=user.admin_uid, program_id = user.program_id).first()
+
+        rewards = {
+            "signup_reward" : rewards_info.signup_reward,
+            "login_reward": rewards_info.login_reward
+
+        }
+
         initialize_user_records(user.user_id)
 
         return jsonify({
@@ -233,25 +235,18 @@ def _check_user_conflicts(email, mobile_number):
     Returns:
         Flask Response or None: Error response if conflict exists, None if available
     """
-    # # Check for existing username
-    # existing_username = User.objects(username=username.strip('').lower()).first()
-    # if existing_username:
-    #     Errors(admin_uid = existing_username.admin_uid, program_id = existing_username.program_id, username = username, email = existing_username.email,
-    #            error_source = "Sign Up Form", error_type = get_error("registration_failed")).save()
-    #     logger.warning(f"Registration attempt with existing username: {username}")
-    #     return jsonify({"error": get_error("username_exists")}), 400
     
     # Check for existing email
     existing_email = User.objects(email=email).first()
     if existing_email:
-        Errors(admin_uid = existing_email.admin_uid, program_id = existing_email.program_id, name = existing_email.name, email = email,
+        Errors(admin_uid = existing_email.admin_uid, program_id = existing_email.program_id, email = email,
                error_source = "Sign Up Form", error_type = get_error("registration_failed")).save()
         logger.warning(f"Registration attempt with existing email: {email}")
         return jsonify({"error": get_error("email_exists")}), 400
 
     existing_mobile_num = User.objects(mobile_number=mobile_number).first()
     if existing_mobile_num:
-        Errors(admin_uid = existing_mobile_num.admin_uid, program_id = existing_mobile_num.program_id,name = existing_mobile_num.name, email = existing_mobile_num.email,
+        Errors(admin_uid = existing_mobile_num.admin_uid, program_id = existing_mobile_num.program_id, email = existing_mobile_num.email,
                error_source = "Sign Up Form", error_type = get_error("registration_failed")).save()
         logger.warning(f"Registration attempt with existing mobile number: {mobile_number}")
         return jsonify({"error": "Mobile number already exists"}), 400

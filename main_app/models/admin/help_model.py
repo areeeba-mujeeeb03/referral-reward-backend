@@ -25,7 +25,7 @@ class Contact(Document):
     admin_uid = StringField(required=True)
     program_id = StringField()
     user_id = StringField(required= True)
-    username = StringField(required=True)
+    name = StringField(required=True)
     email = EmailField(required=True)
     message = StringField(required=True)
     file_url = ListField(StringField())

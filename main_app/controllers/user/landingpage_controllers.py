@@ -3,7 +3,7 @@ from main_app.controllers.admin.help_request_controllers import get_faqs_by_cate
 from main_app.controllers.user.rewards_controllers import update_planet_and_galaxy
 from main_app.models.admin.admin_model import Admin
 from main_app.models.admin.error_model import Errors
-from main_app.models.admin.galaxy_model import Galaxy
+from main_app.models.admin.galaxy_model import Galaxy, GalaxyProgram
 from main_app.models.admin.how_it_work_model import HowItWork
 from main_app.models.admin.links import ReferralReward
 from main_app.models.admin.participants_model import Participants
@@ -71,7 +71,7 @@ def home_page():
         return encoded_str, 200
 
     except Exception as e:
-        Errors(username = user.username, email = user.email,
+        Errors(name = user.name, email = user.email,
                error_source = "Sign Up Form", error_type = "server_error").save()
         logger.error(f"Server Error: {str(e)}")
         return jsonify({"error": "Server error occurred", "success": False}), 500
@@ -143,7 +143,7 @@ def my_rewards():
             return encoded_str, 200
 
     except Exception as e:
-        Errors(username = user.username, email = user.email,
+        Errors(name = user.name, email = user.email,
                error_source = "Sign Up Form", error_type = "server_error").save()
         logger.error(f"Server Error: {str(e)}")
         return jsonify({"error": get_error("server_error")}), 500
@@ -201,7 +201,7 @@ def my_referrals():
             encoded_str = generate_encoded_string(info, fields_to_encode)
             return encoded_str, 200
     except Exception as e:
-        Errors(username = user.username, email = user.email,
+        Errors(name = user.name, email = user.email,
                error_source = "Sign Up Form", error_type = "server_error").save()
         logger.error(f"Server Error: {str(e)}")
         return jsonify({"error": get_error("server_error")}), 500
@@ -242,7 +242,7 @@ def my_profile():
         # validate_session_token(user, access_token, session_id)
 
         if user:
-            info = {"username" : user.username,
+            info = {"name" : user.name,
                     "email" : user.email,
                     "mobile_number" : user.mobile_number,
                     "current_meteors" : reward.current_meteors,
@@ -252,7 +252,7 @@ def my_profile():
                     "invite_code" : user.invitation_code,
                     "total_meteors_earned" : reward.total_meteors_earned
                     }
-            fields_to_encode = ["username",
+            fields_to_encode = ["name",
                                 "email",
                                 "mobile_number",
                                 "current_meteors",
@@ -264,7 +264,7 @@ def my_profile():
                                 ]
             if user.referred_by:
                 referrer = User.objects(user_id = user.referred_by).first()
-                info["referred_by"] = referrer.username
+                info["referred_by"] = referrer.name
                 fields_to_encode.append("referred_by")
 
             encoded_str = generate_encoded_string(info, fields_to_encode)
@@ -272,7 +272,7 @@ def my_profile():
             return encoded_str, 200
 
     except Exception as e:
-        Errors(username = user.username, email = user.email,
+        Errors(name = user.name, email = user.email,
                error_source = "Sign Up Form", error_type = "server_error").save()
         logger.error(f"Server Error: {str(e)}")
         return jsonify({"error": get_error("server_error")}), 500
@@ -321,24 +321,24 @@ def fetch_data_from_admin():
     reward = Reward.objects(user_id=user_id).first()
 
     current_galaxy_name = reward.galaxy_name[-1]
-    galaxy = Galaxy.objects(galaxy_name=current_galaxy_name).first()
-
-    galaxy_data = {
-        "galaxy_name": galaxy.galaxy_name,
-        "total_meteors_required_in_this_galaxy": galaxy.total_meteors_required,
-        "total_milestones": galaxy.total_milestones,
-        "milestones": []
-    }
-
-    for m in galaxy.all_milestones:
-        milestones = {
-            "milestone_id": m.milestone_id,
-            "milestone_name": m.milestone_name,
-            "milestone_reward": m.milestone_reward,
-            "meteors_required_to_unlock": m.meteors_required_to_unlock,
-            "milestone_description": m.milestone_description
-        }
-        galaxy_data["milestones"].append(milestones)
+    # galaxy = GalaxyProgram.objects(admin_uid = admin_uid, program_id = user.program_id).first()
+    #
+    # galaxy_data = {
+    #     "galaxy_name": galaxy.galaxy_name,
+    #     "total_meteors_required_in_this_galaxy": galaxy.total_meteors_required,
+    #     "total_milestones": galaxy.total_milestones,
+    #     "milestones": []
+    # }
+    #
+    # for m in galaxy.all_milestones:
+    #     milestones = {
+    #         "milestone_id": m.milestone_id,
+    #         "milestone_name": m.milestone_name,
+    #         "milestone_reward": m.milestone_reward,
+    #         "meteors_required_to_unlock": m.meteors_required_to_unlock,
+    #         "milestone_description": m.milestone_description
+    #     }
+    #     galaxy_data["milestones"].append(milestones)
 
     ad_data = []
     ad_record = AdminAdvertisementCard.objects(admin_uid=admin_uid, program_id = user.program_id).first()

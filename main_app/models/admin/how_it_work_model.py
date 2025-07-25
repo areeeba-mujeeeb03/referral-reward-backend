@@ -1,7 +1,7 @@
 from mongoengine import StringField , FloatField, DateTimeField, Document
 
 class HowItWork(Document):
-    admin_uid= StringField(required= True, unique=True)
+    admin_uid= StringField(required= True)
     program_id = StringField()
     title1 = StringField()
     desc1 = StringField()

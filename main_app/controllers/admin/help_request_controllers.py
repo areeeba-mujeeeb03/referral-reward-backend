@@ -208,7 +208,7 @@ def list_contact_messages():
     messages = Contact.objects().order_by('sent_at')
     return jsonify([
         {
-            "name": msg.username,
+            "name": msg.name,
             "email": msg.email,
             "message": msg.message,
             "submitted_at": msg.date.isoformat()

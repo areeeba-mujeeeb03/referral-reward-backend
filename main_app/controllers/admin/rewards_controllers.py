@@ -162,7 +162,6 @@ def create_galaxy():
             milestone_objects = []
             for m in milestones_data:
                 milestone = Milestone(
-                    milestone_id=m.get("milestone_id"),
                     milestone_name=m.get("milestone_name"),
                     meteors_required_to_unlock=m.get("meteors_required_to_unlock", 0),
                     milestone_reward=m.get("milestone_reward", 0),
