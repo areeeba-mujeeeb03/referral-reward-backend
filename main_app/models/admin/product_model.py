@@ -3,6 +3,7 @@ import datetime
 
 class Product(Document):
     admin_uid = StringField(required=True, unique=True)
+    program_id = StringField()
     products = ListField(DictField())
     # product_name = StringField(required=True)
     # original_amt = FloatField(required=True)

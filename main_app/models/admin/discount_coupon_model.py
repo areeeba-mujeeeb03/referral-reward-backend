@@ -14,6 +14,7 @@ from mongoengine import Document, EmbeddedDocument, StringField, DateTimeField, 
 
 class ProductDiscounts(Document):
     admin_uid = StringField(required=True)
+    program_id = StringField()
     coupons = ListField(DictField())
 
     meta = {"db_alias" : "admin-db", "collection" : "DiscountCoupons"}

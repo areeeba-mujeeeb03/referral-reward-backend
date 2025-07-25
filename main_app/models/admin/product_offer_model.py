@@ -2,6 +2,7 @@ from mongoengine import (StringField, Document,DictField, DateTimeField, IntFiel
 import datetime
 class Offer(Document):
     admin_uid = StringField()
+    program_id = StringField()
     offers = ListField(DictField())
     # offer_uid = StringField(required = True)
     # product_id = StringField()

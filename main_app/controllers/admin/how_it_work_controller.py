@@ -22,6 +22,7 @@ def add_how_it_work():
         desc2 = data.get("desc2")
         title3 = data.get("title3")
         desc3 = data.get("desc3")
+        prodgram_id = data.get("prodgram_id")
 
         exist = Admin.objects(admin_uid=admin_uid).first()
 
@@ -99,13 +100,15 @@ def add_how_it_work():
             logger.info(f"'How It Work' updated successfully for UID: {admin_uid}")
             msg = "Updated successfully"
         else:
-            HowItWork(admin_uid = admin_uid,
-                      title1 = title1,
-                      desc1 = desc1,
-                      title2=title1,
-                      desc2=desc1,
-                      title3 = title3,
-                      desc3 = desc3
+            HowItWork(
+                admin_uid = admin_uid,
+                program_id = prodgram_id,
+                title1 = title1,
+                desc1 = desc1,
+                title2=title1,
+                desc2=desc1,
+                title3 = title3,
+                desc3 = desc3
             ).save()
             logger.info(f"'How It Work' added successfully for UID: {admin_uid}")
             msg = "Added successfully"

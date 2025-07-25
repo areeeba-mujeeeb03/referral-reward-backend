@@ -6,6 +6,11 @@ from main_app.models.admin.campaign_model import Campaign
 from main_app.models.admin.galaxy_model import GalaxyProgram, Milestone, Galaxy
 from main_app.models.admin.links import AppStats, ReferralReward, Link
 from main_app.models.admin.participants_model import Participants
+from main_app.models.admin.product_model import Product 
+from main_app.models.admin.product_offer_model import Offer
+from main_app.models.admin.perks_model import ExclusivePerks
+from main_app.models.admin.prize_model import AdminPrizes
+from main_app.models.admin.discount_coupon_model import ProductDiscounts
 
 # Configure logging for better debugging and monitoring
 logging.basicConfig(level=logging.INFO)
@@ -259,5 +264,20 @@ def initialize_admin_data(admin_uid, program_id):
 
     if not ReferralReward.objects(admin_uid=admin_uid, program_id=program_id):
         ReferralReward(admin_uid=admin_uid, program_id=program_id).save()
+        
+    if not Product.objects(admin_uid=admin_uid, program_id=program_id):
+        Product(admin_uid=admin_uid, program_id=program_id).save()
+
+    if not Offer.objects(admin_uid=admin_uid, program_id=program_id):
+         Offer(admin_uid=admin_uid, program_id=program_id).save()
+
+    if not AdminPrizes.objects(admin_uid=admin_uid, program_id=program_id):
+         AdminPrizes(admin_uid=admin_uid, program_id=program_id).save()
+
+    if not ExclusivePerks.objects(admin_uid=admin_uid, program_id=program_id):
+         ExclusivePerks(admin_uid=admin_uid, program_id=program_id).save()
+         
+    if not ProductDiscounts.objects(admin_uid=admin_uid, program_id=program_id):
+         ProductDiscounts(admin_uid=admin_uid, program_id=program_id).save()
 
     return "done", 200
