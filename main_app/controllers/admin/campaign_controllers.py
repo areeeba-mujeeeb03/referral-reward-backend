@@ -7,12 +7,12 @@ from main_app.models.admin.discount_coupon_model import ProductDiscounts
 from main_app.models.admin.galaxy_model import GalaxyProgram, Milestone, Galaxy
 from main_app.models.admin.links import AppStats, ReferralReward, Link
 from main_app.models.admin.participants_model import Participants
-from main_app.models.admin.perks_model import ExclusivePerks
-from main_app.models.admin.prize_model import AdminPrizes
 from main_app.models.admin.product_model import Product
 from main_app.models.admin.product_offer_model import Offer
+from main_app.models.admin.perks_model import ExclusivePerks
+from main_app.models.admin.prize_model import AdminPrizes
+from main_app.models.admin.discount_coupon_model import ProductDiscounts
 from main_app.models.admin.special_offer_model import SOffer
-from main_app.utils.user.string_encoding import generate_encoded_string
 
 # Configure logging for better debugging and monitoring
 logging.basicConfig(level=logging.INFO)
@@ -265,6 +265,9 @@ def initialize_admin_data(admin_uid, program_id):
 
     if not ReferralReward.objects(admin_uid=admin_uid, program_id=program_id):
         ReferralReward(admin_uid=admin_uid, program_id=program_id).save()
+
+    if not Product.objects(admin_uid=admin_uid, program_id=program_id):
+        Product(admin_uid=admin_uid, program_id=program_id).save()
 
     if not Product.objects(admin_uid=admin_uid, program_id=program_id):
         Product(admin_uid=admin_uid, program_id=program_id).save()
