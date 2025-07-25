@@ -87,7 +87,7 @@ def stars_to_currency():
     rewards = Reward.objects(user_id=user_id).first()
     conversions = ReferralReward.objects(admin_uid = user.admin_uid).first()
 
-    rate = conversions.conversion_rates["star_to_meteor"]
+    rate = conversions.conversion_rates["meteors_to_stars"]
 
     if stars_debited >= rewards.current_meteors:
         return jsonify({"message": "You don't have enough stars to convert in currency", "success" : False} ), 400

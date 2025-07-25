@@ -244,55 +244,57 @@ def delete_push_notification(notification_id):
         logger.error(f"Delete push notification failed: {str(e)}")
         return jsonify({"error": "Internal server error"}), 500
 
+# --------------------------------------------------------------------------------------------------
 
+# -- Get Puch Notification  
 
-# def get_push_notification(notification_id):
-#     try:
-#         # Extract auth info from query parameters
-#         admin_uid = request.args.get("admin_uid")
-#         access_token = request.args.get("mode")
-#         session_id = request.args.get("log_alt")
+def get_push_notification(notification_id):
+    try:
+        # Extract auth info from query parameters
+        admin_uid = request.args.get("admin_uid")
+        access_token = request.args.get("mode")
+        session_id = request.args.get("log_alt")
 
-#         # # Validation
-#         # if not admin_uid or not access_token or not session_id:
-#         #     return jsonify({"message": "Missing credentials", "success": False}), 400
+        # # Validation
+        # if not admin_uid or not access_token or not session_id:
+        #     return jsonify({"message": "Missing credentials", "success": False}), 400
 
-#         # # Find admin
-#         # admin = Admin.objects(admin_uid=admin_uid).first()
-#         # if not admin:
-#         #     return jsonify({"success": False, "message": "User does not exist"}), 404
+        # # # Find admin
+        # admin = Admin.objects(admin_uid=admin_uid).first()
+        # if not admin:
+        #     return jsonify({"success": False, "message": "User does not exist"}), 404
 
-#         # if admin.access_token != access_token:
-#         #     return jsonify({"success": False, "message": "Invalid access token"}), 401
+        # if admin.access_token != access_token:
+        #     return jsonify({"success": False, "message": "Invalid access token"}), 401
 
-#         # if admin.session_id != session_id:
-#         #     return jsonify({"success": False, "message": "Invalid session"}), 403
+        # if admin.session_id != session_id:
+        #     return jsonify({"success": False, "message": "Invalid session"}), 403
 
-#         # if hasattr(admin, 'expiry_time') and admin.expiry_time:
-#         #     if datetime.datetime.now() > admin.expiry_time:
-#         #         return jsonify({"success": False, "message": "Access token has expired"}), 401
+        # if hasattr(admin, 'expiry_time') and admin.expiry_time:
+        #     if datetime.datetime.now() > admin.expiry_time:
+        #         return jsonify({"success": False, "message": "Access token has expired"}), 401
 
-#         # Find notification
-#         notification = PushNotification.objects(id=notification_id).first()
-#         if not notification:
-#             return jsonify({"success": False, "message": "Notification not found"}), 404
+        # Find notification
+        notification = PushNotification.objects(id=notification_id).first()
+        if not notification:
+            return jsonify({"success": False, "message": "Notification not found"}), 404
 
-#         # Return notification details
-#         response = {
-#             "success": True,
-#             "notification": {
-#                 "id": str(notification.id),
-#                 "title": notification.title,
-#                 "message": notification.message,
-#                 "button_text": getattr(notification, "button_text", None),
-#                 "button_url": getattr(notification, "button_url", None),
-#                 "segment": getattr(notification, "segment", None),
-#                 "specific_users": getattr(notification, "specific_users", []),
-#                 "schedule_date": notification.schedule_date.strftime("%d/%m/%Y %H:%M") if notification.schedule_date else None
-#             }
-#         }
-#         return jsonify(response), 200
+        # Return notification details
+        response = {
+            "success": True,
+            "notification": {
+                "id": str(notification.id),
+                "title": notification.title,
+                "message": notification.message,
+                "button_text": getattr(notification, "button_text", None),
+                "button_url": getattr(notification, "button_url", None),
+                "segment": getattr(notification, "segment", None),
+                "specific_users": getattr(notification, "specific_users", []),
+                "schedule_date": notification.schedule_date.strftime("%d/%m/%Y %H:%M") if notification.schedule_date else None
+            }
+        }
+        return jsonify(response), 200
 
-#     except Exception as e:
-#         logger.error(f"Fetch push notification failed: {str(e)}")
-#         return jsonify({"error": "Internal server error"}), 500
+    except Exception as e:
+        logger.error(f"Fetch push notification failed: {str(e)}")
+        return jsonify({"error": "Internal server error"}), 500

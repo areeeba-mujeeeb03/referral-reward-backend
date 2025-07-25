@@ -15,7 +15,7 @@ from main_app.controllers.admin.rewards_controllers import create_galaxy, remove
 from main_app.controllers.admin.dashboard_controllers import error_table, dashboard_participants, dashboard_stats, \
     graph_data
 from main_app.controllers.admin.email_controller import create_email
-from main_app.controllers.admin.notification_controller import create_push_notification, list_push_notifications, update_push_notification, delete_push_notification
+from main_app.controllers.admin.notification_controller import create_push_notification, list_push_notifications, get_push_notification,update_push_notification, delete_push_notification
 from main_app.controllers.admin.perks_controller import create_exclusive_perks, edit_footer
 from main_app.controllers.admin.special_off_controllers import create_special_offer
 
@@ -420,6 +420,17 @@ def admin_list_push_notification():
     """
     """
     return list_push_notifications()
+
+# =======================
+
+# Get Push Notification
+
+# =======================
+
+@admin_bp.route("/admin/get-push-notification/<notification_id>", methods=["GET"])
+def adminget_push_notification(notification_id):
+     return get_push_notification(notification_id)
+
 
 # =================
 
