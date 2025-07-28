@@ -43,27 +43,27 @@ def add_product():
          exist = Admin.objects(admin_uid=admin_uid).first()
 
          if not exist:
-             return jsonify({"success": False, "message": "User does not exist"})
-         #
-         # if not access_token or not session_id:
-         #     return jsonify({"message": "Missing token or session", "success": False}), 400
-         #
-         # if exist.access_token != access_token:
-         #     return ({"success": False,
-         #              "message": "Invalid access token"}), 401
-         #
-         # if exist.session_id != session_id:
-         #     return ({"success": False,
-         #              "message": "Session mismatch or invalid session"}), 403
-         #
-         # if hasattr(exist, 'expiry_time') and exist.expiry_time:
-         #     if datetime.datetime.now() > exist.expiry_time:
-         #         return ({"success": False,
-         #                  "message": "Access token has expired",
-         #                  "token": "expired"}), 401
+             return jsonify({"success": False, "message": "User does not exist"}), 400
 
-         # if not all([product_name, original_amt, short_desc, admin_uid]):
-         #     return jsonify({"message": "Missing required fields"}), 400
+         if not access_token or not session_id:
+             return jsonify({"message": "Missing token or session", "success": False}), 400
+
+         if exist.access_token != access_token:
+             return ({"success": False,
+                      "message": "Invalid access token"}), 401
+
+         if exist.session_id != session_id:
+             return ({"success": False,
+                      "message": "Session mismatch or invalid session"}), 403
+
+         if hasattr(exist, 'expiry_time') and exist.expiry_time:
+             if datetime.datetime.now() > exist.expiry_time:
+                 return ({"success": False,
+                          "message": "Access token has expired",
+                          "token": "expired"}), 401
+
+         if not all([product_name, original_amt, short_desc, admin_uid]):
+             return jsonify({"message": "Missing required fields"}), 400
 
          try:
             original_amt = float(original_amt)
@@ -125,7 +125,7 @@ def update_product(uid):
      exist = Admin.objects(admin_uid=admin_uid).first()
 
      if not exist:
-         return jsonify({"success": False, "message": "User does not exist"})
+         return jsonify({"success": False, "message": "User does not exist"}), 400
 
      if not access_token or not session_id:
          return jsonify({"message": "Missing token or session", "success": False}), 400

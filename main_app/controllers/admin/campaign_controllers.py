@@ -7,9 +7,9 @@ from main_app.models.admin.discount_coupon_model import ProductDiscounts
 from main_app.models.admin.galaxy_model import GalaxyProgram, Milestone, Galaxy
 from main_app.models.admin.links import AppStats, ReferralReward, Link
 from main_app.models.admin.participants_model import Participants
-from main_app.models.admin.product_model import Product
+from main_app.models.admin.product_model import Product 
 from main_app.models.admin.product_offer_model import Offer
-from main_app.models.admin.perks_model import ExclusivePerks, Perks
+from main_app.models.admin.perks_model import Perks
 from main_app.models.admin.prize_model import AdminPrizes
 from main_app.models.admin.discount_coupon_model import ProductDiscounts
 from main_app.models.admin.special_offer_model import SOffer
@@ -48,20 +48,20 @@ def create_new_campaign():
         if not admin:
             return jsonify({"success": False, "message": "User does not exist"}), 404
         #
-        # if not admin_uid or not access_token or not session_id:
-        #     return jsonify({"message": "Missing required fields", "success": False}), 400
-        #
-        # if admin.access_token != access_token:
-        #     return ({"success": False,
-        #              "message": "Invalid access token"}), 401
-        #
-        # if admin.session_id != session_id:
-        #     return ({"success": False,
-        #              "message": "Session mismatch or invalid session"}), 403
-        #
-        # if hasattr(admin, 'expiry_time') and admin.expiry_time:
-        #     if datetime.datetime.now() > admin.expiry_time:
-        #         return jsonify({"success": False, "message": "Access token has expired"}), 401
+        if not admin_uid or not access_token or not session_id:
+            return jsonify({"message": "Missing required fields", "success": False}), 400
+
+        if admin.access_token != access_token:
+            return ({"success": False,
+                     "message": "Invalid access token"}), 401
+
+        if admin.session_id != session_id:
+            return ({"success": False,
+                     "message": "Session mismatch or invalid session"}), 403
+
+        if hasattr(admin, 'expiry_time') and admin.expiry_time:
+            if datetime.datetime.now() > admin.expiry_time:
+                return jsonify({"success": False, "message": "Access token has expired"}), 401
 
         find = Campaign.objects(admin_uid = admin_uid)
         for campa in find:
@@ -266,21 +266,18 @@ def initialize_admin_data(admin_uid, program_id):
     if not Product.objects(admin_uid=admin_uid, program_id=program_id):
         Product(admin_uid=admin_uid, program_id=program_id).save()
 
-    if not Product.objects(admin_uid=admin_uid, program_id=program_id):
-        Product(admin_uid=admin_uid, program_id=program_id).save()
-
     if not SOffer.objects(admin_uid=admin_uid, program_id=program_id):
         SOffer(admin_uid=admin_uid, program_id=program_id).save()
 
     if not Offer.objects(admin_uid=admin_uid, program_id=program_id):
-        Offer(admin_uid=admin_uid, program_id=program_id).save()
-
-    if not Perks.objects(admin_uid=admin_uid, program_id=program_id):
-        Perks(admin_uid=admin_uid, program_id=program_id).save()
+         Offer(admin_uid=admin_uid, program_id=program_id).save()
 
     if not AdminPrizes.objects(admin_uid=admin_uid, program_id=program_id):
-        AdminPrizes(admin_uid=admin_uid, program_id=program_id).save()
+         AdminPrizes(admin_uid=admin_uid, program_id=program_id).save()
 
+    if not Perks.objects(admin_uid=admin_uid, program_id=program_id):
+         Perks(admin_uid=admin_uid, program_id=program_id).save()
+         
     if not ProductDiscounts.objects(admin_uid=admin_uid, program_id=program_id):
         ProductDiscounts(admin_uid=admin_uid, program_id=program_id).save()
 

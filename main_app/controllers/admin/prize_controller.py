@@ -32,7 +32,7 @@ def add_exciting_prizes():
         exist = Admin.objects(admin_uid=admin_uid).first()
 
         if not exist:
-            return jsonify({"success": False, "message": "User does not exist"})
+            return jsonify({"success": False, "message": "User does not exist"}), 400
 
         if not access_token or not session_id:
             return jsonify({"message": "Missing token or session", "success": False}), 400
@@ -138,7 +138,7 @@ def check_eligibility():
         exist = Admin.objects(admin_uid=admin_uid).first()
 
         if not exist:
-            return jsonify({"success": False, "message": "User does not exist"})
+            return jsonify({"success": False, "message": "User does not exist"}), 400
 
         if not access_token or not session_id:
             return jsonify({"message": "Missing token or session", "success": False}), 400
