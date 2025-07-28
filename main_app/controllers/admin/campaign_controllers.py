@@ -224,6 +224,7 @@ def create_new_campaign():
             highest_reward = galaxy_data.get("highest_reward")
             stars = galaxy_data.get("stars")
             milestones_data = galaxy_data.get("milestones", [])
+            total_meteors_required = milestones_data[-1]['meteors_required_to_unlock']
 
             milestone_objects = []
             for m in milestones_data:
@@ -243,7 +244,8 @@ def create_new_campaign():
                 total_milestones=total_milestones,
                 highest_reward=highest_reward,
                 stars_to_be_achieved=stars,
-                milestones=milestone_objects
+                milestones=milestone_objects,
+                total_meteors_required = total_meteors_required
             )
 
             galaxy_program.galaxies.append(new_galaxy)

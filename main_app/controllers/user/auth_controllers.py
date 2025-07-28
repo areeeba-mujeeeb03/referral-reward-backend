@@ -283,6 +283,7 @@ def validate_session_token(user, access_token, session_id):
             if datetime.datetime.now() > user.expiry_time:
                 return ({"success"  : False,
                          "message" : "Access token has expired"}), 401
+
     except Exception as e:
         logger.error(f"Token validation error: {str(e)}")
         Errors(admin_uid = user.admin_uid, program_id = user.program_id, name=user.name, email=user.email, error_source="Reset Password",

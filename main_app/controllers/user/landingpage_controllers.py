@@ -298,14 +298,14 @@ def fetch_data_from_admin():
 
     how_it_works_text = HowItWork.objects(admin_uid=admin_uid, program_id = user.program_id).first()
 
-    if not how_it_works_text:
-        return ({"message": "No 'how it works' data found", "success": False}), 404
+    # if not how_it_works_text:
+    #     return ({"message": "No 'how it works' data found", "success": False}), 404
 
-    how_text = how_it_works_text.to_mongo().to_dict()
-    data =[]
-    how_text.pop('_id', None)
-    how_text.pop('admin_uid', None)
-    data.append(how_text)
+    # how_text = how_it_works_text.to_mongo().to_dict()
+    # data =[]
+    # how_text.pop('_id', None)
+    # how_text.pop('admin_uid', None)
+    # data.append(how_text)
 
     prize = AdminPrizes.objects(admin_uid=admin_uid, program_id = user.program_id).first()
     prize_data = []
@@ -321,24 +321,24 @@ def fetch_data_from_admin():
     reward = Reward.objects(user_id=user_id).first()
 
     current_galaxy_name = reward.galaxy_name[-1]
-    # galaxy = GalaxyProgram.objects(admin_uid = admin_uid, program_id = user.program_id).first()
+    galaxy = GalaxyProgram.objects(admin_uid = admin_uid, program_id = user.program_id).first()
+    galaxy_data = {}
+    for g in galaxy.galaxies:
+        galaxy_data = {
+            "galaxy_name": g['galaxy_name'],
+            "total_meteors_required_in_this_galaxy": g['total_meteors_required'],
+            "total_milestones": g['total_milestones'],
+            "milestones": []
+        }
     #
-    # galaxy_data = {
-    #     "galaxy_name": galaxy.galaxy_name,
-    #     "total_meteors_required_in_this_galaxy": galaxy.total_meteors_required,
-    #     "total_milestones": galaxy.total_milestones,
-    #     "milestones": []
-    # }
-    #
-    # for m in galaxy.all_milestones:
-    #     milestones = {
-    #         "milestone_id": m.milestone_id,
-    #         "milestone_name": m.milestone_name,
-    #         "milestone_reward": m.milestone_reward,
-    #         "meteors_required_to_unlock": m.meteors_required_to_unlock,
-    #         "milestone_description": m.milestone_description
-    #     }
-    #     galaxy_data["milestones"].append(milestones)
+        for m in g.milestones:
+            milestones = {
+                "milestone_name": m['milestone_name'],
+                "milestone_reward": m['milestone_reward'],
+                "meteors_required_to_unlock": m['meteors_required_to_unlock'],
+                "milestone_description": m['milestone_description']
+            }
+            galaxy_data["milestones"].append(milestones)
 
     ad_data = []
     ad_record = AdminAdvertisementCard.objects(admin_uid=admin_uid, program_id = user.program_id).first()
