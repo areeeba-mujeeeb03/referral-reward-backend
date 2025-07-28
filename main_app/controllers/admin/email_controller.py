@@ -2,16 +2,12 @@
 import datetime
 
 from flask import request, jsonify
-from werkzeug.utils import secure_filename
+# from werkzeug.utils import secure_filename
 import os, logging
 
 from main_app.models.admin.admin_model import Admin
 from main_app.models.admin.email_model import EmailTemplate
 
-UPLOAD_FOLDER = "uploads/email_templates"
-
-logging.basicConfig(level=logging.INFO)
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +32,7 @@ def create_email():
         exist = Admin.objects(admin_uid=admin_uid).first()
 
         if not exist:
-            return jsonify({"success": False, "message": "User does not exist"})
+            return jsonify({"success": False, "message": "User does not exist"}), 400
 
         if not access_token or not session_id:
             return jsonify({"message": "Missing token or session", "success": False}), 400
