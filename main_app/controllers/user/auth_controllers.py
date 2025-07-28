@@ -61,6 +61,7 @@ def handle_registration():
             return conflict_check
 
         url = data.get("url")
+        print(data)
         find_url = Campaign.objects(base_url = url).first()
         if not find_url:
             return jsonify({"message" : "URL not found", "success" : False}),400
@@ -76,6 +77,7 @@ def handle_registration():
             admin_uid = find_url.admin_uid
         )
         user.save()
+
 
         # Save user early if referral via tag_id
         tag_id = data.get("tag_id")

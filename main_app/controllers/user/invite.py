@@ -39,22 +39,22 @@ def send_whatsapp_invite():
 
         if not user_exist:
             return jsonify({"success": False, "message": "User does not exist"}), 404
-        if not access_token or not session_id:
-            return jsonify({"message": "Missing token or session", "success": False}), 400
-        if user_exist.access_token != access_token:
-            return jsonify({"success": False, "message": "Invalid access token"}), 401
-        if user_exist.session_id != session_id:
-            return jsonify({"success": False, "message": "Session mismatch or invalid session"}), 403
-        if hasattr(user_exist, 'expiry_time') and user_exist.expiry_time:
-            if datetime.datetime.now() > user_exist.expiry_time:
-                return ({"success": False,
-                         "message": "Access token has expired"}), 401
+        # if not access_token or not session_id:
+        #     return jsonify({"message": "Missing token or session", "success": False}), 400
+        # if user_exist.access_token != access_token:
+        #     return jsonify({"success": False, "message": "Invalid access token"}), 401
+        # if user_exist.session_id != session_id:
+        #     return jsonify({"success": False, "message": "Session mismatch or invalid session"}), 403
+        # if hasattr(user_exist, 'expiry_time') and user_exist.expiry_time:
+        #     if datetime.datetime.now() > user_exist.expiry_time:
+        #         return ({"success": False,
+        #                  "message": "Access token has expired"}), 401
         if not user_exist.invitation_link:
             return jsonify({"success": False, "message": "Invitation link not found"}), 404
 
         msg = (f"Hey! I’m using Wealth Elite and thought you’d love it too! "
                f"Join using my invite and enjoy exclusive offers on their products. \n\n"
-               f"Use my invitation link : {user_exist.invitation_link + "/wa" }\n"
+               f"Use my invitation link : {user_exist.invitation_link + "/wa"} \n"
                f" Or you can use my invitation code: {user_exist.invitation_code}")
         encoded_msg = quote_plus(msg)
 

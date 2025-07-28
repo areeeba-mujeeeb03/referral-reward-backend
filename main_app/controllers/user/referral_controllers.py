@@ -333,8 +333,8 @@ def initialize_user_records(user_id):
     reward.save()
     reward.update(
         set__redeemed_meteors=0,
-        push__galaxy_name=[],
-        push__current_planet=[]
+        push__galaxy_name=["Milky Way Galaxy"],
+        push__current_planet=['Planet A']
     )
 
     Referral(user_id=user_id, all_referrals=[]).save()

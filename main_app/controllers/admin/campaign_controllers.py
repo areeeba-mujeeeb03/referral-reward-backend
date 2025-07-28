@@ -260,9 +260,6 @@ def initialize_admin_data(admin_uid, program_id):
     if not Participants.objects(admin_uid=admin_uid, program_id=program_id):
         Participants(admin_uid=admin_uid, program_id=program_id).save()
 
-    if not AppStats.objects(admin_uid=admin_uid, program_id=program_id):
-        AppStats(admin_uid=admin_uid, program_id=program_id).save()
-
     if not ReferralReward.objects(admin_uid=admin_uid, program_id=program_id):
         ReferralReward(admin_uid=admin_uid, program_id=program_id).save()
 
