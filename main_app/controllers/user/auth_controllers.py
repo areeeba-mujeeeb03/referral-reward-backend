@@ -40,36 +40,37 @@ def handle_registration():
             logger.warning("Registration attempt with empty request body")
             return jsonify({"error": get_error("invalid_data")}), 400
 
-        required_fields = ["name", "email", "mobile_number", "password", "confirm_password"]
+        required_fields = ['name', 'email', 'mobile_number', 'password', 'confirm_password']
+
         validation_result = _validate_required_fields(data, required_fields)
         if validation_result:
             return validation_result
 
-        if validate_email_format(data["email"]):
-            return validate_email_format(data["email"])
+        if validate_email_format(data['email']):
+            return validate_email_format(data['email'])
 
         if not re.match(r'^\d{10}$', str(data["mobile_number"])):
             return jsonify({"error": "Mobile must be 10 digits"}), 400
 
-        if data["password"] != data["confirm_password"]:
+        if data['password'] != data['confirm_password']:
             return jsonify({"error": "Password and Confirm Password do not match"}), 400
 
-        if validate_password_strength(data["password"]):
-            return validate_password_strength(data["password"])
-        conflict_check = _check_user_conflicts(data["email"], data['mobile_number'])
+        if validate_password_strength(data['password']):
+            return validate_password_strength(data['password'])
+        conflict_check = _check_user_conflicts(data['email'], data['mobile_number'])
         if conflict_check:
             return conflict_check
 
-        url = data.get("url")
+        url = data.get('url')
         find_url = Campaign.objects(base_url = url).first()
         # if not find_url:
         #     return jsonify({"message" : "URL not found", "success" : False}),400
 
-        hashed_password = hash_password(data["password"])
+        hashed_password = hash_password(data['password'])
         user = User(
             name = data['name'],
-            email=data["email"],
-            mobile_number=data["mobile_number"],
+            email=data['email'],
+            mobile_number=data['mobile_number'],
             program_id = find_url.program_id,
             password=hashed_password,
             created_at=datetime.datetime.now(),
@@ -86,7 +87,7 @@ def handle_registration():
             user.save()
             process_referrer_by_tag_id(tag_id, user.user_id, user.name)
 
-        referral_code = data.get("referral_code")
+        referral_code = data.get('referral_code')
         if referral_code:
             inviter = User.objects(invitation_code=referral_code).first()
             if not inviter:
@@ -125,7 +126,7 @@ def handle_registration():
 
     except Exception as e:
         logger.info(f"Registration failed as {str(e)}")
-        return jsonify({"message" : "Registration Failed", "success" : False}), 400
+        return jsonify({"error" : "Registration Failed", "success" : False}), 400
 
 
 # ==================
@@ -145,7 +146,15 @@ def _validate_required_fields(data, required_fields):
     Returns:
         Flask Response or None: Error response if validation fails, None if valid
     """
+
+    # missing = [field for field in required_fields if not data.get(field)]
+    # if missing:
+    #     return jsonify({"error": f"Missing required fields: {', '.join(missing)}"}), 400
+
     for field in required_fields:
+        # missing = [field for field in field if not data.get(field)]
+        # if missing:
+        #     return jsonify({"error": f"Missing required fields: {missing}"}), 400
         if not data.get(field) or not str(data.get(field)).strip():
             logger.warning(f"Missing or empty required field: {field}")
             return jsonify({
@@ -172,12 +181,15 @@ def validate_email_format(email):
     """
     
 
-    email_pattern = r'^[a-zA-Z0-9._%+-]+@gmail\.com$'
-    # email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    # email_pattern = r'^[a-zA-Z0-9._%+-]+@gmail\.com$'
+    email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
 
     if not re.match(email_pattern, email):
         logger.warning(f"Invalid email format provided: {email}")
-        return jsonify({"error": "Invalid email format"}), 400
+        return jsonify({"error": "Invalid email format", "success" : False}), 400
+
+    if not email == email.lower():
+        return jsonify({"error": "Email must be in lower case", "success" : False})
     return None
 
 
@@ -239,14 +251,14 @@ def _check_user_conflicts(email, mobile_number):
     # Check for existing email
     existing_email = User.objects(email=email).first()
     if existing_email:
-        Errors(admin_uid = existing_email.admin_uid, program_id = existing_email.program_id, email = email,
+        Errors(admin_uid = existing_email.admin_uid, program_id = existing_email.program_id, name = existing_email.name, email = email,
                error_source = "Sign Up Form", error_type = get_error("registration_failed")).save()
         logger.warning(f"Registration attempt with existing email: {email}")
         return jsonify({"error": get_error("email_exists")}), 400
 
     existing_mobile_num = User.objects(mobile_number=mobile_number).first()
     if existing_mobile_num:
-        Errors(admin_uid = existing_mobile_num.admin_uid, program_id = existing_mobile_num.program_id, email = existing_mobile_num.email,
+        Errors(admin_uid = existing_mobile_num.admin_uid, program_id = existing_mobile_num.program_id, name = existing_email.name,email = existing_mobile_num.email,
                error_source = "Sign Up Form", error_type = get_error("registration_failed")).save()
         logger.warning(f"Registration attempt with existing mobile number: {mobile_number}")
         return jsonify({"error": "Mobile number already exists"}), 400
@@ -269,24 +281,24 @@ def validate_session_token(user, access_token, session_id):
     """
     try:
         if not access_token or not session_id:
-            return jsonify({"message": "Missing token or session", "success": False}), 400
+            return jsonify({"error": "Missing token or session", "success": False}), 400
 
         if user.access_token != access_token:
             return ({"success" :False,
-                     "message" : "Invalid access token"}), 401
+                     "error" : "Invalid access token"}), 401
 
         if user.session_id != session_id:
             return ({"success" : False,
-                     "message" : "Session mismatch or invalid session"}), 403
+                     "error" : "Session mismatch or invalid session"}), 403
 
         if hasattr(user, 'expiry_time') and user.expiry_time:
             if datetime.datetime.now() > user.expiry_time:
                 return ({"success"  : False,
-                         "message" : "Access token has expired"}), 401
+                         "error" : "Access token has expired"}), 401
 
     except Exception as e:
         logger.error(f"Token validation error: {str(e)}")
         Errors(admin_uid = user.admin_uid, program_id = user.program_id, name=user.name, email=user.email, error_source="Reset Password",
               error_type=get_error("code validation failed")).save()
         return jsonify({"success" : False,
-                        "message" : "Token validation failed"}), 500
+                        "error" : "Token validation failed"}), 500

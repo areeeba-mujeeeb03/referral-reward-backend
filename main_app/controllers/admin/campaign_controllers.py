@@ -1,10 +1,15 @@
 import datetime
 from flask import request, jsonify
+from bson import ObjectId
 import logging
+
+from main_app.controllers.admin.how_it_work_controller import advertisement_card
 from main_app.models.admin.admin_model import Admin
+from main_app.models.admin.advertisment_card_model import AdvertisementCardItem, AdminAdvertisementCard
 from main_app.models.admin.campaign_model import Campaign
-from main_app.models.admin.discount_coupon_model import ProductDiscounts
+from main_app.models.admin.email_model import EmailTemplate
 from main_app.models.admin.galaxy_model import GalaxyProgram, Milestone, Galaxy
+from main_app.models.admin.how_it_work_model import HowItWork
 from main_app.models.admin.links import AppStats, ReferralReward, Link
 from main_app.models.admin.participants_model import Participants
 from main_app.models.admin.product_model import Product 
@@ -285,6 +290,15 @@ def initialize_admin_data(admin_uid, program_id):
 
     return "done", 200
 
+def serialize_mongo(data):
+    if isinstance(data, ObjectId):
+        return str(data)
+    if isinstance(data, dict):
+        return {key: serialize_mongo(value) for key, value in data.items()}
+    if isinstance(data, list):
+        return [serialize_mongo(item) for item in data]
+    return data
+
 def edit_campaign(program_id):
     try:
         data = request.get_json()
@@ -305,6 +319,10 @@ def edit_campaign(program_id):
         galaxy_program = GalaxyProgram.objects(admin_uid=admin_uid, program_id=program_id).first()
         galaxy_info = galaxy_program.to_mongo().to_dict() if galaxy_program else {}
 
+        sharing_apps = AppStats.objects(admin_uid=admin_uid, program_id=program_id).first()
+        sharing_apps_info = sharing_apps.to_mongo().to_dict() if sharing_apps else {}
+
+
         result = {
             "campaign": {
                 "program_name": campaign.program_name,
@@ -314,10 +332,13 @@ def edit_campaign(program_id):
             },
             "referral_reward": referral_info,
             "participant_rewards": participant_info,
-            "galaxy_data": galaxy_info
+            "galaxy_data": galaxy_info,
+            "sharing_app" : sharing_apps_info,
+
         }
 
-        return jsonify({"success": True, "data": result}), 200
+        return jsonify({"success": True, "data": serialize_mongo(result)}), 200
+
     except Exception as e:
         logger.error(f"Error editing campaign: {e}")
         return jsonify({"success": False, "message": "Something went wrong"}), 500
@@ -439,6 +460,68 @@ def update_campaign(program_id):
         galaxy_program.save()
 
         initialize_admin_data(admin_uid, program_id)
+
+        return jsonify({"success": True, "message": "Campaign updated successfully"}), 200
+
+    except Exception as e:
+        logger.error(f"Error updating campaign: {e}")
+        return jsonify({"success": False, "message": "Failed to update campaign"}), 500
+
+def delete_campaign(program_id):
+    try:
+        data = request.get_json()
+        admin_uid = data.get("admin_uid")
+
+        if not admin_uid or not program_id:
+            return jsonify({"success": False, "message": "admin_uid and program_id are required"}), 400
+
+        campaign = Campaign.objects(admin_uid=admin_uid, program_id=program_id).first()
+        admin = Admin.objects(admin_uid=admin_uid).first()
+        if not campaign or not admin:
+            return jsonify({"success": False, "message": "Campaign or Admin not found"}), 404
+
+        campaign.delete()
+        referral_data = ReferralReward.objects(admin_uid=admin_uid, program_id=program_id).first()
+        referral_data.delete()
+
+        participant = Participants.objects(admin_uid=admin_uid, program_id=program_id).first()
+        participant.delete()
+
+        galaxy_program = GalaxyProgram.objects(admin_uid=admin_uid, program_id=program_id).first()
+        galaxy_program.delete()
+
+        sharing_apps = AppStats.objects(admin_uid=admin_uid, program_id=program_id).first()
+        sharing_apps.delete()
+
+        advertisement_crds = AdminAdvertisementCard.objects(admin_uid=admin_uid, program_id=program_id).first()
+        advertisement_crds.delete()
+
+        product =  Product.objects(admin_uid=admin_uid, program_id=program_id).first()
+        product.delete()
+
+        special_offers = SOffer.objects(admin_uid=admin_uid, program_id=program_id).first()
+        special_offers.delete()
+
+        product_offers = Offer.objects(admin_uid=admin_uid, program_id=program_id).first()
+        product_offers.delete()
+
+        exciting_prizes =  AdminPrizes.objects(admin_uid=admin_uid, program_id=program_id).first()
+        exciting_prizes.delete()
+
+        exclusive_perks = Perks.objects(admin_uid=admin_uid, program_id=program_id).first()
+        exclusive_perks.delete()
+
+        discount_coupons =  ProductDiscounts.objects(admin_uid=admin_uid, program_id=program_id).first()
+        discount_coupons.delete()
+
+        how_it_works = HowItWork.objects(admin_uid = admin_uid, program_id = program_id).first()
+        how_it_works.delete()
+
+        emails = EmailTemplate.objects(admin_uid = admin_uid, program_id = program_id).first()
+        emails.delete()
+
+
+
 
         return jsonify({"success": True, "message": "Campaign updated successfully"}), 200
 

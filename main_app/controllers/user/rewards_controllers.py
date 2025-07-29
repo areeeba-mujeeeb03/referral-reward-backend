@@ -42,6 +42,7 @@ def update_planet_and_galaxy(user_id):
                                 "meteors": reward.current_meteors,
                                 "success": True
                             }), 200
+
         for galaxy in galaxy_program.galaxies:
             if galaxy.galaxy_name not in current_galaxy_name:
                 reward.update(

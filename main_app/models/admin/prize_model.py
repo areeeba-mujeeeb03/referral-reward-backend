@@ -23,7 +23,7 @@ class PrizeDetail(EmbeddedDocument):
     product_id = StringField()
 
 class AdminPrizes(Document):
-    admin_uid = StringField(required=True, unique=True)
+    admin_uid = StringField(required=True)
     program_id = StringField()
     prizes = ListField(EmbeddedDocumentField(PrizeDetail))
 

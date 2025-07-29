@@ -80,8 +80,6 @@ def generate_invite_link_with_expiry():
     if not admin_uid:
         return jsonify({"error": "admin_uid is required", "success" : False}), 400
 
-    if not start_date and not expiry_date:
-        return jsonify({"error": "Start date and expiry date are required", "success" : False}), 400
 
     gen_str = int(start_date.strftime("%Y%m%d%H%M%S"))
     expiry_time = expiry_date + timedelta(hours=5)
