@@ -21,10 +21,11 @@ class PrizeDetail(EmbeddedDocument):
     required_meteors = IntField(required=True)
     product_uid = StringField()
     created_at = DateTimeField(default=datetime.datetime.now)
+    product_id = StringField()
 
 class AdminPrizes(Document):
     admin_uid = StringField(required=True, unique=True)
-    product_uid = StringField()
+    program_id = StringField()
     prizes = ListField(EmbeddedDocumentField(PrizeDetail))
 
 

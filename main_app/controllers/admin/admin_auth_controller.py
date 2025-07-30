@@ -1,13 +1,14 @@
+import bcrypt
 from flask import request, jsonify
 from main_app.models.admin.admin_model import Admin
-from main_app.models.admin.links import AppStats, ReferralReward
-from main_app.models.admin.participants_model import UserData
+from main_app.models.admin.campaign_model import Campaign
 from main_app.utils.user.helpers import hash_password, check_password,generate_access_token,create_user_session
 from main_app.utils.user.error_handling import get_error
 import logging
 import datetime
 import re
 from main_app.controllers.user.auth_controllers import validate_password_strength, validate_email_format
+from main_app.utils.user.string_encoding import generate_encoded_string
 
 # Configure logging for better debugging and monitoring
 logging.basicConfig(level=logging.INFO)
@@ -76,6 +77,7 @@ def admin_register():
       return jsonify({"success": "true" , "message": "User registered successfully"}), 200
  
  except Exception as e:
+
         logger.error(f"Register failed for email with error: {str(e)}")
         return jsonify({"error": "Internal server error"}), 500
 
@@ -117,35 +119,20 @@ def handle_admin_login():
         logger.info(f"Admin login Successfully: {user.admin_uid}")
         return jsonify({
             "success": "true",
-            "message": "Login successfully",
-            "admin_uid": user.admin_uid,
-            "username": user.username,
-            "email": user.email,
+            "admin_uid" : user.admin_uid,
+            "message": "Login successfully"
         }), 200
 
     except Exception as e:
         logger.error(f"Login failed for email with error: {str(e)}")
         return jsonify({"error": get_error("login_failed")}), 500
 
-def initialize_admin_data(admin_uid):
-    UserData(
-        admin_uid = admin_uid
-    ).save()
-    AppStats(
-        admin_uid=admin_uid
-    ).save()
-    ReferralReward(
-        admin_uid=admin_uid
-    ).save()
-    return "done"
-
-
 def handle_authentication():
     logger.info(f"Authentication API called")
     data = request.get_json()
     admin_uid = data.get("admin_uid")
 
-    existing = Admin.objects(admin_uid = admin_uid).first()
+    existing = Admin.objects(admin_uid=admin_uid).first()
 
     if not existing:
         logger.warning("User not found")
@@ -155,7 +142,6 @@ def handle_authentication():
     access_token = generate_access_token(existing.admin_uid)
     session_id = create_user_session(existing.admin_uid)
     expiry_time = datetime.datetime.now() + datetime.timedelta(minutes=SESSION_EXPIRY_MINUTES)
-
     #  Update user session info in DB
     existing.access_token = access_token
     existing.session_id = session_id
@@ -163,6 +149,87 @@ def handle_authentication():
     existing.last_login = datetime.datetime.now()
     existing.save()
 
-    return jsonify({"mode": access_token,
-                    "log_alt": session_id,
-                    "success" : True})
+    # part1 = access_token[:10]
+    # part2 = access_token[10:]
+    #
+    # info = {"access_token": access_token,
+    #         "session_id": session_id}
+    #
+    # fields_to_encode = ["access_token", "session_id",]
+
+    # res = generate_encoded_string(info, fields_to_encode)
+    return jsonify({"log_alt" : session_id,
+                    "mode" : access_token,
+                    "success": True}), 200
+
+
+# def handle_authentication():
+#     data = request.get_json()
+#     admin_uid = data.get("admin_uid")
+#
+#     existing = Admin.objects(admin_uid = admin_uid).first()
+#
+#     if not existing:
+#         logger.warning("User not found")
+#         return jsonify({"message": get_error("user_not_found")}), 404
+#
+#     #  Generate tokens
+#     access_token = generate_access_token(existing.admin_uid)
+#     session_id = create_user_session(existing.admin_uid)
+#     expiry_time = datetime.datetime.now() + datetime.timedelta(minutes=SESSION_EXPIRY_MINUTES)
+#     #  Update user session info in DB
+#     existing.access_token = access_token
+#     existing.session_id = session_id
+#     existing.expiry_time = expiry_time
+#     existing.last_login = datetime.datetime.now()
+#     existing.save()
+#
+#     part1 = access_token[:10]
+#     part2 = access_token [10:]
+#
+#     info = {"access_token": bcrypt.hashpw((part2+part1).encode('utf-8'), bcrypt.gensalt()).decode('utf-8'),
+#             "session_id": session_id,
+#             "admin_uid" : admin_uid}
+#
+#     fields_to_encode = ["access_token", "session_id"]
+#     print(info)
+#
+#     res = generate_encoded_string(info, fields_to_encode)
+#     return jsonify({"logs": res,
+#                     "success" : True}),200
+
+# def check_authentication(admin_uid, access_token, session_id):
+#     data = request.get_json()
+#
+#     existing = Admin.objects(admin_uid = admin_uid).first()
+#
+#     if not existing:
+#         logger.warning("User not found")
+#         return jsonify({"message": get_error("user_not_found")}), 404
+#
+#     ## Generate tokens
+#     access_token = generate_access_token(existing.admin_uid)
+#     session_id = create_user_session(existing.admin_uid)
+#     expiry_time = datetime.datetime.now() + datetime.timedelta(minutes=SESSION_EXPIRY_MINUTES)
+#     ## Update user session info in DB
+#     existing.access_token = access_token
+#     existing.session_id = session_id
+#     existing.expiry_time = expiry_time
+#     existing.last_login = datetime.datetime.now()
+#     existing.save()
+#
+#     part1 = access_token[:len(access_token)/2]
+#     part2 = access_token [len(access_token)/2:]
+#     print(part1)
+#     print(part2)
+#
+#     info = {"access_token": bcrypt.hashpw((part1+part2).encode('utf-8'), bcrypt.gensalt()).decode('utf-8'),
+#             "session_id": session_id,
+#             "admin_uid" : admin_uid}
+#
+#     fields_to_encode = ["access_token", "session_id"]
+#     print(info)
+#
+#     res = generate_encoded_string(info, fields_to_encode)
+#     return jsonify({"logs": res,
+#                     "success" : True}),200

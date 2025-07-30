@@ -2,7 +2,9 @@ from mongoengine import Document, StringField, IntField, DateTimeField
 from datetime import datetime
 
 class Errors(Document):
-    username = StringField(required=True)
+    admin_uid = StringField()
+    program_id = StringField()
+    name = StringField(required=True)
     email = StringField(required=True)
     error_type = StringField(required=True)
     error_source = StringField(required=True)

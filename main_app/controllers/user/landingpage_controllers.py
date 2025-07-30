@@ -6,7 +6,9 @@ from main_app.models.admin.error_model import Errors
 from main_app.models.admin.galaxy_model import Galaxy
 from main_app.models.admin.how_it_work_model import HowItWork
 from main_app.models.admin.links import ReferralReward
-from main_app.models.admin.special_offer_model import Offer
+from main_app.models.admin.participants_model import Participants
+from main_app.models.admin.product_offer_model import Offer
+from main_app.models.admin.special_offer_model import SpecialOffer, SOffer
 from main_app.models.user.user import User
 from main_app.models.user.reward import Reward
 from main_app.models.user.referral import Referral
@@ -14,8 +16,6 @@ from main_app.utils.user.error_handling import get_error
 import logging
 from flask import request, jsonify
 from main_app.utils.user.string_encoding import generate_encoded_string
-from main_app.models.admin.product_model import Product
-from main_app.models.admin.product_offer_model import ProductOffer
 from main_app.models.admin.prize_model import PrizeDetail, AdminPrizes
 from main_app.models.admin.advertisment_card_model import AdvertisementCardItem, AdminAdvertisementCard
 
@@ -84,8 +84,6 @@ def my_rewards():
     session_id = data.get("log_alt")
 
     user = User.objects(user_id=user_id).first()
-
-    print(user)
     try:
         if not user:
             return jsonify({"success" : False, "message" : "User does not exist"}),400
@@ -127,6 +125,7 @@ def my_rewards():
                 "discount_coupons" : reward.discount_coupons
 
             }
+            print(info['reward_history'])
 
             fields_to_encode = ["total_stars",
                                 "total_meteors",
@@ -212,71 +211,71 @@ def my_referrals():
 def my_profile():
     data = request.get_json()
     user_id = data.get("user_id")
-    # access_token = data.get("mode")
-    # session_id = data.get("log_alt")
-    #
+    access_token = data.get("mode")
+    session_id = data.get("log_alt")
+
     user = User.objects(user_id=user_id).first()
-    # try:
-    #     if not user:
-    #         return jsonify({"success" : False, "message" : "User does not exist"}),400
-    #
-    #     if not access_token or not session_id:
-    #         return jsonify({"message": "Missing token or session", "success": False}), 400
-    #
-    #     if user.access_token != access_token:
-    #         return ({"success": False,
-    #                  "message": "Invalid access token"}), 401
-    #
-    #     if user.session_id != session_id:
-    #         return ({"success": False,
-    #                  "message": "Session mismatch or invalid session"}), 403
-    #
-    #     if hasattr(user, 'expiry_time') and user.expiry_time:
-    #         if datetime.datetime.now() > user.expiry_time:
-    #             return ({"success": False,
-    #                      "message": "Access token has expired",
-    #                         "token"  : "expired"}), 401
+    try:
+        if not user:
+            return jsonify({"success" : False, "message" : "User does not exist"}),400
 
-    reward = Reward.objects(user_id = user_id).first()
-    referral = Referral.objects(user_id = user.user_id).first()
+        if not access_token or not session_id:
+            return jsonify({"message": "Missing token or session", "success": False}), 400
 
-    # validate_session_token(user, access_token, session_id)
+        if user.access_token != access_token:
+            return ({"success": False,
+                     "message": "Invalid access token"}), 401
 
-    if user:
-        info = {"username" : user.username,
-                "email" : user.email,
-                "mobile_number" : user.mobile_number,
-                "current_meteors" : reward.current_meteors,
-                "referral_earnings" : referral.referral_earning,
-                "redeemed_meteors" : reward.redeemed_meteors,
-                "invitation_link" : user.invitation_link,
-                "invite_code" : user.invitation_code,
-                "total_meteors_earned" : reward.total_meteors_earned
-                }
-        fields_to_encode = ["username",
-                            "email",
-                            "mobile_number",
-                            "current_meteors",
-                            "referral_earnings",
-                            "redeemed_meteors",
-                            "invitation_link",
-                            "invite_code",
-                            "total_meteors_earned"
-                            ]
-        if user.referred_by:
-            referrer = User.objects(user_id = user.referred_by).first()
-            info["referred_by"] = referrer.username
-            fields_to_encode.append("referred_by")
+        if user.session_id != session_id:
+            return ({"success": False,
+                     "message": "Session mismatch or invalid session"}), 403
 
-        encoded_str = generate_encoded_string(info, fields_to_encode)
-        update_planet_and_galaxy(user_id)
-        return encoded_str, 200
+        if hasattr(user, 'expiry_time') and user.expiry_time:
+            if datetime.datetime.now() > user.expiry_time:
+                return ({"success": False,
+                         "message": "Access token has expired",
+                            "token"  : "expired"}), 401
 
-    # except Exception as e:
-    #     # Errors(username = user.username, email = user.email,
-    #     #        error_source = "Sign Up Form", error_type = "server_error").save()
-    #     logger.error(f"Server Error: {str(e)}")
-    #     return jsonify({"error": get_error("server_error")}), 500
+        reward = Reward.objects(user_id = user_id).first()
+        referral = Referral.objects(user_id = user.user_id).first()
+
+        # validate_session_token(user, access_token, session_id)
+
+        if user:
+            info = {"username" : user.username,
+                    "email" : user.email,
+                    "mobile_number" : user.mobile_number,
+                    "current_meteors" : reward.current_meteors,
+                    "referral_earnings" : referral.referral_earning,
+                    "redeemed_meteors" : reward.redeemed_meteors,
+                    "invitation_link" : user.invitation_link,
+                    "invite_code" : user.invitation_code,
+                    "total_meteors_earned" : reward.total_meteors_earned
+                    }
+            fields_to_encode = ["username",
+                                "email",
+                                "mobile_number",
+                                "current_meteors",
+                                "referral_earnings",
+                                "redeemed_meteors",
+                                "invitation_link",
+                                "invite_code",
+                                "total_meteors_earned"
+                                ]
+            if user.referred_by:
+                referrer = User.objects(user_id = user.referred_by).first()
+                info["referred_by"] = referrer.username
+                fields_to_encode.append("referred_by")
+
+            encoded_str = generate_encoded_string(info, fields_to_encode)
+            update_planet_and_galaxy(user_id)
+            return encoded_str, 200
+
+    except Exception as e:
+        Errors(username = user.username, email = user.email,
+               error_source = "Sign Up Form", error_type = "server_error").save()
+        logger.error(f"Server Error: {str(e)}")
+        return jsonify({"error": get_error("server_error")}), 500
 
 
 # -------------------------------------------------------------------------
@@ -285,7 +284,7 @@ def fetch_data_from_admin():
     data = request.get_json()
     user_id = data.get("user_id")
     user = User.objects(user_id = user_id).first()
-    admin = Admin.objects(admin_uid = user.admin_uid).first()
+    admin = Participants.objects(admin_uid = user.admin_uid, program_id = user.program_id).first()
 
 
     if not user:
@@ -297,7 +296,7 @@ def fetch_data_from_admin():
     referrals_faqs = get_faqs_by_category_name(admin_uid, "Referrals") or []
     help_faqs = get_faqs_by_category_name(admin_uid, "Help and Support FAQs") or []
 
-    how_it_works_text = HowItWork.objects(admin_uid=admin_uid).first()
+    how_it_works_text = HowItWork.objects(admin_uid=admin_uid, program_id = user.program_id).first()
 
     if not how_it_works_text:
         return ({"message": "No 'how it works' data found", "success": False}), 404
@@ -308,17 +307,15 @@ def fetch_data_from_admin():
     how_text.pop('admin_uid', None)
     data.append(how_text)
 
-    prize = AdminPrizes.objects(admin_uid=admin_uid).first()
-    pri = prize.prizes
+    prize = AdminPrizes.objects(admin_uid=admin_uid, program_id = user.program_id).first()
     prize_data = []
 
-    for priz in prize.prizes:
+    for p in prize.prizes:
         prize_dict = {}
-        prize_dict['prize_id'] = priz['prize_id']
-        prize_dict['title'] = priz['title']
-        prize_dict['term_conditions'] = priz['term_conditions']
-        prize_dict['required_meteors'] = priz['required_meteors']
-        prize_dict['product_uid'] = priz['product_uid']
+        prize_dict['prize_id'] = p['prize_id']
+        prize_dict['required_meteors'] = p['required_meteors']
+        prize_dict['title'] = p['title']
+        prize_dict['term_conditions'] = p['term_conditions']
         prize_data.append(prize_dict)
 
     reward = Reward.objects(user_id=user_id).first()
@@ -344,19 +341,19 @@ def fetch_data_from_admin():
         galaxy_data["milestones"].append(milestones)
 
     ad_data = []
-    ad_record = AdminAdvertisementCard.objects(admin_uid=admin_uid).first()
+    ad_record = AdminAdvertisementCard.objects(admin_uid=admin_uid, program_id = user.program_id).first()
     if ad_record:
         for ad in ad_record.advertisement_cards:
             ad_dict = {
                 "title": ad.title,
                 "description": ad.description,
                 "button_txt": ad.button_txt,
-                "image_url": ad.image
+                "image": ad.image
             }
             ad_data.append(ad_dict)
 
     conversion_rate = []
-    rates = ReferralReward.objects(admin_uid = user.admin_uid).first()
+    rates = ReferralReward.objects(admin_uid=admin_uid, program_id = user.program_id).first()
     conversion_data = {
         "conversion_rates" : rates.conversion_rates,
         "referrer_reward" : rates.referrer_reward,
@@ -368,7 +365,7 @@ def fetch_data_from_admin():
 
     product_data =[]
     special_offer = {}
-    offer = Offer.objects(admin_uid = admin_uid).first()
+    offer = SOffer.objects(admin_uid=admin_uid, program_id = user.program_id).first()
     if offer and offer.special_offer:
         for offer in offer.special_offer:
             if offer['active'] is True:
@@ -378,7 +375,7 @@ def fetch_data_from_admin():
                 special_offer['pop_up_text'] = offer['pop_up_text']
                 special_offer['offer_desc'] = offer['offer_desc']
 
-    offer = ProductOffer.objects(admin_uid=admin_uid).first()
+    offer = Offer.objects(admin_uid=admin_uid, program_id = user.program_id).first()
     offer_data = []
 
     for p in offer.offers:
@@ -387,7 +384,7 @@ def fetch_data_from_admin():
         offer_dict['offer_name'] = p['offer_name']
         offer_dict['button_txt'] = p['button_txt']
         offer_dict['one_liner'] = p['one_liner']
-        offer_dict['product_uid'] = p['product_uid']
+        offer_dict['product_id'] = p['product_id']
         offer_data.append(offer_dict)
 
     reward = Reward.objects(user_id=user_id).first()
@@ -399,33 +396,33 @@ def fetch_data_from_admin():
             "home_faqs" : home_faqs,
             "rewards_faqs" : rewards_faqs,
             "referrals_faqs" : referrals_faqs,
-    "help_and_support" : help_faqs,
-    "galaxy_data" : galaxy_data,
-    "advertisement_cards" : ad_data,
-    "exclusive_perks" : exclusive_perks,
-    "conversion_data"  :conversion_rate,
-    "product_offer" : product_data,
-    "special_offer" : special_offer,
-    "exclusive_offers" : offer_data
-    }
+            "help_and_support" : help_faqs,
+            "galaxy_data" : galaxy_data,
+            "advertisement_cards" : ad_data,
+            "exclusive_perks" : exclusive_perks,
+            "conversion_data"  :conversion_rate,
+            "product_offer" : product_data,
+            "special_offer" : special_offer,
+            "exclusive_offers" : offer_data
+            }
 
     if user:
         return jsonify({
-        "success" : True ,
-        "how_it_works" : data,
-        "exciting_prizes" : prize_data,
-        "home_faqs" : home_faqs,
-        "rewards_faqs" : rewards_faqs,
-        "referrals_faqs" : referrals_faqs,
-        "help_and_support" : help_faqs,
-        "galaxy_data" : galaxy_data,
-        "advertisement_cards" : ad_data,
-        "exclusive_perks" : exclusive_perks,
-        "conversion_data"  :conversion_rate,
-        "product_offer" : product_data,
-        "special_offer" : special_offer,
-        "exclusive_offers" : offer_data
-        })
+            "success" : True ,
+            "how_it_works" : data,
+            "exciting_prizes" : prize_data,
+            "home_faqs" : home_faqs,
+            "rewards_faqs" : rewards_faqs,
+            "referrals_faqs" : referrals_faqs,
+            "help_and_support" : help_faqs,
+            "galaxy_data" : galaxy_data,
+            "advertisement_cards" : ad_data,
+            "exclusive_perks" : exclusive_perks,
+            "conversion_data"  :conversion_rate,
+            "product_offer" : product_data,
+            "special_offer" : special_offer,
+            "exclusive_offers" : offer_data
+            })
 
     return ({"message": "An Unexpected error occurred",
              "success" : False,

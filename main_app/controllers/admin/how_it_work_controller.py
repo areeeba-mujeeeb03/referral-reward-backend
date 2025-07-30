@@ -22,11 +22,12 @@ def add_how_it_work():
         desc2 = data.get("desc2")
         title3 = data.get("title3")
         desc3 = data.get("desc3")
+        program_id = data.get("program_id")
 
         exist = Admin.objects(admin_uid=admin_uid).first()
 
-        # if not exist:
-        #     return jsonify({"success": False, "message": "User does not exist"})
+        if not exist:
+            return jsonify({"success": False, "message": "User does not exist"}), 400   
 
         # if not access_token or not session_id:
         #     return jsonify({"message": "Missing token or session", "success": False}), 400
@@ -50,7 +51,7 @@ def add_how_it_work():
             return jsonify({"message": "No fields provided"}), 400
 
         # Validaiton
-        if not all([admin_uid, title1, desc1, title2, desc2, title3, desc3 ]):
+        if not all([admin_uid, title1, desc1, title2, desc2, title3, desc3, program_id ]):
            logger.warning("Missing required fields")
            return jsonify({"message": " All fields are required."}), 400
         
@@ -81,6 +82,9 @@ def add_how_it_work():
             
             if desc3 != existing.desc3:
                  fields_changed = True
+
+            # if program_id != existing.program_id:
+            #      fields_changed = True
             
             if not fields_changed:
                 return jsonify({"message": "No fields updated"})
@@ -92,20 +96,23 @@ def add_how_it_work():
                 "title2":title2,
                 "desc2":desc2,
                 "title3":title3,
-                "desc3":desc3
+                "desc3":desc3,
+                # "program_id":program_id
                 }
 
             existing.update(**update_data)
             logger.info(f"'How It Work' updated successfully for UID: {admin_uid}")
             msg = "Updated successfully"
         else:
-            HowItWork(admin_uid = admin_uid,
-                      title1 = title1,
-                      desc1 = desc1,
-                      title2=title1,
-                      desc2=desc1,
-                      title3 = title3,
-                      desc3 = desc3
+            HowItWork(
+                admin_uid = admin_uid,
+                program_id = program_id,
+                title1 = title1,
+                desc1 = desc1,
+                title2=title2,
+                desc2=desc2,
+                title3 = title3,
+                desc3 = desc3
             ).save()
             logger.info(f"'How It Work' added successfully for UID: {admin_uid}")
             msg = "Added successfully"
@@ -122,8 +129,6 @@ def add_how_it_work():
 
 # Advertisement card
 
-UPLOAD_FOLDER = "uploads/advertisement_card"
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 def advertisement_card():
     try:
@@ -136,11 +141,12 @@ def advertisement_card():
       description = data.get("description")
       button_txt = data.get("button_txt")
       image = data.get("image")
+      program_id = data.get("program_id")
 
       exist = Admin.objects(admin_uid=admin_uid).first()
 
-    #   if not exist:
-    #       return jsonify({"success": False, "message": "User does not exist"}), 200
+      if not exist:
+          return jsonify({"success": False, "message": "User does not exist"}), 400
 
     #   if not access_token or not session_id:
     #       return jsonify({"message": "Missing token or session", "success": False}), 400
@@ -159,7 +165,7 @@ def advertisement_card():
     #                    "message": "Access token has expired",
     #                    "token": "expired"}), 400
 
-      if not all([title, description, button_txt, admin_uid]):
+      if not all([title, description, button_txt, admin_uid, program_id]):
          logger.warning("Missing required fields")
          return jsonify({"message": "All fields are required."}), 400
       
@@ -215,14 +221,15 @@ def advertisement_card():
             )
             AdminAdvertisementCard(
                 admin_uid=admin_uid,
+                program_id=program_id,
                 advertisement_cards=[new_card]
             ).save()
-            msg = "Advertisement card document created and card added"
+            msg = "Advertisement card document created "
 
 
       logger.info(f"Ad card added for admin UID: {admin_uid}")
       return jsonify({"success": True, "message": msg}), 200
     
     except Exception as e:
-       logger.error(f"Add advertisment card failed : {str(e)}")
+       logger.error(f"Add advertisement card failed : {str(e)}")
        return jsonify({"error": "Internal server error"}), 500

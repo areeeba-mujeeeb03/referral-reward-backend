@@ -1,10 +1,10 @@
 import datetime
 from flask import request, jsonify
 # from werkzeug.utils import secure_filename
-from main_app.models.admin.perks_model import ExclusivePerks, FooterSection, FooterItem
+from main_app.models.admin.perks_model import ExclusivePerks,Perks,FooterSection, FooterItem
 import os , logging
 from main_app.models.admin.admin_model import Admin
-
+from main_app.utils.admin.helpers import generate_perks_uid
 
 # Configure logging for better debugging and monitoring
 logging.basicConfig(level=logging.INFO)
@@ -23,13 +23,14 @@ def create_exclusive_perks():
         information = data.get("information")
         term_conditions = data.get("term_conditions")
         image = data.get("image")
+        perk_id = data.get("perk_id")
 
         print(data)
 
         exist = Admin.objects(admin_uid=admin_uid).first()
 
-        # if not exist:
-        #     return jsonify({"success": False, "message": "User does not exist"})
+        if not exist:
+            return jsonify({"success": False, "message": "User does not exist"}), 400
 
         # if not access_token or not session_id:
         #     return jsonify({"message": "Missing token or session", "success": False}), 400
@@ -57,33 +58,90 @@ def create_exclusive_perks():
         if not Admin.objects(admin_uid=admin_uid).first():
             logger.warning(f"Admin not found for UID: {admin_uid}")
             return jsonify({"message": "Admin not found" }), 400
+        
+        # Check if Perks document exists
+        perks_doc = Perks.objects(admin_uid=admin_uid).first()
 
-          # Check if a similar perk exists for the admin
-        existing_perk = ExclusivePerks.objects(title=title, admin_uid=admin_uid).first()
-        if existing_perk:
-             existing_perk.update(
-                   information=information,
-                   term_conditions=term_conditions,
-                   image=image
-              )
-             message = "Exclusive perks updated successfully"
+        if perks_doc:
+            updated = False
+
+            # Try to update existing embedded perk by perk_id
+            if perk_id:
+                for perk in perks_doc.perks:
+                    if perk.perk_id == perk_id:
+                        perk.title = title
+                        perk.information = information
+                        perk.term_conditions = term_conditions
+                        perk.image = image
+                        updated = True
+                        message = "Exclusive perk updated successfully"
+                        break
+
+            if not updated:
+                # Append new perk
+                new_perk = ExclusivePerks(
+                    perk_id=generate_perks_uid(admin_uid),
+                    title=title,
+                    information=information,
+                    term_conditions=term_conditions,
+                    image=image
+                )
+                perks_doc.perks.append(new_perk)
+                message = "Exclusive perk added successfully"
+
+            perks_doc.save()
         else:
+            # Create new Perks document with one exclusive perk
             new_perk = ExclusivePerks(
-                   title=title,
-                   information=information,
-                   term_conditions=term_conditions,
-                   image=image,
-                   admin_uid=admin_uid
-             )
-            new_perk.save()
+                perk_id=generate_perks_uid(admin_uid),
+                title=title,
+                information=information,
+                term_conditions=term_conditions,
+                image=image
+            )
+            new_doc = Perks(
+                admin_uid=admin_uid,
+                perks=[new_perk]
+            )
+            new_doc.save()
             message = "Exclusive perk added successfully"
 
         return jsonify({"success": True, "message": message}), 200
-    
 
      except Exception as e:
             logger.error(f"Add exclusive perks failed:{str(e)}")
             return jsonify({"error": "Internal server error"}), 500
+
+
+        #   # Check if a similar perk exists for the admin
+        # existing_perk = ExclusivePerks.objects(admin_uid=admin_uid).first()
+        # if existing_perk:
+        #     #  existing_perk.update(
+        #     #        information=information,
+        #     #        term_conditions=term_conditions,
+        #     #        image=image
+        #     #   )
+        #   if existing_perk.perks:
+        #     # Update first perk
+        #      existing_perk.perks[0].title = title
+        #      existing_perk.perks[0].information = information
+        #      existing_perk.perks[0].term_conditions = term_conditions
+        #      existing_perk.perks[0].image = image
+        #      message = "Exclusive perks updated successfully"
+        # else:
+        #     new_perk = ExclusivePerks(
+        #            perk_id = generate_perks_uid(admin_uid),
+        #            title=title,
+        #            information=information,
+        #            term_conditions=term_conditions,
+        #            image=image,
+        #            admin_uid=admin_uid
+        #      )
+        #     new_perk.save()
+        #     message = "Exclusive perk added successfully"
+
+        # return jsonify({"success": True, "message": message}), 200
+    
 
 
 
@@ -104,7 +162,7 @@ def edit_footer():
         exist = Admin.objects(admin_uid=admin_uid).first()
 
         if not exist:
-            return jsonify({"success": False, "message": "User does not exist"})
+            return jsonify({"success": False, "message": "User does not exist"}), 400
 
         if not access_token or not session_id:
             return jsonify({"message": "Missing token or session", "success": False}), 400

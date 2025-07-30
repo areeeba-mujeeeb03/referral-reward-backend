@@ -1,10 +1,7 @@
-import os
 from main_app.models.admin.error_model import Errors
 from main_app.models.admin.help_model import FAQ, Contact
 from main_app.models.admin.links import AppStats
 from main_app.models.user.user import User
-# from main_app.controllers.user.auth_controllers import validate_session_token
-from main_app.models.admin.product_model import Product
 from main_app.utils.user.error_handling import get_error
 import logging
 import datetime
@@ -57,15 +54,20 @@ def update_profile():
             ).save()
             return jsonify({"error": get_error("incorrect_password")}), 400
 
-        # Uniqueness checks
-        if data.get("username")!= user.username and User.objects(username=data["username"]).first():
-            return jsonify({"error": get_error("username_exists")}), 400
+        try:
+            if data.get("username") != user.username and User.objects(username=data["username"]).first():
+                return jsonify({"error": get_error("username_exists")}), 400
 
-        if data.get("email")!= user.email and User.objects(email=data["email"]).first():
-            return jsonify({"error": get_error("email_exists")}), 400
+            if data.get("email")!= user.email and User.objects(email=data["email"]).first():
+                return jsonify({"error": get_error("email_exists")}), 400
 
-        if data.get("mobile_number")!= user.mobile_number and User.objects(mobile_number=data["mobile_number"]).first():
-            return jsonify({"error": "This number is already registered"}), 400
+            if data.get("mobile_number")!= user.mobile_number and User.objects(mobile_number=data["mobile_number"]).first():
+                print(user.mobile_number)
+                return jsonify({"error": "This number is already registered"}), 400
+
+        except Exception as e:
+            print(str(e))
+            return None
 
         update_fields = {}
 
@@ -99,9 +101,6 @@ def update_profile():
     except Exception as e:
         Errors(username = user.username, email = user.email, error_type = str(e),  error_source="Update Profile",)
         return jsonify({"success": False, "message": "Server error"}), 500
-
-
-UPLOAD_FOLDER = "static/uploads/contact"
 
 def submit_msg():
     data = request.get_json()
@@ -166,13 +165,20 @@ def submit_msg():
 
 def update_app_stats(app_name, user):
     if app_name:
-        app_col = AppStats.objects(admin_uid = user.admin_uid).first()
-        for app in app_col.apps:
-            print(app['platform'])
-            if app['platform'].strip('').lower() == app_name.strip('').lower():
-                print(app)
-                app['accepted'] += 1
-                app_col.save()
-                return "done"
+        app_col = AppStats.objects(admin_uid=user.admin_uid).first()
+        if user.joined_via == app_name:
+            if user.login_count == 1:
+                for app in app_col.apps:
+                    if app['platform'].strip('').lower() == app_name.strip('').lower():
+                        app['successful'] += 1
+                        app_col.save()
+                        return "done"
+            if user.login_count == 0:
+                for app in app_col.apps:
+                    if app['platform'].strip('').lower() == app_name.strip('').lower():
+                        print(app)
+                        app['accepted'] += 1
+                        app_col.save()
+                        return "done"
 
     return jsonify({"message" : "failed to update app status"}),400

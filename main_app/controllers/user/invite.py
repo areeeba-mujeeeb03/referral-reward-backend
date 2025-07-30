@@ -1,6 +1,8 @@
 import datetime
 import logging
 from flask import request, jsonify, session
+
+from main_app.models.admin.error_model import Errors
 from main_app.models.user.user import User
 from main_app.controllers.user.auth_controllers import validate_session_token
 from main_app.models.admin.links import AppStats
@@ -27,13 +29,13 @@ def generate_msg(user, name):
     return encoded_msg
 
 def send_whatsapp_invite():
-    try:
-        data = request.get_json()
-        user_id = data.get("user_id")
-        access_token = data.get("mode")
-        session_id = data.get("log_alt")
+    data = request.get_json()
+    user_id = data.get("user_id")
+    access_token = data.get("mode")
+    session_id = data.get("log_alt")
 
-        user_exist = User.objects(user_id=user_id).first()
+    user_exist = User.objects(user_id=user_id).first()
+    try:
 
         if not user_exist:
             return jsonify({"success": False, "message": "User does not exist"}), 404
@@ -83,21 +85,22 @@ def send_whatsapp_invite():
         })
 
     except Exception as e:
-        logger.error("WhatsApp invite error", exc_info=True)
+        logger.error(f"WhatsApp invite error {str(e)}", exc_info=True)
+        Errors(admin_uid=user_exist.admin_uid, program_id=user_exist.program_id, username=user_exist.user_id, email=user_exist.email,
+               error_source="Send Invitation on WhatsApp",
+               error_type=f"Failed to send invitation : {user_exist.user_id}").save()
         return jsonify({"success": False, "message": "Internal Server Error"}), 500
 
 
 
 def send_twitter_invite():
+    data = request.get_json()
+    user_id = data.get("user_id")
+    access_token = data.get("mode")
+    session_id = data.get("log_alt")
+
+    user_exist = User.objects(user_id=user_id).first()
     try:
-        data = request.get_json()
-        user_id = data.get("user_id")
-        access_token = data.get("mode")
-        session_id = data.get("log_alt")
-
-        user_exist = User.objects(user_id=user_id).first()
-
-
         if not user_exist:
             return jsonify({"success": False, "message": "User does not exist"})
         if not access_token or not session_id:
@@ -105,11 +108,11 @@ def send_twitter_invite():
         if user_exist.access_token != access_token:
             return ({"success": False,
                      "message": "Invalid access token"}), 401
-        
+
         if user_exist.session_id != session_id:
             return ({"success": False,
                      "message": "Session mismatch or invalid session"}), 403
-        
+
         if hasattr(user_exist, 'expiry_time') and user_exist.expiry_time:
             if datetime.datetime.now() > user_exist.expiry_time:
                 return ({"success": False,
@@ -150,18 +153,20 @@ def send_twitter_invite():
 
     except Exception as e:
         logger.error(f"Twitter invite error: {str(e)}")
+        Errors(admin_uid=user_exist.admin_uid, program_id=user_exist.program_id, username=user_exist.user_id, email=user_exist.email,
+               error_source="Send Invitation on Twitter",
+               error_type=f"Failed to send invitation : {user_exist.user_id}").save()
         return jsonify({"success": False, "message": "Internal Server Error"}), 500
 
 
 def send_telegram_invite():
+    data = request.get_json()
+    user_id = data.get("user_id")
+    access_token = data.get("mode")
+    session_id = data.get("log_alt")
+
+    user_exist = User.objects(user_id=user_id).first()
     try:
-        data = request.get_json()
-        user_id = data.get("user_id")
-        access_token = data.get("mode")
-        session_id = data.get("log_alt")
-
-        user_exist = User.objects(user_id=user_id).first()
-
         if not user_exist:
             return jsonify({"success": False, "message": "User does not exist"})
         if not access_token or not session_id:
@@ -214,17 +219,20 @@ def send_telegram_invite():
 
     except Exception as e:
         logger.error(f"Twitter invite error: {str(e)}")
+        Errors(admin_uid=user_exist.admin_uid, program_id=user_exist.program_id, username=user_exist.user_id,
+               email=user_exist.email,
+               error_source="Send Invitation on Telegram",
+               error_type=f"Failed to send invitation : {user_exist.user_id}").save()
         return jsonify({"success": False, "message": "Internal Server Error"}), 500
 
 def send_facebook_invite():
+    data = request.get_json()
+    user_id = data.get("user_id")
+    access_token = data.get("mode")
+    session_id = data.get("log_alt")
+
+    user_exist = User.objects(user_id=user_id).first()
     try:
-        data = request.get_json()
-        user_id = data.get("user_id")
-        access_token = data.get("mode")
-        session_id = data.get("log_alt")
-
-        user_exist = User.objects(user_id=user_id).first()
-
         if not user_exist:
             return jsonify({"success": False, "message": "User does not exist"})
         if not access_token or not session_id:
@@ -278,17 +286,20 @@ def send_facebook_invite():
 
     except Exception as e:
         logger.error(f"Twitter invite error: {str(e)}")
+        Errors(admin_uid=user_exist.admin_uid, program_id=user_exist.program_id, username=user_exist.user_id,
+               email=user_exist.email,
+               error_source="Send Invitation on Facebook",
+               error_type=f"Failed to send invitation : {user_exist.user_id}").save()
         return jsonify({"success": False, "message": "Internal Server Error"}), 500
 
 def send_linkedin_invite():
+    data = request.get_json()
+    user_id = data.get("user_id")
+    access_token = data.get("mode")
+    session_id = data.get("log_alt")
+
+    user_exist = User.objects(user_id=user_id).first()
     try:
-        data = request.get_json()
-        user_id = data.get("user_id")
-        access_token = data.get("mode")
-        session_id = data.get("log_alt")
-
-        user_exist = User.objects(user_id=user_id).first()
-
         if not user_exist:
             return jsonify({"success": False, "message": "User does not exist"})
         if not access_token or not session_id:
@@ -342,4 +353,8 @@ def send_linkedin_invite():
 
     except Exception as e:
         logger.error(f"Twitter invite error: {str(e)}")
+        Errors(admin_uid=user_exist.admin_uid, program_id=user_exist.program_id, username=user_exist.user_id,
+               email=user_exist.email,
+               error_source="Send Invitation on LinkedIn",
+               error_type=f"Failed to send invitation : {user_exist.user_id}").save()
         return jsonify({"success": False, "message": "Internal Server Error"}), 500

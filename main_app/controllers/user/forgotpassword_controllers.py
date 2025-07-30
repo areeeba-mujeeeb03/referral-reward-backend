@@ -3,14 +3,13 @@ import uuid
 import datetime
 import smtplib
 from email.mime.text import MIMEText
-from twilio.base.values import unset
-
 from main_app.controllers.user.OTP_controllers import _generate_otp
 from main_app.models.admin.error_model import Errors
 from main_app.models.user.user import User
 from main_app.models.user.links import Link
 from flask import request,jsonify
 from main_app.controllers.user.auth_controllers import validate_password_strength
+from main_app.utils.user.error_handling import get_error
 from main_app.utils.user.helpers import hash_password
 
 
@@ -49,7 +48,7 @@ def send_verification_code():
     if not user:
         return jsonify({"success": False, "message": "User does not exist"}),400
 
-    link = Link.objects(user_id = user.user_id).first()
+    link = Link.objects(user_id = user.user_id, program_id = user.program_id).first()
     if not link:
         Link(
             user_id = user.user_id,
@@ -76,7 +75,7 @@ def send_verification_code():
             server.sendmail("something3029@gmail.com", email, msg.as_string())
             return ({"message": f"Password verification code sent to {email}", "success" : True}), 201
     except Exception as e:
-        Errors(username=user.user_id, email=user.email, error_source="send verification code for password reset",
+        Errors(admin_uid=user.admin_uid, program_id=user.program_id,username=user.user_id, email=user.email, error_source="send verification code for password reset",
                error_type=f"Failed to send email : {user.user_id}").save()
         return ({"error": f"Failed to send email: {str(e)}"}), 404
 
@@ -109,7 +108,7 @@ def verify_code():
         return jsonify({"message" : "Verified Successfully", "success" : True}),200
 
     except Exception as e:
-        Errors(username=user.user_id, email=user.email, error_source="send verification code for password reset",
+        Errors(admin_uid=user.admin_uid, program_id=user.program_id,username=user.user_id, email=user.email, error_source="send verification code for password reset",
                error_type=f"Failed to send email : {user.user_id}").save()
         return jsonify({"message" : f"An unexpected error occurred : {str(e)}"}), 400
 
@@ -183,6 +182,9 @@ def reset_password():
 
     except Exception as e:
         logger.error(f"Login failed for email with error: {str(e)}")
+        Errors(admin_uid=user.admin_uid, program_id=user.program_id,
+               username=user.username, email=user.email,
+               error_source="Sign Up Form", error_type= "failed to reset password").save()
         return jsonify({"message": "Password updated successfully!", "success" : True}), 201
 
 

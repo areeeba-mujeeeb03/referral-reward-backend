@@ -42,25 +42,25 @@ def add_product():
 
          exist = Admin.objects(admin_uid=admin_uid).first()
 
-         # if not exist:
-         #     return jsonify({"success": False, "message": "User does not exist"})
-         #
-         # if not access_token or not session_id:
-         #     return jsonify({"message": "Missing token or session", "success": False}), 400
-         #
-         # if exist.access_token != access_token:
-         #     return ({"success": False,
-         #              "message": "Invalid access token"}), 401
-         #
-         # if exist.session_id != session_id:
-         #     return ({"success": False,
-         #              "message": "Session mismatch or invalid session"}), 403
-         #
-         # if hasattr(exist, 'expiry_time') and exist.expiry_time:
-         #     if datetime.datetime.now() > exist.expiry_time:
-         #         return ({"success": False,
-         #                  "message": "Access token has expired",
-         #                  "token": "expired"}), 401
+         if not exist:
+             return jsonify({"success": False, "message": "User does not exist"}), 400
+
+         if not access_token or not session_id:
+             return jsonify({"message": "Missing token or session", "success": False}), 400
+
+         if exist.access_token != access_token:
+             return ({"success": False,
+                      "message": "Invalid access token"}), 401
+
+         if exist.session_id != session_id:
+             return ({"success": False,
+                      "message": "Session mismatch or invalid session"}), 403
+
+         if hasattr(exist, 'expiry_time') and exist.expiry_time:
+             if datetime.datetime.now() > exist.expiry_time:
+                 return ({"success": False,
+                          "message": "Access token has expired",
+                          "token": "expired"}), 401
 
          if not all([product_name, original_amt, short_desc, admin_uid]):
              logger.warning(f"Missing required fields")
@@ -80,7 +80,7 @@ def add_product():
             "image" : image,
             "reward_type" : reward_type
             }
-         
+
          admin_exist = Product.objects(admin_uid = admin_uid).first()
          if not admin_exist:
             product = Product(
@@ -101,7 +101,7 @@ def add_product():
         #     return jsonify({"message" : "Product Added Successfully"})
         #  admin_exist.update(
         #      push__products = pro_dict
-        #  )   
+        #  )
 
          logger.info(f"Product saved with ID:")
          return jsonify({"success":"true" , "message": "Product Added Successfully" }), 200
@@ -125,8 +125,8 @@ def update_product(product_uid):
 
      exist = Admin.objects(admin_uid=admin_uid).first()
 
-    #  if not exist:
-    #      return jsonify({"success": False, "message": "User does not exist"})
+     if not exist:
+         return jsonify({"success": False, "message": "User does not exist"}), 400
 
     #  if not access_token or not session_id:
     #      return jsonify({"message": "Missing token or session", "success": False}), 400
@@ -149,9 +149,9 @@ def update_product(product_uid):
             logger.warning("No fields or files provided in request")
             return jsonify({"message": "No fields provided for update"}), 400
 
-     product_doc = Product.objects(admin_uid=admin_uid, products__product_uid=product_uid).first()
-     if not product_doc:
-        logger.warning(f"Product not found for UID: {product_uid}")
+     product = Product.objects(product_uid=uid).first()
+     if not product:
+        logger.warning(f"Product not found for UID: {uid}")
         return jsonify({"message": "Product not found"}), 400
      
      updated = False
@@ -263,25 +263,21 @@ def add_offer():
         "button_txt": button_txt,
         "off_percent": off_percent,
         "status": status,
-        "product_id": product_id,
+        "product_uid": product_id,
         # "admin_uid": admin_uid,
         "start_date": start_date,
         "expiry_date": expiry_date
         }
-         
-     admin_exist = ProductOffer.objects(admin_uid = admin_uid).first()
+
+     admin_exist = Offer.objects(admin_uid = admin_uid).first()
      if not admin_exist:
             offer = ProductOffer(
                 admin_uid=admin_uid,
                 offers = [off_dic]
             )
             offer.save()
-            return jsonify({"success": True , "message": "Offer add successfully"}), 200
-    #  else:
-    #     # Check for duplicate product under same admin
-    #     for off in admin_exist.offers:
-    #         if off.get("offer_name") == offer_name:
-    #             return jsonify({"message": "offer already exists for this admin"}), 400
+            logger.info(f"Offer saved with ID: ")
+            return jsonify({"success": True, "message": "Offer add successfully"}), 200
 
      else:
         ProductOffer.objects(admin_uid=admin_uid).update(push__offers = off_dic)
@@ -310,19 +306,18 @@ def update_offer():
 
         exist = Admin.objects(admin_uid=admin_uid).first()
 
-        # if not exist:
-        #     return jsonify({"success": False, "message": "User does not exist"})
+        if not exist:
+            return jsonify({"success": False, "message": "User does not exist"}), 400
 
         # if not access_token or not session_id:
         #     return jsonify({"message": "Missing token or session", "success": False}), 400
 
-        # if exist.access_token != access_token:
-        #     return ({"success": False,
-        #              "message": "Invalid access token"}), 401
-
-        # if exist.session_id != session_id:
-        #     return ({"success": False,
-        #              "message": "Session mismatch or invalid session"}), 403
+        if exist.access_token != access_token:
+            return ({"success": False,
+                     "message": "Invalid access token"}), 401
+        if exist.session_id != session_id:
+            return ({"success": False,
+                     "message": "Session mismatch or invalid session"}), 403
 
         # if hasattr(exist, 'expiry_time') and exist.expiry_time:
         #     if datetime.datetime.now() > exist.expiry_time:

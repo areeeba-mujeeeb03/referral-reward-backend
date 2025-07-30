@@ -9,7 +9,6 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 
-
 # Secret key for session management (CSRF, etc.)
 app.config["SECRET_KEY"] = "areeba-mujeeb-is-Smart"
 

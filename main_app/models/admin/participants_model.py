@@ -1,7 +1,8 @@
 from mongoengine import Document, IntField, StringField
 
-class UserData(Document):
+class Participants(Document):
     admin_uid = StringField(required=True)
+    program_id = StringField()
     total_participants  = IntField(default=0)
     total_referrals = IntField(default=0)
     successful_referrals = IntField(default=0)
@@ -14,5 +15,9 @@ class UserData(Document):
     vouchers_won = IntField(default=0)
     used_coupons = IntField(default=0)
     currencies_converted = IntField(default=0)
+    signup_reward_type = StringField(default=None)
+    login_reward = IntField(default=0)
+    login_reward_type = StringField(default=None)
+    signup_reward = IntField(default=0)
 
     meta = {"db_alias": "admin-db", "collection": "participants"}

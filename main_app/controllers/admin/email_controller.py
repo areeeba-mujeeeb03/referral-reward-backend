@@ -6,7 +6,7 @@ from flask import request, jsonify
 import os, logging
 
 from main_app.models.admin.admin_model import Admin
-from main_app.models.admin.email_model import EmailTemplate, EmailData
+from main_app.models.admin.email_model import EmailTemplate
 
 UPLOAD_FOLDER = "uploads/email_templates"
 
@@ -59,8 +59,8 @@ def create_email():
 
         if not email_type:
             return jsonify({"message": "email_type is required"}), 400
-
-        if not all([name, email, subject, reply_to, content, button_text, admin_uid]):
+        
+        if not all([name, email, subject, reply_to, content, button_text]):
             return jsonify({"message": "All fields are required"}), 400
 
         # Check if a template already exists for the admin

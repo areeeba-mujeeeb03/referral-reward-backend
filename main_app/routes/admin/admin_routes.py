@@ -1,6 +1,7 @@
 from flask import Blueprint
 from main_app.controllers.admin.admin_auth_controller import admin_register, handle_authentication
 from main_app.controllers.admin.admin_auth_controller import handle_admin_login
+from main_app.controllers.admin.campaign_controllers import create_new_campaign
 from main_app.controllers.admin.discount_coupons_controllers import create_discount_coupons, update_discount_coupon, \
     delete_discount_coupon
 from main_app.controllers.admin.forgotpassword_controllers import forgot_otp_email, verify_otp, reset_password
@@ -11,11 +12,12 @@ from main_app.controllers.admin.prize_controller import add_exciting_prizes, che
 from main_app.controllers.admin.how_it_work_controller import add_how_it_work, advertisement_card
 from main_app.controllers.admin.referral_controllers import generate_invite_link_with_expiry, sharing_app_stats, \
     save_referral_data
-from main_app.controllers.admin.rewards_controllers import create_galaxy, remove_milestone, add_new_milestone,set_reward_settings
+from main_app.controllers.admin.rewards_controllers import create_galaxy,set_reward_settings
 from main_app.controllers.admin.dashboard_controllers import error_table, dashboard_participants, dashboard_stats, \
-    graph_data
+    graph_data, dashboard_all_campaigns, reward_history
 from main_app.controllers.admin.email_controller import create_email
-from main_app.controllers.admin.notification_controller import create_push_notification, list_push_notifications, get_push_notification,update_push_notification, delete_push_notification
+from main_app.controllers.admin.notification_controller import create_push_notification, list_push_notifications, \
+    update_push_notification, delete_push_notification, get_push_notification
 from main_app.controllers.admin.perks_controller import create_exclusive_perks, edit_footer
 from main_app.controllers.admin.special_off_controllers import create_special_offer
 
@@ -306,7 +308,11 @@ def update_faq():
 
 @admin_bp.route('/admin/delete-faqs', methods=['DELETE'])
 def remove_faq():
-
+    """
+    Handle password reset using code(otp) from email
+    Accepts: POST request with new password and reset
+    Returns: Password reset confirmation response
+    """
     return delete_faq()
 
 # ==============
@@ -317,7 +323,11 @@ def remove_faq():
 
 @admin_bp.route('/admin/messages', methods=['GET'])
 def view_msgs():
-
+    """
+    Handle password reset using code(otp) from email
+    Accepts: POST request with new password and reset
+    Returns: Password reset confirmation response
+    """
     return list_contact_messages()
 
 # ==============
@@ -328,7 +338,11 @@ def view_msgs():
 
 @admin_bp.route('/generate-link', methods = ['POST'])
 def generate_link():
-
+    """
+    Handle password reset using code(otp) from email
+    Accepts: POST request with new password and reset
+    Returns: Password reset confirmation response
+    """
     return generate_invite_link_with_expiry()
 
 # ==============
@@ -339,7 +353,11 @@ def generate_link():
 
 @admin_bp.route('/admin/special-referral-link', methods = ['POST'])
 def special_link_referral():
-
+    """
+    Handle password reset using code(otp) from email
+    Accepts: POST request with new password and reset
+    Returns: Password reset confirmation response
+    """
     return save_referral_data()
 
 # ==============
@@ -350,7 +368,11 @@ def special_link_referral():
 
 @admin_bp.route('/admin/sharing-apps', methods=['POST'])
 def sharing_apps():
-
+    """
+    Handle password reset using code(otp) from email
+    Accepts: POST request with new password and reset
+    Returns: Password reset confirmation response
+    """
     return sharing_app_stats()
 
 # ==============
@@ -361,7 +383,11 @@ def sharing_apps():
 
 @admin_bp.route('/admin/set-referral-rewards', methods = ['POST'])
 def set_referral_rewards():
-
+    """
+    Handle password reset using code(otp) from email
+    Accepts: POST request with new password and reset
+    Returns: Password reset confirmation response
+    """
     return set_reward_settings()
 
 # ==============
@@ -372,7 +398,11 @@ def set_referral_rewards():
 
 @admin_bp.route('/admin/add-new-galaxy', methods = ['POST'])
 def add_galaxy():
-
+    """
+    Handle password reset using code(otp) from email
+    Accepts: POST request with new password and reset
+    Returns: Password reset confirmation response
+    """
     return create_galaxy()
 
 # ==============
@@ -381,10 +411,14 @@ def add_galaxy():
 
 # ==============
 
-@admin_bp.route('/admin/add-new-milestones', methods = ['POST'])
-def add_milestone():
-
-    return add_new_milestone()
+# @admin_bp.route('/admin/add-new-milestones', methods = ['POST'])
+# def add_milestone():
+#     """
+#     Handle password reset using code(otp) from email
+#     Accepts: POST request with new password and reset
+#     Returns: Password reset confirmation response
+#     """
+#     return add_new_milestone()
 
 # ==================
 
@@ -392,10 +426,14 @@ def add_milestone():
 
 # ===================
 
-@admin_bp.route('/admin/delete-milestone', methods = ['POST'])
-def delete_milestone():
-
-    return remove_milestone()
+# @admin_bp.route('/admin/delete-milestone', methods = ['POST'])
+# def delete_milestone():
+#     """
+#     Handle password reset using code(otp) from email
+#     Accepts: POST request with new password and reset
+#     Returns: Password reset confirmation response
+#     """
+#     return remove_milestone()
 
 # =======================
 
@@ -406,6 +444,9 @@ def delete_milestone():
 @admin_bp.route('/admin/push-notification', methods=['POST'])
 def admin_push_notification():
     """
+    Handle password reset using code(otp) from email
+    Accepts: POST request with new password and reset
+    Returns: Password reset confirmation response
     """
     return create_push_notification()
 
@@ -418,6 +459,9 @@ def admin_push_notification():
 @admin_bp.route('/admin/table-push-notifications', methods=['POST'])
 def admin_list_push_notification():
     """
+    Handle password reset using code(otp) from email
+    Accepts: POST request with new password and reset
+    Returns: Password reset confirmation response
     """
     return list_push_notifications()
 
@@ -441,6 +485,9 @@ def adminget_push_notification(notification_id):
 @admin_bp.route('/admin/update-push-notifications/<notification_id>', methods=['PUT'])
 def admin_update_push_notification(notification_id):
     """
+    Handle password reset using code(otp) from email
+    Accepts: POST request with new password and reset
+    Returns: Password reset confirmation response
     """
     return update_push_notification(notification_id)
 
@@ -455,6 +502,9 @@ def admin_update_push_notification(notification_id):
 @admin_bp.route('/admin/delete_push_notifications/<notification_id>', methods=['DELETE'])
 def admin_delete_push_notification(notification_id):
     """
+    Handle password reset using code(otp) from email
+    Accepts: POST request with new password and reset
+    Returns: Password reset confirmation response
     """
     return delete_push_notification(notification_id)
 
@@ -467,6 +517,9 @@ def admin_delete_push_notification(notification_id):
 @admin_bp.route("/admin/create-discount-coupon", methods= ["POST"])
 def admin_create_discount_coupons():
     """
+    Handle password reset using code(otp) from email
+    Accepts: POST request with new password and reset
+    Returns: Password reset confirmation response
     """
     return create_discount_coupons()
 
@@ -479,6 +532,9 @@ def admin_create_discount_coupons():
 @admin_bp.route("/admin/update-discount-coupon", methods= ["POST"])
 def update_coupons():
     """
+    Handle password reset using code(otp) from email
+    Accepts: POST request with new password and reset
+    Returns: Password reset confirmation response
     """
     return update_discount_coupon()
 
@@ -491,6 +547,9 @@ def update_coupons():
 @admin_bp.route("/admin/delete-discount-coupon", methods= ["POST"])
 def remove_discount_coupons():
     """
+    Handle password reset using code(otp) from email
+    Accepts: POST request with new password and reset
+    Returns: Password reset confirmation response
     """
     return delete_discount_coupon()
 
@@ -503,6 +562,9 @@ def remove_discount_coupons():
 @admin_bp.route("/admin/exclusive-perks", methods= ["POST"])
 def admin_create_exclusive_perks():
     """
+    Handle password reset using code(otp) from email
+    Accepts: POST request with new password and reset
+    Returns: Password reset confirmation response
     """
     return create_exclusive_perks()
 
@@ -515,7 +577,11 @@ def admin_create_exclusive_perks():
 
 @admin_bp.route("/admin/update-footer", methods=["POST"])
 def admin_create_footer():
-
+    """
+    Handle password reset using code(otp) from email
+    Accepts: POST request with new password and reset
+    Returns: Password reset confirmation response
+    """
     return edit_footer()
 
 # ===================
@@ -533,11 +599,11 @@ def authentication():
     """
     return handle_authentication()
 
-# =====
+# ===================
 
-# 40.
+#  38. Authentications
 
-# =====
+# ==================
 
 @admin_bp.route("/admin/graph-data/<admin_uid>", methods = ["POST"])
 def graph(admin_uid):
@@ -548,11 +614,61 @@ def graph(admin_uid):
     """
     return graph_data(admin_uid)
 
-# =======
+# ===================
 
-# 41.
+#  39. Authentications
+
+# ==================
 
 # ===========
 @admin_bp.route('/admin/special-offer', methods = ['POST'])
 def add_special_offer():
+    """
+    Handle password reset using code(otp) from email
+    Accepts: POST request with new password and reset
+    Returns: Password reset confirmation response
+    """
     return create_special_offer()
+
+# ===================
+
+# 40. Create Campaign
+
+# ==================
+
+@admin_bp.route('/admin/create-campaign', methods = ['POST'])
+def create_campaign():
+    """
+    Handle password reset using code(otp) from email
+    Accepts: POST request with new password and reset
+    Returns: Password reset confirmation response
+    """
+    return create_new_campaign()
+
+
+@admin_bp.route('/admin/list-all-campaigns', methods=['POST'])
+def list_campaign():
+    """
+    Handle password reset using code(otp) from email
+    Accepts: POST request with new password and reset
+    Returns: Password reset confirmation response
+    """
+    return dashboard_all_campaigns()
+
+
+@admin_bp.route("/admin/get-push-notification/<notification_id>", methods=["GET"])
+def admin_get_push_notification(notification_id):
+
+    return get_push_notification(notification_id)
+
+@admin_bp.route('/admin/reward-history', methods = ['POST'])
+def user_rewards():
+
+    return reward_history()
+
+
+# @admin_bp.route('/admin/check-auths', methods = ['POST'])
+# def
+
+
+

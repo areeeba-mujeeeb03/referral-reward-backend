@@ -1,6 +1,5 @@
 from flask import request, jsonify
 import datetime
-
 from main_app.models.admin.links import ReferralReward
 from main_app.models.user.reward import Reward
 from main_app.models.user.user import User
@@ -37,7 +36,7 @@ def meteors_to_stars():
 
     rewards = Reward.objects(user_id = user_id).first()
 
-    conversions = ReferralReward.objects(admin_uid = user.admin_uid).first()
+    conversions = ReferralReward.objects(admin_uid = user.admin_uid, program_id = user.program_id).first()
 
     rate = conversions.conversion_rates["meteors_to_stars"]
 
@@ -85,7 +84,7 @@ def stars_to_currency():
                      "message": "Access token has expired"}), 401
 
     rewards = Reward.objects(user_id=user_id).first()
-    conversions = ReferralReward.objects(admin_uid = user.admin_uid).first()
+    conversions = ReferralReward.objects(admin_uid = user.admin_uid, program_id = user.program_id).first()
 
     rate = conversions.conversion_rates["meteors_to_stars"]
 

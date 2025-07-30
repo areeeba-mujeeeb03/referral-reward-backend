@@ -1,9 +1,11 @@
 from flask import request, jsonify
 import datetime
-from main_app.models.admin.discount_coupon_model import ProductDiscounts, DiscountCoupon
+
+from main_app.models.admin.campaign_model import Campaign
+from main_app.models.admin.discount_coupon_model import ProductDiscounts
 import logging
 from main_app.models.admin.admin_model import Admin
-from main_app.models.admin.special_offer_model import SpecialOffer, Offer
+from main_app.models.admin.special_offer_model import SpecialOffer, SOffer
 from main_app.controllers.admin.referral_controllers import parse_date_flexible
 
 # Configure logging for better debugging and monitoring
@@ -15,11 +17,10 @@ def create_special_offer():
     try:
         data = request.get_json()
         logger.info("Running Special Offer Generation")
-
-        # Extract required data
         admin_uid = data.get("admin_uid")
-        access_token = data.get("mode")  # Assuming "mode" is being used as access_token
+        access_token = data.get("mode")
         session_id = data.get("log_alt")
+        program_id = data.get("program_id")
         offer_title = data.get('offer_title')
         offer_desc = data.get('offer_desc')
         tag = data.get('tag')
@@ -29,32 +30,39 @@ def create_special_offer():
         end_time = data.get('end_time')
         offer_code = data.get('code')
         pop_up_text = data.get('pop_up_text')
+        hide = data.get("hide")
 
-        # admin = Admin.objects(admin_uid=admin_uid).first()
-        # if not admin:
-        #     logger.info(f"Unauthorized access attempt with user_id: {admin_uid}")
-        #     return jsonify({"success": False, "message": "User does not exist"}), 401
+        admin = Admin.objects(admin_uid=admin_uid).first()
+        if not admin:
+            logger.info(f"Unauthorized access attempt with user_id: {admin_uid}")
+            return jsonify({"success": False, "message": "User does not exist"}), 401
 
-        # if not access_token or not session_id:
-        #     logger.info("Missing token or session in request body")
-        #     return jsonify({"message": "Missing token or session", "success": False}), 400
-        #
-        # if admin.access_token != access_token:
-        #     logger.info("Invalid access token")
-        #     return jsonify({"success": False, "message": "Invalid access token"}), 401
-        #
-        # if admin.session_id != session_id:
-        #     logger.info("Session mismatch or invalid session")
-        #     return jsonify({"success": False, "message": "Session mismatch or invalid session"}), 403
-        #
-        # if hasattr(admin, 'expiry_time') and admin.expiry_time:
-        #     if datetime.datetime.now() > admin.expiry_time:
-        #         logger.info("Access token has expired")
-        #         return jsonify({
-        #             "success": False,
-        #             "message": "Access token has expired",
-        #             "token": "expired"
-        #         }), 401
+        if not access_token or not session_id:
+            logger.info("Missing token or session in request body")
+            return jsonify({"message": "Missing token or session", "success": False}), 400
+
+        if admin.access_token != access_token:
+            logger.info("Invalid access token")
+            return jsonify({"success": False, "message": "Invalid access token"}), 401
+
+        if admin.session_id != session_id:
+            logger.info("Session mismatch or invalid session")
+            return jsonify({"success": False, "message": "Session mismatch or invalid session"}), 403
+
+        if hasattr(admin, 'expiry_time') and admin.expiry_time:
+            if datetime.datetime.now() > admin.expiry_time:
+                logger.info("Access token has expired")
+                return jsonify({
+                    "success": False,
+                    "message": "Access token has expired",
+                    "token": "expired"
+                }), 401
+
+        check_prog = Campaign.objects(admin_uid = admin_uid, program_id = program_id).first()
+        if not check_prog:
+            return jsonify({"message" : "Campaign Not Found"}), 404
+
+        check_existing = SOffer.objects(admin_uid = admin_uid, program_id=program_id).first()
 
         start_time_obj = datetime.datetime.strptime(start_time, "%H:%M").time()
         end_time_obj = datetime.datetime.strptime(end_time, "%H:%M").time()
@@ -62,11 +70,12 @@ def create_special_offer():
         start_timestamp = datetime.datetime.combine(start_date, start_time_obj)
         expiry_timestamp = datetime.datetime.combine(end_date, end_time_obj)
 
-        if not all([offer_code, offer_desc, offer_title, start_date, end_date, pop_up_text, tag]):
+        if not all([admin_uid, access_token, session_id,offer_code, offer_desc, offer_title, start_date, end_date, pop_up_text, tag]):
             return jsonify({"error": "All fields are required"}), 400
 
         if expiry_timestamp <= start_timestamp:
             return jsonify({"error": "End date and time must be after start date and time"}), 400
+
 
         offer_data = {
             "offer_title": offer_title,
@@ -80,10 +89,11 @@ def create_special_offer():
             "end_time": end_time,
             "start_timestamp": start_timestamp,
             "expiry_timestamp": expiry_timestamp,
+            "hide" : hide,
             "active": start_timestamp <= datetime.datetime.now()
         }
 
-        existing_offer = Offer.objects(admin_uid=admin_uid).first()
+        existing_offer = SOffer.objects(admin_uid=admin_uid, program_id= program_id).first()
 
         if existing_offer and existing_offer.special_offer:
             for offer in existing_offer.special_offer:
@@ -98,7 +108,7 @@ def create_special_offer():
                         "success": False
                     }), 400
 
-        Offer.objects(admin_uid=admin_uid).update_one(
+        SOffer.objects(admin_uid=admin_uid,program_id= program_id).update_one(
             push__special_offer=offer_data
         )
 

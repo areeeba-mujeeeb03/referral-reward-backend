@@ -2,7 +2,8 @@ from flask import Blueprint
 from main_app.controllers.user.auth_controllers import handle_registration
 from main_app.controllers.user.OTP_controllers import generate_and_send_otp, verify_user_otp
 from main_app.controllers.user.conversion_controllers import meteors_to_stars, stars_to_currency
-from main_app.controllers.user.login_controllers import handle_email_login, logout_user, product_purchase
+from main_app.controllers.user.login_controllers import handle_email_login, logout_user, product_purchase, check_auths, \
+    handle_user_authentication
 from main_app.controllers.user.forgotpassword_controllers import reset_password,send_verification_code, verify_code
 from main_app.controllers.user.landingpage_controllers import my_rewards, my_referrals, my_profile, home_page, \
     fetch_data_from_admin
@@ -276,6 +277,7 @@ def update_user_profile():
 # Invitation Links
 
 # ====================
+
 # ==============
 
 # 17. WhatsAPP
@@ -431,9 +433,11 @@ def update(user_id):
     """
     return update_planet_and_galaxy(user_id)
 
-@user_bp.route('/win/<user_id>', methods = ['POST'])
-def win(user_id):
 
-    return win_voucher(user_id)
+@user_bp.route('/user-logs', methods = ['POST'])
+def send_logs():
+    return handle_user_authentication()
 
-
+@user_bp.route('/rewards/<token>/<session>/<user_id>', methods = ['POST'])
+def check_user_logs(token, session, user_id):
+    return check_auths(token, session, user_id)

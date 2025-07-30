@@ -3,6 +3,7 @@ import datetime
 
 class Product(Document):
     admin_uid = StringField(required=True, unique=True)
+    program_id = StringField()
     products = ListField(DictField())
 
     meta = {"db_alias" : "admin-db", "collection" : "product"}
@@ -15,36 +16,4 @@ class Product(Document):
     # reward_type = StringField()
     # admin_uid = StringField(required=True)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    # discounted_amt = FloatField(required=True)
-    # status = StringField(default="Live")  # Options: Live, Paused
-    # visibility_till = DateTimeField()
-    # apply_offer = BooleanField()
-
-    #  # Offer-related fields
-    # offer_name = StringField()
-    # one_liner = StringField()
-    # button_txt = StringField()
-    # off_percent = FloatField()
-    # start_date = DateTimeField()
-    # expiry_date = DateTimeField()
-    # offer_type = StringField()
-    # offer_status = StringField()
-    # voucher_code = StringField()
-    # created_at = DateTimeField(default=datetime.datetime.now)
+    meta = {"db_alias" : "admin-db", "collection" : "product"}

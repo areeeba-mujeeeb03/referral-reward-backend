@@ -20,36 +20,37 @@ def add_exciting_prizes():
     try:
         logger.info("Add Exciting Prizes API called")
         data = request.get_json()
+        data = request.get_json()
         access_token = data.get("mode")
         session_id = data.get("log_alt")
         title = data.get("title")
         term_conditions = data.get("term_conditions")
         admin_uid = data.get("admin_uid")
         required_meteors = data.get("required_meteors")
-        product_uid = data.get("product_uid")
+        product_id = data.get("product_uid")
         image = data.get("image")
 
-        # exist = Admin.objects(admin_uid=admin_uid).first()
+        exist = Admin.objects(admin_uid=admin_uid).first()
 
-        # if not exist:
-        #     return jsonify({"success": False, "message": "User does not exist"})
+        if not exist:
+            return jsonify({"success": False, "message": "User does not exist"}), 400
 
-        # if not access_token or not session_id:
-        #     return jsonify({"message": "Missing token or session", "success": False}), 400
+        if not access_token or not session_id:
+            return jsonify({"message": "Missing token or session", "success": False}), 400
 
-        # if exist.access_token != access_token:
-        #     return ({"success": False,
-        #              "message": "Invalid access token"}), 401
+        if exist.access_token != access_token:
+            return ({"success": False,
+                     "message": "Invalid access token"}), 401
 
-        # if exist.session_id != session_id:
-        #     return ({"success": False,
-        #              "message": "Session mismatch or invalid session"}), 403
+        if exist.session_id != session_id:
+            return ({"success": False,
+                     "message": "Session mismatch or invalid session"}), 403
 
-        # if hasattr(exist, 'expiry_time') and exist.expiry_time:
-        #     if datetime.datetime.now() > exist.expiry_time:
-        #         return ({"success": False,
-        #                  "message": "Access token has expired",
-        #                  "token": "expired"}), 401
+        if hasattr(exist, 'expiry_time') and exist.expiry_time:
+            if datetime.datetime.now() > exist.expiry_time:
+                return ({"success": False,
+                         "message": "Access token has expired",
+                         "token": "expired"}), 401
 
         #  Validation fields
         if not all ([title , term_conditions, admin_uid, required_meteors, product_uid]):
@@ -81,7 +82,7 @@ def add_exciting_prizes():
                 if prize.title == title:
                     prize.term_conditions = term_conditions
                     prize.required_meteors = required_meteors
-                    prize.product_uid = product_uid 
+                    prize.product_id = product_id
                     if image:
                         prize.image = image
                     updated = True
@@ -98,7 +99,7 @@ def add_exciting_prizes():
                     term_conditions=term_conditions,
                     image=image,
                     required_meteors=required_meteors,
-                    product_uid = product_uid 
+                    product_id = product_id
                 )
                 admin_prize.prizes.append(new_prize)
                 admin_prize.save()
@@ -111,7 +112,7 @@ def add_exciting_prizes():
                 term_conditions=term_conditions,
                 image=image,
                 required_meteors=required_meteors,
-                product_uid=product_uid
+                product_id=product_id
             )
             AdminPrizes(admin_uid=admin_uid, prizes=[new_prize]).save()
             msg = "Prize list created for new admin"
@@ -137,8 +138,8 @@ def check_eligibility():
 
         exist = Admin.objects(admin_uid=admin_uid).first()
 
-        # if not exist:
-        #     return jsonify({"success": False, "message": "User does not exist"})
+        if not exist:
+            return jsonify({"success": False, "message": "User does not exist"}), 400
 
         # if not access_token or not session_id:
         #     return jsonify({"message": "Missing token or session", "success": False}), 400
