@@ -17,7 +17,7 @@ from main_app.controllers.admin.dashboard_controllers import error_table, dashbo
     graph_data, dashboard_all_campaigns, reward_history
 from main_app.controllers.admin.email_controller import create_email
 from main_app.controllers.admin.notification_controller import create_push_notification, list_push_notifications, \
-    update_push_notification, delete_push_notification, get_push_notification
+    update_push_notification, delete_push_notification, get_notification
 from main_app.controllers.admin.perks_controller import create_exclusive_perks, edit_footer
 from main_app.controllers.admin.special_off_controllers import create_special_offer
 
@@ -465,6 +465,24 @@ def admin_list_push_notification():
     """
     return list_push_notifications()
 
+
+# ======
+
+# Get by id 
+
+# =======
+
+@admin_bp.route('/admin/get-push-notifications/<notification_id>', methods=['GET'])
+def admin_get_push_notification(notification_id):
+    """
+     Get a single push notification by its ID.
+    Expects query parameters:
+      - admin_uid
+      - mode (as access_token)
+      - log_alt (as session_id)
+    """
+    return get_notification(notification_id)
+
 # =================
 
 # 31. Update Notification
@@ -642,11 +660,7 @@ def list_campaign():
     """
     return dashboard_all_campaigns()
 
-
-@admin_bp.route("/admin/get-push-notification/<notification_id>", methods=["GET"])
-def admin_get_push_notification(notification_id):
-
-    return get_push_notification(notification_id)
+# ========
 
 @admin_bp.route('/admin/reward-history', methods = ['POST'])
 def user_rewards():
