@@ -62,8 +62,10 @@ def process_referral_code_and_reward(referral_code, new_user_id, new_username):
 
             reward_record = Reward.objects(user_id=referrer_id).first()
             reward_record.update(
-                inc__total_meteors_earned = PENDING_REFERRAL_REWARD_POINTS
+                inc__total_meteors_earned = PENDING_REFERRAL_REWARD_POINTS,
+                inc__current_meteors = PENDING_REFERRAL_REWARD_POINTS
             )
+            print(reward_record.total_meteors_earned, reward_record.current_meteors)
             Participants.objects().first()
             if reward_record:
                 reward_record.total_meteors += PENDING_REFERRAL_REWARD_POINTS
@@ -115,9 +117,10 @@ def process_referrer_by_tag_id(tag_id, new_user_id, new_username):
     reward = Reward.objects(user_id=ref.user_id).first()
     if reward:
         reward.update(
-            inc__total_meteors_earned=PENDING_REFERRAL_REWARD_POINTS
+            inc__total_meteors_earned=PENDING_REFERRAL_REWARD_POINTS,
+            inc__current_meteors=PENDING_REFERRAL_REWARD_POINTS
         )
-        reward.current_meteors += PENDING_REFERRAL_REWARD_POINTS
+        print(reward.total_meteors_earned, reward.current_meteors)
         reward.reward_history.append({
             "earned_by_action": "referral",
             "earned_meteors": PENDING_REFERRAL_REWARD_POINTS,
@@ -231,8 +234,13 @@ def update_referral_status_and_reward(referrer_id, user_id):
     )
 
     if reward:
-        reward.current_meteors += SUCCESS_REFERRAL_REWARD_POINTS
-        reward.total_meteors_earned += SUCCESS_REFERRAL_REWARD_POINTS
+        reward.update(
+            inc__current_meteors = SUCCESS_REFERRAL_REWARD_POINTS,
+            inc__total_meteors_earned  = SUCCESS_REFERRAL_REWARD_POINTS
+        )
+        # reward.current_meteors += SUCCESS_REFERRAL_REWARD_POINTS
+        # reward.total_meteors_earned += SUCCESS_REFERRAL_REWARD_POINTS
+        print(reward.current_meteors, reward.total_meteors_earned)
         rewards = ReferralReward.objects(admin_uid=referrer.admin_uid, program_id=referrer.program_id).first()
         if rewards.referrer_reward_type == "meteors":
             reward.reward_history.append({
@@ -331,11 +339,6 @@ def initialize_user_records(user_id):
         "referred_on": datetime.datetime.now().strftime("%Y-%m-%d")
     })
     reward.save()
-    reward.update(
-        set__redeemed_meteors=0,
-        push__galaxy_name=[],
-        push__current_planet=[]
-    )
 
     Referral(user_id=user_id, all_referrals=[]).save()
 

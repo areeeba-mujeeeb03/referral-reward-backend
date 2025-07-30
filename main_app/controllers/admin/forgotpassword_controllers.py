@@ -44,7 +44,7 @@ def forgot_otp_email():
             logger.error(f"Failed to send OTP email to: {email}")
             return jsonify({"message": "Failed to send code"}), 500
 
-        logger.info(f"OTP email sent successfully to: {email}")
+        logger.info(f"OTP email sent successfully to your email")
         return jsonify({"message": "Code send successfully to email","success": "True"}), 200
     
     except Exception as e:

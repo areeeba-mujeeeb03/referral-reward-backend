@@ -47,7 +47,7 @@ def update_profile():
 
         if not check_password(password, user.password):
             Errors(
-                username=user.username,
+                name=user.name,
                 email=user.email,
                 error_source="Profile Update",
                 error_type=f"Incorrect password attempt for: {user.email}"
@@ -55,9 +55,6 @@ def update_profile():
             return jsonify({"error": get_error("incorrect_password")}), 400
 
         try:
-            if data.get("username") != user.username and User.objects(username=data["username"]).first():
-                return jsonify({"error": get_error("username_exists")}), 400
-
             if data.get("email")!= user.email and User.objects(email=data["email"]).first():
                 return jsonify({"error": get_error("email_exists")}), 400
 
@@ -71,8 +68,8 @@ def update_profile():
 
         update_fields = {}
 
-        if data.get("username"):
-            update_fields["username"] = data["username"]
+        if data.get("name"):
+            update_fields["name"] = data["name"]
         if data.get("email"):
             update_fields["email"] = data["email"]
         if data.get("mobile_number"):
@@ -99,7 +96,7 @@ def update_profile():
         }), 200
 
     except Exception as e:
-        Errors(username = user.username, email = user.email, error_type = str(e),  error_source="Update Profile",)
+        Errors(name = user.name, email = user.email, error_type = str(e),  error_source="Update Profile",)
         return jsonify({"success": False, "message": "Server error"}), 500
 
 def submit_msg():
@@ -109,7 +106,7 @@ def submit_msg():
     try:
 
 
-        username = data.get('username')
+        name = data.get('name')
         email = data.get('email')
         message = data.get('message')
 
@@ -136,8 +133,8 @@ def submit_msg():
         if user.session_id != session_id:
             return jsonify({"success": False, "message": "Session mismatch"}), 403
 
-        if user.username != username:
-            return jsonify({"message": "You are not registered with this username"}), 400
+        if user.name != name:
+            return jsonify({"message": "You are not registered with this name"}), 400
 
         if user.email != email:
             return jsonify({"message": "You are not registered with this email"}), 400
@@ -146,7 +143,7 @@ def submit_msg():
             admin_uid=user.admin_uid,
             user_id=user_id,
             email=email,
-            username=username,
+            name=name,
             message=message,
             date=datetime.datetime.now(),
             file_url = files
@@ -156,7 +153,7 @@ def submit_msg():
 
     except Exception as e:
         Errors(
-            username=user.username,
+            name=user.name,
             email=user.email,
             error_source="send contact message",
             error_type=f"Failed to save attachments {str(e)}"

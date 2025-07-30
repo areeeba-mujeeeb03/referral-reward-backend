@@ -8,7 +8,7 @@ class AdvertisementCardItem(EmbeddedDocument):
     image = StringField()
 
 class AdminAdvertisementCard(Document):
-    admin_uid = StringField(required=True, unique=True)
+    admin_uid = StringField(required=True)
     program_id = StringField()
     advertisement_cards = ListField(EmbeddedDocumentField(AdvertisementCardItem))
 

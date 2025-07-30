@@ -1,7 +1,7 @@
 import datetime
 from flask import request, jsonify
 # from werkzeug.utils import secure_filename
-from main_app.models.admin.perks_model import ExclusivePerks,Perks,FooterSection, FooterItem
+from main_app.models.admin.perks_model import ExclusivePerks,Perks
 import os , logging
 from main_app.models.admin.admin_model import Admin
 from main_app.utils.admin.helpers import generate_perks_uid
@@ -149,70 +149,70 @@ def create_exclusive_perks():
 
 #-------- Footer Section
 
-
-def edit_footer():
-    try:
-        logger.info("Update footer API called")
-        data = request.get_json()
-        admin_uid = data.get("admin_uid")
-        access_token = data.get("mode")
-        session_id = data.get("log_alt")
-        content = data.get("content")
-
-        exist = Admin.objects(admin_uid=admin_uid).first()
-
-        if not exist:
-            return jsonify({"success": False, "message": "User does not exist"}), 400
-
-        if not access_token or not session_id:
-            return jsonify({"message": "Missing token or session", "success": False}), 400
-
-        if exist.access_token != access_token:
-            return ({"success": False,
-                     "message": "Invalid access token"}), 401
-
-        if exist.session_id != session_id:
-            return ({"success": False,
-                     "message": "Session mismatch or invalid session"}), 403
-
-        if hasattr(exist, 'expiry_time') and exist.expiry_time:
-            if datetime.datetime.now() > exist.expiry_time:
-                return ({"success": False,
-                         "message": "Access token has expired",
-                         "token": "expired"}), 401
-
-        if not admin_uid or not content:
-            logger.warning("Missing admin_uid or content")
-            return jsonify({"message": "Admin uid and content are required"}), 400
-
-        # content = content.strip()
-        # if not content:
-        #     logger.warning("Empty content after stripping")
-        #     return jsonify({"message": "Content cannot be empty"}), 400
-
-        footer_section = FooterSection.objects(admin_uid=admin_uid).first()
-
-        if footer_section:
-            # Check for duplicate
-            if any(item.content == content for item in footer_section.footer):
-                logger.info("Duplicate footer content not added.")
-                return jsonify({"message": "Footer already exists"}), 200
-
-            # Append new content
-            footer_section.footer.append(FooterItem(content=content))
-            footer_section.save()
-        else:
-            # Create new footer section
-            new_footer = FooterSection(
-                admin_uid=admin_uid,
-                footer=[FooterItem(content=content)]
-            )
-            new_footer.save()
-
-        logger.info("Footer updated successfully.")
-        return jsonify({"message": "Footer updated successfully"}), 200
-
-    except Exception as e:
-        logger.exception(f"Update footer failed: {str(e)}")
-        return jsonify({"error": "Internal server error"}), 500
+#
+# def edit_footer():
+#     try:
+#         logger.info("Update footer API called")
+#         data = request.get_json()
+#         admin_uid = data.get("admin_uid")
+#         access_token = data.get("mode")
+#         session_id = data.get("log_alt")
+#         content = data.get("content")
+#
+#         exist = Admin.objects(admin_uid=admin_uid).first()
+#
+#         if not exist:
+#             return jsonify({"success": False, "message": "User does not exist"}), 400
+#
+#         if not access_token or not session_id:
+#             return jsonify({"message": "Missing token or session", "success": False}), 400
+#
+#         if exist.access_token != access_token:
+#             return ({"success": False,
+#                      "message": "Invalid access token"}), 401
+#
+#         if exist.session_id != session_id:
+#             return ({"success": False,
+#                      "message": "Session mismatch or invalid session"}), 403
+#
+#         if hasattr(exist, 'expiry_time') and exist.expiry_time:
+#             if datetime.datetime.now() > exist.expiry_time:
+#                 return ({"success": False,
+#                          "message": "Access token has expired",
+#                          "token": "expired"}), 401
+#
+#         if not admin_uid or not content:
+#             logger.warning("Missing admin_uid or content")
+#             return jsonify({"message": "Admin uid and content are required"}), 400
+#
+#         # content = content.strip()
+#         # if not content:
+#         #     logger.warning("Empty content after stripping")
+#         #     return jsonify({"message": "Content cannot be empty"}), 400
+#
+#         footer_section = FooterSection.objects(admin_uid=admin_uid).first()
+#
+#         if footer_section:
+#             # Check for duplicate
+#             if any(item.content == content for item in footer_section.footer):
+#                 logger.info("Duplicate footer content not added.")
+#                 return jsonify({"message": "Footer already exists"}), 200
+#
+#             # Append new content
+#             footer_section.footer.append(FooterItem(content=content))
+#             footer_section.save()
+#         else:
+#             # Create new footer section
+#             new_footer = FooterSection(
+#                 admin_uid=admin_uid,
+#                 footer=[FooterItem(content=content)]
+#             )
+#             new_footer.save()
+#
+#         logger.info("Footer updated successfully.")
+#         return jsonify({"message": "Footer updated successfully"}), 200
+#
+#     except Exception as e:
+#         logger.exception(f"Update footer failed: {str(e)}")
+#         return jsonify({"error": "Internal server error"}), 500
 

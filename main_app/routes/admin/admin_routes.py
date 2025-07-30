@@ -1,7 +1,8 @@
 from flask import Blueprint
 from main_app.controllers.admin.admin_auth_controller import admin_register, handle_authentication
 from main_app.controllers.admin.admin_auth_controller import handle_admin_login
-from main_app.controllers.admin.campaign_controllers import create_new_campaign
+from main_app.controllers.admin.campaign_controllers import create_new_campaign, edit_campaign, update_campaign, \
+    delete_campaign
 from main_app.controllers.admin.discount_coupons_controllers import create_discount_coupons, update_discount_coupon, \
     delete_discount_coupon
 from main_app.controllers.admin.forgotpassword_controllers import forgot_otp_email, verify_otp, reset_password
@@ -17,8 +18,13 @@ from main_app.controllers.admin.dashboard_controllers import error_table, dashbo
     graph_data, dashboard_all_campaigns, reward_history
 from main_app.controllers.admin.email_controller import create_email
 from main_app.controllers.admin.notification_controller import create_push_notification, list_push_notifications, \
+<<<<<<< HEAD
     update_push_notification, delete_push_notification, get_notification
 from main_app.controllers.admin.perks_controller import create_exclusive_perks, edit_footer
+=======
+    update_push_notification, delete_push_notification, get_push_notification
+from main_app.controllers.admin.perks_controller import create_exclusive_perks
+>>>>>>> 7dfac03a765050e456d4e742ea89051037185131
 from main_app.controllers.admin.special_off_controllers import create_special_offer
 
 admin_bp = Blueprint("admin_routes", __name__)
@@ -668,8 +674,20 @@ def user_rewards():
     return reward_history()
 
 
-# @admin_bp.route('/admin/check-auths', methods = ['POST'])
-# def
+@admin_bp.route('/admin/edit-campaign/<program_id>', methods = ['POST'])
+def edit_program(program_id):
+
+    return edit_campaign(program_id)
+
+@admin_bp.route('/admin/update-campaign/<program_id>', methods = ['POST'])
+def update_program(program_id):
+
+    return update_campaign(program_id)
+
+@admin_bp.route('/admin/delete-campaign/<program_id>', methods = ['POST'])
+def remove_campaign(program_id):
+
+    return delete_campaign(program_id)
 
 
 

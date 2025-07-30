@@ -166,7 +166,7 @@ def dashboard_participants():
             users = user_sort.to_mongo().to_dict()
             userdata = {}
             userdata['rank'] = "#" + str(len(data) + 1)
-            userdata['username'] = users['username']
+            userdata['name'] = users['name']
             userdata['email'] = users['email']
             userdata['mobile_number'] = users['mobile_number']
             userdata['referral_code'] = users['invitation_code']
@@ -184,7 +184,7 @@ def dashboard_participants():
             userdata = {}
             # userdata['rank'] =  "#" + (len(redemption_data) + 1)
             userdata['rank'] = "#" + str(len(redemption_data) + 1)
-            userdata['username'] = user_sort.username
+            userdata['name'] = user_sort.name
             userdata['email'] = user_sort.email
             userdata['rewards_redeemed'] = redemption.total_meteors_earned,
             userdata['num_of_redemp'] = redemption.used_vouchers,
@@ -213,7 +213,7 @@ def dashboard_participants():
             # user = user_sort.to_mongo().to_dict()
             userdata = {}
             userdata['rank'] = "#" + str(len(games_data) + 1 )
-            userdata['username'] = user_sort.username
+            userdata['name'] = user_sort.name
             userdata['email'] = user_sort.email
             userdata['mobile_number'] = user_sort.mobile_number
             # game = Game
@@ -337,7 +337,7 @@ def reward_history():
 
     for registered_user in registered_users:
         user_dict = {}
-        user_dict['username'] = registered_user.username
+        user_dict['name'] = registered_user.name
         user_dict['email'] = registered_user.email
         rewards = Reward.objects(user_id = registered_user.user_id).first()
         user_dict['total_rewards'] = len(rewards.reward_history)
@@ -349,7 +349,7 @@ def reward_history():
 
     for registered_user in registered_users:
         user_dict = {}
-        user_dict['username'] = registered_user.username
+        user_dict['name'] = registered_user.name
         user_dict['email'] = registered_user.email
         rewards = Reward.objects(user_id=registered_user.user_id).first()
         user_dict['total_rewards'] = len(rewards.reward_history)
@@ -358,26 +358,28 @@ def reward_history():
         rank_data.append(user_dict)
 
     top_referrers = []
-    top_ref_data = Referral.objects(admin_uid=admin_uid, program_id=program_id).order_by('-total_referrals').limit(3)
+
+    top_ref_data = Referral.objects().order_by('-total_referrals').limit(3)
     for ref in top_ref_data:
-        user = User.objects(user_id=ref.user_id).first()
+        user = User.objects(user_id=ref.user_id, admin_uid = admin_uid, program_id = program_id).first()
         if user:
             top_referrers.append({
-                "username": user.username,
+                "name": user.name,
                 "email": user.email,
                 "total_referrals": ref.total_referrals
             })
 
     # Get top 3 earners
     top_earners = []
-    top_earnings = Reward.objects().order_by('-total_meteors_earned').limit(3)
+
+    top_earnings = Reward.objects().order_by('-total_stars').limit(3)
     for reward in top_earnings:
-        user = User.objects(user_id=reward.user_id).first()
+        user = User.objects(user_id=reward.user_id, admin_uid = admin_uid, program_id = program_id).first()
         if user and user.admin_uid == admin_uid and user.program_id == program_id:
             top_earners.append({
-                "username": user.username,
+                "name": user.name,
                 "email": user.email,
-                "total_meteors_earned": reward.total_meteors_earned
+                "total_meteors_earned": reward.total_stars
             })
 
     info = {"rewards": reward_data,

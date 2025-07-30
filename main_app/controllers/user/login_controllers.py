@@ -89,6 +89,7 @@ def handle_email_login():
 
     # Step 3: Find user by email
     user = User.objects(email=email).first()
+    try :
     # if not user:
     #     user_name = User.objects(username=email).first()
     #     if not user_name:
@@ -162,13 +163,12 @@ def handle_email_login():
     #         "user_id": user_name.user_id
     #     }), 200
 
-    if user:
-        if user.email != email:
-            return jsonify({"message": "Invalid email"})
+        if not user:
+            return jsonify({"error": "User Not Found"}), 404
         is_member = user.is_member
 
         if not is_member == True:
-            return jsonify({"success": False, "message": "Need to purchase before logging in!"}), 400
+            return jsonify({"success": False, "error": "Need to purchase before logging in!"}), 400
 
         # Step 4: Check if account is active
 
@@ -178,7 +178,7 @@ def handle_email_login():
 
         if not user.password.startswith("$2"):
             logger.warning("Invalid or corrupt password hash")
-            return jsonify({"success": False, "message": "Something went wrong. Please reset your password."}), 400
+            return jsonify({"success": False, "error": "Something went wrong. Please reset your password."}), 400
         # Step 5: Verify password
         if not check_password(password, user.password):
             Errors(name=user.name, email=email,
@@ -191,7 +191,7 @@ def handle_email_login():
         session_id = create_user_session(user.user_id)
         expiry_time = datetime.datetime.now() + datetime.timedelta(minutes=SESSION_EXPIRY_MINUTES)
 
-        # Step 7: Update referral status (if referred)
+        # Step 7: Update referral status
         referred_by = user['referred_by']
 
         if referred_by:
@@ -233,11 +233,12 @@ def handle_email_login():
             "log_alt": session_id,
             "user_id": user.user_id
         }), 200
-
-    Errors(admin_uid=user.admin_uid, program_id=user.program_id, name=user.name, email=user.email,
-           error_source="Reset Password",
-           error_type=get_error("code validation failed")).save()
-    return jsonify({"error": get_error("login_failed")}), 500
+    except Exception as e:
+        logger.error(f"Login failed with error: {str(e)}")
+        Errors(admin_uid=user.admin_uid, program_id=user.program_id, name=user.name, email=user.email,
+               error_source="Reset Password",
+               error_type=get_error("code validation failed")).save()
+        return jsonify({"error": get_error("login_failed")}), 500
 
 # ==================
 
@@ -267,13 +268,13 @@ def logout_user():
             )
             logger.info(f"User logged out successfully: {user_id}")
 
-            return jsonify({"message": "Logged out successfully", "success" : True}), 200
+            return jsonify({"error": "Logged out successfully", "success" : True}), 200
 
     except Exception as e:
         logger.error(f"Logout failed for user {user_id}: {str(e)}")
         Errors(name=user.name, email=user.email, error_type=get_error("logout_failed"),
                error_source="Logout form").save()
-        return jsonify({"message": "Something went wrong", "success" : False}), 400
+        return jsonify({"error": "Something went wrong", "success" : False}), 400
 
 def handle_user_authentication():
     data = request.get_json()
@@ -283,7 +284,7 @@ def handle_user_authentication():
 
     if not existing:
         logger.warning("User not found")
-        return jsonify({"message": get_error("user_not_found")}), 404
+        return jsonify({"error": get_error("user_not_found")}), 404
 
     #  Generate tokens
     access_token = generate_access_token(existing.admin_uid)

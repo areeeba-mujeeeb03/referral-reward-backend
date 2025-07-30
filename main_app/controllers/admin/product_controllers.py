@@ -273,6 +273,8 @@ def update_offer():
         admin_uid = data.get("admin_uid")
         access_token = data.get("mode")
         session_id = data.get("log_alt")
+        start = parse_date_flexible(data.get("start_date"))
+        expiry = parse_date_flexible(data.get("expiry_date"))
         uid = data.get("uid")
 
         exist = Admin.objects(admin_uid=admin_uid).first()
@@ -328,13 +330,11 @@ def update_offer():
          offer.status = data.get("status")
 
         if "start_date" in data:
-            start = parse_date_flexible(data.get("start_date"))
             if not start:
                 return jsonify({"message": "Invalid start_date format"}), 400
             offer.start_date = start
 
         if "expiry_date" in data:
-            expiry = parse_date_flexible(data.get("expiry_date"))
             if not expiry:
                 return jsonify({"message": "Invalid expiry_date format"}), 400
             offer.expiry_date = expiry
