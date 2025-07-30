@@ -7,8 +7,8 @@ from main_app.models.admin.galaxy_model import Galaxy
 from main_app.models.admin.how_it_work_model import HowItWork
 from main_app.models.admin.links import ReferralReward
 from main_app.models.admin.participants_model import Participants
-from main_app.models.admin.product_offer_model import Offer
-from main_app.models.admin.special_offer_model import SpecialOffer, SOffer
+from main_app.models.admin.product_offer_model import ProductOffer
+from main_app.models.admin.special_offer_model import SOffer
 from main_app.models.user.user import User
 from main_app.models.user.reward import Reward
 from main_app.models.user.referral import Referral
@@ -375,7 +375,7 @@ def fetch_data_from_admin():
                 special_offer['pop_up_text'] = offer['pop_up_text']
                 special_offer['offer_desc'] = offer['offer_desc']
 
-    offer = Offer.objects(admin_uid=admin_uid, program_id = user.program_id).first()
+    offer = ProductOffer.objects(admin_uid=admin_uid, program_id = user.program_id).first()
     offer_data = []
 
     for p in offer.offers:

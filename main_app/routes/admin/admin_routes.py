@@ -14,7 +14,7 @@ from main_app.controllers.admin.referral_controllers import generate_invite_link
     save_referral_data
 from main_app.controllers.admin.rewards_controllers import create_galaxy,set_reward_settings
 from main_app.controllers.admin.dashboard_controllers import error_table, dashboard_participants, dashboard_stats, \
-    graph_data, dashboard_all_campaigns, reward_history
+    graph_data, reward_history,dashboard_all_campaigns
 from main_app.controllers.admin.email_controller import create_email
 from main_app.controllers.admin.notification_controller import create_push_notification, list_push_notifications, \
     update_push_notification, delete_push_notification, get_push_notification

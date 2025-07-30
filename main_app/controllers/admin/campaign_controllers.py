@@ -7,7 +7,7 @@ from main_app.models.admin.galaxy_model import GalaxyProgram, Milestone, Galaxy
 from main_app.models.admin.links import AppStats, ReferralReward, Link
 from main_app.models.admin.participants_model import Participants
 from main_app.models.admin.product_model import Product 
-from main_app.models.admin.product_offer_model import Offer
+from main_app.models.admin.product_offer_model import ProductOffer
 from main_app.models.admin.perks_model import Perks
 from main_app.models.admin.prize_model import AdminPrizes
 from main_app.models.admin.discount_coupon_model import ProductDiscounts
@@ -268,8 +268,8 @@ def initialize_admin_data(admin_uid, program_id):
     if not Product.objects(admin_uid=admin_uid, program_id=program_id):
         Product(admin_uid=admin_uid, program_id=program_id).save()
 
-    if not Offer.objects(admin_uid=admin_uid, program_id=program_id):
-         Offer(admin_uid=admin_uid, program_id=program_id).save()
+    if not ProductOffer.objects(admin_uid=admin_uid, program_id=program_id):
+         ProductOffer(admin_uid=admin_uid, program_id=program_id).save()
 
     if not AdminPrizes.objects(admin_uid=admin_uid, program_id=program_id):
          AdminPrizes(admin_uid=admin_uid, program_id=program_id).save()

@@ -16,6 +16,8 @@ from main_app.utils.user.string_encoding import generate_encoded_string
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+def dashboard_all_campaigns():
+    return jsonify({"message" : "All Campaigns"})
 def dashboard_stats():
     data = request.get_json()
     admin_uid = data.get("admin_uid")
@@ -23,7 +25,7 @@ def dashboard_stats():
     session_id = data.get("log_alt")
     program_id = data.get("program_id")
 
-        exist = Admin.objects(admin_uid=admin_uid).first()
+    exist = Admin.objects(admin_uid=admin_uid).first()
 
     if not exist:
         return jsonify({"success": False, "message": "User does not exist"})
@@ -45,7 +47,9 @@ def dashboard_stats():
                      "message": "Access token has expired",
                      "token": "expired"}), 401
 
+    check_program = Campaign.objects(admin_uid = admin_uid, program_id = program_id).first()
     if exist:
+        
         all_user_data = Participants.objects(admin_uid = admin_uid, program_id = check_program.program_id).first()
         apps_data = AppStats.objects(admin_uid = admin_uid, program_id = check_program.program_id).first()
         sharing_apps_data = []
@@ -229,6 +233,7 @@ def error_table():
                 return ({"success": False,
                          "message": "Access token has expired",
                          "token": "expired"}), 401
+        errors = Errors.objects(admin_uid = admin_uid, program_id = program_id)
 
         all_errors = []
         for error in errors:
