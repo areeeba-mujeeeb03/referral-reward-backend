@@ -21,11 +21,10 @@ class Perks(Document):
 
 
 # --- Footer Model
-class FooterItem(EmbeddedDocument):
-    content = StringField(required=True)
-class FooterSection(Document):
-    admin_uid = StringField(required=True)
-    footer = ListField(EmbeddedDocumentField(FooterItem))
+# class FooterSection(Document):
+#     admin_uid = StringField(required=True)
+#     program_id = StringField()
+#     footer_text = StringField()
 
     meta = { "db_alias": "admin-db", "collection": "footer" }
 

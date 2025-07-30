@@ -17,7 +17,8 @@ import datetime
 #         return super(FAQ, self).save(*args, **kwargs)
 
 class FAQ(Document):
-    admin_uid = StringField(required=True, unique=True)
+    admin_uid = StringField(required=True)
+    program_id = StringField()
     categories = ListField(DictField(), default=list)
     meta = {"db_alias": "admin-db", "collection": "FAQs"}
 

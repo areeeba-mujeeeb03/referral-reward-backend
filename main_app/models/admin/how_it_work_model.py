@@ -9,5 +9,6 @@ class HowItWork(Document):
     desc2 = StringField()
     title3 = StringField()
     desc3 = StringField()
+    footer_text = StringField()
 
     meta =  {"db_alias" : "admin-db", "collection" : "how-it-work"}

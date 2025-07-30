@@ -84,28 +84,28 @@ def my_rewards():
     user_id = data.get("user_id")
     access_token = data.get("mode")
     session_id = data.get("log_alt")
-
+    # print(data)
     user = User.objects(user_id=user_id).first()
     try:
         if not user:
             return jsonify({"success" : False, "message" : "User does not exist"}),400
 
-        if not access_token or not session_id:
-            return jsonify({"message": "Missing token or session", "success": False}), 400
-
-        if user.access_token != access_token:
-            return ({"success": False,
-                     "message": "Invalid access token"}), 401
-
-        if user.session_id != session_id:
-            return ({"success": False,
-                     "message": "Session mismatch or invalid session"}), 403
-
-        if hasattr(user, 'expiry_time') and user.expiry_time:
-            if datetime.datetime.now() > user.expiry_time:
-                return ({"success": False,
-                         "message": "Access token has expired",
-                            "token"  : "expired"}), 401
+        # if not access_token or not session_id:
+        #     return jsonify({"message": "Missing token or session", "success": False}), 400
+        #
+        # if user.access_token != access_token:
+        #     return ({"success": False,
+        #              "message": "Invalid access token"}), 401
+        #
+        # if user.session_id != session_id:
+        #     return ({"success": False,
+        #              "message": "Session mismatch or invalid session"}), 403
+        #
+        # if hasattr(user, 'expiry_time') and user.expiry_time:
+        #     if datetime.datetime.now() > user.expiry_time:
+        #         return ({"success": False,
+        #                  "message": "Access token has expired",
+        #                     "token"  : "expired"}), 401
 
         # validate_session_token(user, access_token, session_id)
         reward = Reward.objects(user_id = user_id).first()
@@ -120,14 +120,12 @@ def my_rewards():
                 "total_meteors": user_reward.current_meteors,
                 "total_vouchers": user_reward.total_vouchers,
                 "invite_code": user.invitation_code,
-                "reward_history": list(user_reward.reward_history),
+                "reward_history": user_reward.reward_history,
                  "redeemed_meteors" : reward.redeemed_meteors,
                 "redeemed_vouchers": reward.used_vouchers,
                 "total_meteors_earned": reward.total_meteors_earned,
                 "discount_coupons" : reward.discount_coupons
-
             }
-            print(info['reward_history'])
 
             fields_to_encode = ["total_stars",
                                 "total_meteors",
@@ -140,6 +138,8 @@ def my_rewards():
                                 "total_meteors_earned",
                                 "discount_coupons"
                                 ]
+
+
 
             encoded_str = generate_encoded_string(info, fields_to_encode)
             return encoded_str, 200
@@ -161,22 +161,22 @@ def my_referrals():
         if not user:
             return jsonify({"success" : False, "message" : "User does not exist"}),400
 
-        if not access_token or not session_id:
-            return jsonify({"message": "Missing token or session", "success": False}), 400
-
-        if user.access_token != access_token:
-            return ({"success": False,
-                     "message": "Invalid access token"}), 401
-
-        if user.session_id != session_id:
-            return ({"success": False,
-                     "message": "Session mismatch or invalid session"}), 403
-
-        if hasattr(user, 'expiry_time') and user.expiry_time:
-            if datetime.datetime.now() > user.expiry_time:
-                return ({"success": False,
-                         "message": "Access token has expired",
-                            "token"  : "expired"}), 401
+        # if not access_token or not session_id:
+        #     return jsonify({"message": "Missing token or session", "success": False}), 400
+        #
+        # if user.access_token != access_token:
+        #     return ({"success": False,
+        #              "message": "Invalid access token"}), 401
+        #
+        # if user.session_id != session_id:
+        #     return ({"success": False,
+        #              "message": "Session mismatch or invalid session"}), 403
+        #
+        # if hasattr(user, 'expiry_time') and user.expiry_time:
+        #     if datetime.datetime.now() > user.expiry_time:
+        #         return ({"success": False,
+        #                  "message": "Access token has expired",
+        #                     "token"  : "expired"}), 401
 
         # validate_session_token(user, access_token, session_id)
         # update_planet_and_galaxy(user_id)

@@ -19,7 +19,7 @@ from main_app.controllers.admin.dashboard_controllers import error_table, dashbo
 from main_app.controllers.admin.email_controller import create_email
 from main_app.controllers.admin.notification_controller import create_push_notification, list_push_notifications, \
     update_push_notification, delete_push_notification, get_push_notification
-from main_app.controllers.admin.perks_controller import create_exclusive_perks, edit_footer
+from main_app.controllers.admin.perks_controller import create_exclusive_perks
 from main_app.controllers.admin.special_off_controllers import create_special_offer
 
 admin_bp = Blueprint("admin_routes", __name__)

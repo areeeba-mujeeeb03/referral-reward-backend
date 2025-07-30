@@ -220,6 +220,7 @@ def referrals():
     Args: user_id (str) - Unique identifier for user
     Returns: User's referral data and history
     """
+    # print("working")
     return my_referrals()
 
 # ====================
@@ -237,6 +238,7 @@ def rewards():
     Args: user_id (str) - Unique identifier for user
     Returns: User's rewards and points data
     """
+    # print("working")
     return my_rewards()
 
 
