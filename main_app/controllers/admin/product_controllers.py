@@ -97,12 +97,9 @@ def add_product():
             Product.objects(admin_uid=admin_uid).update(
                 push__products = pro_dict
             )
-        #     return jsonify({"message" : "Product Added Successfully"})
-        #  admin_exist.update(
-        #      push__products = pro_dict
-        #  )
+            return jsonify({"message" : "Product Added Successfully"})
 
-         logger.info(f"Product saved with ID:")
+         logger.info(f"Product saved.")
          return jsonify({"success":"true" , "message": "Product Added Successfully" }), 200
 
     except Exception as e:

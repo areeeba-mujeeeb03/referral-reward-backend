@@ -2,18 +2,15 @@ from flask import Blueprint
 from main_app.controllers.admin.admin_auth_controller import admin_register, handle_authentication
 from main_app.controllers.admin.admin_auth_controller import handle_admin_login
 from main_app.controllers.admin.campaign_controllers import create_new_campaign, edit_campaign, update_campaign, \
-    delete_campaign
+    delete_campaign, all_products
 from main_app.controllers.admin.discount_coupons_controllers import create_discount_coupons, update_discount_coupon, \
     delete_discount_coupon
 from main_app.controllers.admin.forgotpassword_controllers import forgot_otp_email, verify_otp, reset_password
-from main_app.controllers.admin.help_request_controllers import add_faqs, delete_faq, list_contact_messages, update_faqs
+from main_app.controllers.admin.help_request_controllers import list_contact_messages
 from main_app.controllers.admin.profile_controllers import edit_profile_data
 from main_app.controllers.admin.product_controllers import add_product, update_product, update_offer, add_offer
-from main_app.controllers.admin.prize_controller import add_exciting_prizes, check_eligibility
-from main_app.controllers.admin.how_it_work_controller import add_how_it_work, advertisement_card
-from main_app.controllers.admin.referral_controllers import generate_invite_link_with_expiry, sharing_app_stats, \
-    save_referral_data
-from main_app.controllers.admin.rewards_controllers import create_galaxy,set_reward_settings
+from main_app.controllers.admin.prize_controller import add_exciting_prizes
+from main_app.controllers.admin.referral_controllers import generate_invite_link_with_expiry
 from main_app.controllers.admin.dashboard_controllers import error_table, dashboard_participants, dashboard_stats, \
     graph_data, dashboard_all_campaigns, reward_history
 from main_app.controllers.admin.email_controller import create_email
@@ -61,7 +58,6 @@ def login_email():
 # 3. User Forgot Password with reset password
 
 # ==============
-
 
 @admin_bp.route("/admin/forgot-password", methods = ["POST"])
 def user_forgot_password():
@@ -134,7 +130,7 @@ def update_add_product(uid):
 
 # ==================
 
-#  Add offer
+#  8. Add offer
 
 # ===================
 
@@ -150,7 +146,7 @@ def admin_add_offer():
 
 # ==========================
 
-# 8. Update Offers
+# 9. Update Offers
 
 # ==========================
 
@@ -166,7 +162,7 @@ def admin_update_offer():
 
 # ===========================
 
-# 9. Exciting Prizes
+# 10. Exciting Prizes
 
 # ===========================
 
@@ -179,51 +175,9 @@ def admin_exciting_prizes():
     """
     return add_exciting_prizes()
 
-# ===============
-
-# 10. Check user prize eligibility meteors
-
-# ===============
-
-@admin_bp.route('/admin/check-prize-eligibility', methods=["POST"])
-def prize_check_eligibility():
-    """
-    Checks if a user is eligible for the prize based on certain criteria.
-    """
-    return check_eligibility()
-
-# ========================
-
-# 11. How It Work
-
-# ========================
-
-@admin_bp.route("/admin/how-it-work", methods = ["POST"])
-def admin_how_it_work():
-    """
-    Add or update 'How It Works' content based on admin_uid.
-    """
-    return  add_how_it_work()
-
-
-# ==========================
-
-# 12. Advertisement Card
-
-# ==========================
-
-@admin_bp.route("/admin/advertisement-card", methods = ["POST"])
-def admin_advertisement_card():
-    """
-    Handles the creation of a new advertisement card.
-    Add and update advertisement card by admin_uid.
-    """
-    return advertisement_card()
-
-
 # =======================================
 
-# 13. Participant table
+# 11. Participant table
 
 # =======================================
 
@@ -234,7 +188,7 @@ def admin_reward_participant_table():
 
 # ===============
 
-# 14. Error
+# 12. Error
 
 # ===============
 
@@ -242,27 +196,54 @@ def admin_reward_participant_table():
 def admin_error_table():
     return error_table()
 
+# ===============
+
+# 13. Dashboard Graph data
+
+# ===============
+
+@admin_bp.route("/admin/dashboard/graph-data", methods = ["POST"])
+def graph():
+    """
+    Handle password reset using code(otp) from email
+    Accepts: POST request with new password and reset
+    Returns: Password reset confirmation response
+    """
+    return graph_data()
+
 # =============
 
-# 16. Dashboard Statistics
+# 14. Dashboard Statistics
 
 # =============
 
 @admin_bp.route('/admin/dashboard/stats', methods = ['POST'])
 def fetch_stats():
     return dashboard_stats()
+
+# ===================
+
+# 15. dashboard Reward History
+
+# ==================
+
+@admin_bp.route('/admin/reward-history', methods = ['POST'])
+def user_rewards():
+
+    return reward_history()
+
 # =============
 
 # 16. Email save
 
 # =============
+
 @admin_bp.route("/admin/send-email", methods = ["POST"])
 def admin_send_email():
     """
     handles : admin defining email templates for different e-mails
     """
     return create_email()
-
 
 # ==============
 
@@ -280,45 +261,7 @@ def edit_profile():
 
 # ==============
 
-# 18. Add new FAQ
-
-# ==============
-
-@admin_bp.route('/admin/add-faqs', methods=['POST'])
-def add_new_faq():
-
-    return add_faqs()
-
-# ==============
-
-# 19. Update existing FAQ
-
-# ==============
-
-
-@admin_bp.route('/admin/update-faqs', methods=['PUT'])
-def update_faq():
-
-    return update_faqs()
-
-# ==============
-
-# 20. Delete Existing FAQ
-
-# ==============
-
-@admin_bp.route('/admin/delete-faqs', methods=['DELETE'])
-def remove_faq():
-    """
-    Handle password reset using code(otp) from email
-    Accepts: POST request with new password and reset
-    Returns: Password reset confirmation response
-    """
-    return delete_faq()
-
-# ==============
-
-# 21. View messages sent by users
+# 18. View messages sent by users
 
 # ==============
 
@@ -333,7 +276,7 @@ def view_msgs():
 
 # ==============
 
-# 22. Generate invitation link with expiry
+# 19. Generate invitation link with expiry
 
 # ==============
 
@@ -346,99 +289,10 @@ def generate_link():
     """
     return generate_invite_link_with_expiry()
 
-# ==============
-
-# 23. Generate invitation link with expiry
-
-# ==============
-
-@admin_bp.route('/admin/special-referral-link', methods = ['POST'])
-def special_link_referral():
-    """
-    Handle password reset using code(otp) from email
-    Accepts: POST request with new password and reset
-    Returns: Password reset confirmation response
-    """
-    return save_referral_data()
-
-# ==============
-
-# 24. Sharing platforms
-
-# ==============
-
-@admin_bp.route('/admin/sharing-apps', methods=['POST'])
-def sharing_apps():
-    """
-    Handle password reset using code(otp) from email
-    Accepts: POST request with new password and reset
-    Returns: Password reset confirmation response
-    """
-    return sharing_app_stats()
-
-# ==============
-
-# 25. Referral reward
-
-# ==============
-
-@admin_bp.route('/admin/set-referral-rewards', methods = ['POST'])
-def set_referral_rewards():
-    """
-    Handle password reset using code(otp) from email
-    Accepts: POST request with new password and reset
-    Returns: Password reset confirmation response
-    """
-    return set_reward_settings()
-
-# ==============
-
-# 26. Add New Galaxy
-
-# ==============
-
-@admin_bp.route('/admin/add-new-galaxy', methods = ['POST'])
-def add_galaxy():
-    """
-    Handle password reset using code(otp) from email
-    Accepts: POST request with new password and reset
-    Returns: Password reset confirmation response
-    """
-    return create_galaxy()
-
-# ==============
-
-# 27. Add New Milestone
-
-# ==============
-
-# @admin_bp.route('/admin/add-new-milestones', methods = ['POST'])
-# def add_milestone():
-#     """
-#     Handle password reset using code(otp) from email
-#     Accepts: POST request with new password and reset
-#     Returns: Password reset confirmation response
-#     """
-#     return add_new_milestone()
-
-# ==================
-
-# 28. Delete milestone
-
-# ===================
-
-# @admin_bp.route('/admin/delete-milestone', methods = ['POST'])
-# def delete_milestone():
-#     """
-#     Handle password reset using code(otp) from email
-#     Accepts: POST request with new password and reset
-#     Returns: Password reset confirmation response
-#     """
-#     return remove_milestone()
 
 # =======================
 
-# 29. Push Notification
+# 20. Push Notification
 
 # ========================
 
@@ -453,7 +307,7 @@ def admin_push_notification():
 
 # ===========================
 
-# 30. List of Notification
+# 21. List of Notification
 
 # ============================
 
@@ -468,7 +322,7 @@ def admin_list_push_notification():
 
 # =================
 
-# 31. Update Notification
+# 22. Update Notification
 
 # ================
 
@@ -484,7 +338,7 @@ def admin_update_push_notification(notification_id):
 
 # =================
 
-# 32. Delete Notification
+# 23. Delete Notification
 
 # ================
 
@@ -497,9 +351,19 @@ def admin_delete_push_notification(notification_id):
     """
     return delete_push_notification(notification_id)
 
+# ===================
+
+# 24. Get Push Notification Data Campaign
+
+# ==================
+@admin_bp.route("/admin/get-push-notification/<notification_id>", methods=["GET"])
+def admin_get_push_notification(notification_id):
+
+    return get_push_notification(notification_id)
+
 # ==============
 
-# 33. Discount Coupons Generation
+# 25. Discount Coupons Generation
 
 # ==============
 
@@ -514,7 +378,7 @@ def admin_create_discount_coupons():
 
 # ==============
 
-# 34. Discount Coupons Generation
+# 26. Discount Coupons Generation
 
 # ==============
 
@@ -529,7 +393,7 @@ def update_coupons():
 
 # ==============
 
-# 35. Discount Coupons Generation
+# 27. Discount Coupons Generation
 
 # ==============
 
@@ -544,7 +408,7 @@ def remove_discount_coupons():
 
 # ===================
 
-# 36. Exclusive Perks
+# 28. Exclusive Perks
 
 # ====================
 
@@ -557,25 +421,9 @@ def admin_create_exclusive_perks():
     """
     return create_exclusive_perks()
 
-
 # ===================
 
-#  37. Footer section
-
-# ==================
-
-@admin_bp.route("/admin/update-footer", methods=["POST"])
-def admin_create_footer():
-    """
-    Handle password reset using code(otp) from email
-    Accepts: POST request with new password and reset
-    Returns: Password reset confirmation response
-    """
-    return edit_footer()
-
-# ===================
-
-#  37. Authentications
+#  29. Authentications
 
 # ==================
 
@@ -590,22 +438,7 @@ def authentication():
 
 # ===================
 
-#  38. Authentications
-
-# ==================
-
-@admin_bp.route("/admin/graph-data/<admin_uid>", methods = ["POST"])
-def graph(admin_uid):
-    """
-    Handle password reset using code(otp) from email
-    Accepts: POST request with new password and reset
-    Returns: Password reset confirmation response
-    """
-    return graph_data(admin_uid)
-
-# ===================
-
-#  39. Authentications
+#  30. Authentications
 
 # ==================
 
@@ -620,7 +453,7 @@ def add_special_offer():
 
 # ===================
 
-# 40. Create Campaign
+# 31. Create Campaign
 
 # ==================
 
@@ -632,7 +465,11 @@ def create_campaign():
     Returns: Password reset confirmation response
     """
     return create_new_campaign()
+# ===================
 
+# 32. Create Campaign
+
+# ==================
 
 @admin_bp.route('/admin/list-all-campaigns', methods=['POST'])
 def list_campaign():
@@ -643,32 +480,46 @@ def list_campaign():
     """
     return dashboard_all_campaigns()
 
+# ===================
 
-@admin_bp.route("/admin/get-push-notification/<notification_id>", methods=["GET"])
-def admin_get_push_notification(notification_id):
+# 33. Fetch Campaign Data
 
-    return get_push_notification(notification_id)
-
-@admin_bp.route('/admin/reward-history', methods = ['POST'])
-def user_rewards():
-
-    return reward_history()
-
-
+# ==================
 @admin_bp.route('/admin/edit-campaign/<program_id>', methods = ['POST'])
 def edit_program(program_id):
 
     return edit_campaign(program_id)
+
+# ===================
+
+# 34. Update Campaign
+
+# ==================
 
 @admin_bp.route('/admin/update-campaign/<program_id>', methods = ['POST'])
 def update_program(program_id):
 
     return update_campaign(program_id)
 
+# ===================
+
+# 35. Delete Campaign
+
+# ==================
+
 @admin_bp.route('/admin/delete-campaign/<program_id>', methods = ['POST'])
 def remove_campaign(program_id):
 
     return delete_campaign(program_id)
 
+# ===================
 
+# 36. Products Data
+
+# ==================
+
+@admin_bp.route('/admin/products/<program_id>', methods = ['POST'])
+def view_all(program_id):
+
+    return all_products(program_id)
 

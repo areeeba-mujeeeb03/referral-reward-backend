@@ -297,7 +297,9 @@ def error_table():
         logger.error(f"Internal Server Error while saving email.{str(e)}")
         return jsonify({"error": "Internal server error"}),500
 
-def graph_data(admin_uid):
+def graph_data():
+    data = request.get_json()
+    admin_uid = data.get("admin_uid")
     registered_user = User.objects(admin_uid = admin_uid).order_by('created_at')
 
     return jsonify({"registrations": registered_user, "success" : True}),200
