@@ -294,11 +294,14 @@ def fetch_data_from_admin():
     program_id = user.program_id
 
     # FAQs by categories
+    faq_list = []
     faq_categories = ["Home Screen", "Rewards", "Referrals", "Help and Support FAQs"]
-    faqs = {
-        cat.lower().replace(" ", "_"): get_faqs_by_category_name(admin_uid, cat) or []
-        for cat in faq_categories
-    }
+    for faq in faq_categories:
+        faqs = {
+        faq.lower(): get_faqs_by_category_name(admin_uid, faq)
+        }
+        faq_list.append(faqs)
+
 
     # How it works
     how_it_works_obj = HowItWork.objects(admin_uid=admin_uid, program_id=program_id).first()
@@ -337,24 +340,6 @@ def fetch_data_from_admin():
                 "milestone_description": m['milestone_description']
             }
             galaxy_data["milestones"].append(milestones)
-    # galaxy_data = {}
-    # galaxy_obj = GalaxyProgram.objects(admin_uid=admin_uid, program_id=program_id).first()
-    # if galaxy_obj:
-    #     for g in galaxy_obj.galaxies:
-    #         galaxy_data = {
-    #             "galaxy_name": g.get('galaxy_name', ''),
-    #             "total_meteors_required_in_this_galaxy": g.get('total_meteors_required', 0),
-    #             "total_milestones": g.get('total_milestones', 0),
-    #             "milestones": [
-    #                 {
-    #                     "milestone_name": m.get('milestone_name', ''),
-    #                     "milestone_reward": m.get('milestone_reward', ''),
-    #                     "meteors_required_to_unlock": m.get('meteors_required_to_unlock', 0),
-    #                     "milestone_description": m.get('milestone_description', '')
-    #                 }
-    #                 for m in g.milestones
-    #             ]
-    #         }
 
     # Advertisement cards
     ad_data = []
@@ -410,21 +395,18 @@ def fetch_data_from_admin():
             for p in offer_obj.offers
         ]
 
-    response_data = {
-        "success": True,
-        "how_it_works": how_it_works,
+    return{
+        "how_it_works": [how_it_works],
         "exciting_prizes": prize_data,
-        **faqs,
+        # ,
         "galaxy_data": galaxy_data,
         "advertisement_cards": ad_data,
-        "exclusive_perks": {},
+        # "exclusive_perks": {},
         "conversion_data": conversion_rate,
-        "product_offer": [],
+        # "product_offer": [],
         "special_offer": special_offer,
-        "exclusive_offers": offer_data
-    }
-
-    return jsonify(response_data), 200
+        # "exclusive_offers": offer_data,
+    "success": True}, 200
 
 
 
