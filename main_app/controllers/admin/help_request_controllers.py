@@ -7,15 +7,15 @@ from main_app.models.admin.help_model import FAQ, Contact
 
 ##--------------------------------------------- View all FAQs---------------------------------------------##
 
-def get_faqs_by_category_name(admin_uid, category):
-    faq_doc = FAQ.objects(admin_uid=admin_uid).first()
-    if not faq_doc:
-        return None
-    faqs = []
-    for cate in faq_doc.categories:
-        if cate["category"].strip('').lower() == category.strip('').lower():
-            return cate["faqs"]
-    return jsonify({"message" : "No FAQs"})
+# def get_faqs_by_category_name(admin_uid, category):
+#     faq_doc = FAQ.objects(admin_uid=admin_uid).first()
+#     if not faq_doc:
+#         return None
+#     faqs = []
+#     for cate in faq_doc.categories:
+#         if cate["category"].strip('').lower() == category.strip('').lower():
+#             return cate["faqs"]
+#     return jsonify({"message" : "No FAQs"})
 
 ##---------------------------------------------- Add a new FAQ---------------------------------------------##
 

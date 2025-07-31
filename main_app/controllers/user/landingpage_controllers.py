@@ -295,12 +295,12 @@ def fetch_data_from_admin():
 
     # FAQs by categories
     faq_list = []
-    faq_categories = ["Home Screen", "Rewards", "Referrals", "Help and Support FAQs"]
-    for faq in faq_categories:
-        faqs = {
-        faq.lower(): get_faqs_by_category_name(admin_uid, faq)
-        }
-        faq_list.append(faqs)
+    # faq_categories = ["Home Screen", "Rewards", "Referrals", "Help and Support FAQs"]
+    # for faq in faq_categories:
+    #     faqs = {
+    #     faq.lower(): get_faqs_by_category_name(admin_uid, faq)
+    #     }
+    #     faq_list.append(faqs)
 
 
     # How it works
