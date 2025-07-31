@@ -1,5 +1,5 @@
 import datetime
-from main_app.controllers.admin.help_request_controllers import get_faqs_by_category_name
+# from main_app.controllers.admin.help_request_controllers import get_faqs_by_category_name
 from main_app.controllers.user.rewards_controllers import update_planet_and_galaxy
 from main_app.models.admin.admin_model import Admin
 from main_app.models.admin.error_model import Errors
