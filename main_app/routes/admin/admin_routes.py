@@ -8,7 +8,7 @@ from main_app.controllers.admin.discount_coupons_controllers import create_disco
 from main_app.controllers.admin.forgotpassword_controllers import forgot_otp_email, verify_otp, reset_password
 from main_app.controllers.admin.help_request_controllers import add_faqs, delete_faq, list_contact_messages, update_faqs
 from main_app.controllers.admin.profile_controllers import edit_profile_data
-from main_app.controllers.admin.product_controllers import add_product, update_product, update_offer, add_offer
+from main_app.controllers.admin.product_controllers import add_product, update_product, update_offer,delete_product, add_offer
 from main_app.controllers.admin.prize_controller import add_exciting_prizes, check_eligibility
 from main_app.controllers.admin.how_it_work_controller import add_how_it_work, advertisement_card
 from main_app.controllers.admin.referral_controllers import generate_invite_link_with_expiry, sharing_app_stats, \
@@ -18,13 +18,8 @@ from main_app.controllers.admin.dashboard_controllers import error_table, dashbo
     graph_data, dashboard_all_campaigns, reward_history
 from main_app.controllers.admin.email_controller import create_email
 from main_app.controllers.admin.notification_controller import create_push_notification, list_push_notifications, \
-<<<<<<< HEAD
     update_push_notification, delete_push_notification, get_notification
-from main_app.controllers.admin.perks_controller import create_exclusive_perks, edit_footer
-=======
-    update_push_notification, delete_push_notification, get_push_notification
-from main_app.controllers.admin.perks_controller import create_exclusive_perks
->>>>>>> 7dfac03a765050e456d4e742ea89051037185131
+from main_app.controllers.admin.perks_controller import create_exclusive_perks,ExclusivePerks,Perks
 from main_app.controllers.admin.special_off_controllers import create_special_offer
 
 admin_bp = Blueprint("admin_routes", __name__)
@@ -127,15 +122,26 @@ def admin_add_product():
 
 # ========================
 
-@admin_bp.route("/admin/update-product/<string:uid>", methods = ["PUT"])
-def update_add_product(uid):
+@admin_bp.route("/admin/update-product/<string:product_uid>", methods = ["PUT"])
+def update_add_product(product_uid):
     """
     Updates an existing product in the database.
     Expects: JSON body with updated product details.
     Returns: Success message or error response.
     """
-    return update_product(uid)
+    return update_product(product_uid)
 
+# ===========
+
+# Delete product
+
+# ============
+@admin_bp.route("/admin/delete-product/<product_uid>", methods=["DELETE"])
+def admin_delete_product(product_uid):
+    """
+    
+    """
+    return delete_product(product_uid)
 
 # ==================
 

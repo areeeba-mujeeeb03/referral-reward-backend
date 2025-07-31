@@ -114,69 +114,159 @@ def add_product():
 
 # Update Product 
 
-def update_product(uid):
-  try:
-     logger.info(f"Update Product API called for UID: {uid}")
-     data = request.get_json()
-     admin_uid = data.get("admin_uid")
-     access_token = data.get("mode")
-     session_id = data.get("log_alt")
+# def update_product(product_uid):
+#   try:
+#      logger.info(f"Update Product API called for UID: {product_uid}")
+#      data = request.get_json()
+#      admin_uid = data.get("admin_uid")
+#      access_token = data.get("mode")
+#      session_id = data.get("log_alt")
 
-     exist = Admin.objects(admin_uid=admin_uid).first()
+#     #  exist = Admin.objects(admin_uid=admin_uid).first()
 
-     if not exist:
-         return jsonify({"success": False, "message": "User does not exist"}), 400
+#     #  if not exist:
+#     #      return jsonify({"success": False, "message": "User does not exist"}), 400
 
-     if not access_token or not session_id:
-         return jsonify({"message": "Missing token or session", "success": False}), 400
+#     #  if not access_token or not session_id:
+#     #      return jsonify({"message": "Missing token or session", "success": False}), 400
 
-     if exist.access_token != access_token:
-         return ({"success": False,
-                  "message": "Invalid access token"}), 401
+#     #  if exist.access_token != access_token:
+#     #      return ({"success": False,
+#     #               "message": "Invalid access token"}), 401
 
-     if exist.session_id != session_id:
-         return ({"success": False,
-                  "message": "Session mismatch or invalid session"}), 403
+#     #  if exist.session_id != session_id:
+#     #      return ({"success": False,
+#     #               "message": "Session mismatch or invalid session"}), 403
 
-     if hasattr(exist, 'expiry_time') and exist.expiry_time:
-         if datetime.datetime.now() > exist.expiry_time:
-             return ({"success": False,
-                      "message": "Access token has expired",
-                      "token": "expired"}), 401
+#     #  if hasattr(exist, 'expiry_time') and exist.expiry_time:
+#     #      if datetime.datetime.now() > exist.expiry_time:
+#     #          return ({"success": False,
+#     #                   "message": "Access token has expired",
+#     #                   "token": "expired"}), 401
 
-     if not data and not request.files:
-            logger.warning("No fields or files provided in request")
-            return jsonify({"message": "No fields provided for update"}), 400
+#      if not data or not admin_uid:
+#             logger.warning("No fields or files provided in request")
+#             return jsonify({"message": "No fields provided for update"}), 400
 
-     product = Product.objects(product_uid=uid).first()
-     if not product:
-        logger.warning(f"Product not found for UID: {uid}")
-        return jsonify({"message": "Product not found"}), 400
+#      product = Product.objects(admin_uid=admin_uid, products__product_uid=product_uid).first()
+#      if not product:
+#         logger.warning(f"Product not found for UID: {product_uid}")
+#         return jsonify({"message": "Product not found"}), 400
+#      print("product", product)
+#      for p in product.products:
+    
+#       if p["product_uid"] == product_uid:
+#         logger.info(f"Product updated successfully with UID: {p['product_uid']}")
 
-     if data.get("product_name"):
-        product.product_name = data.get("product_name")
+#      if data.get("product_name"):
+#         product.product_name = data.get("product_name")
 
-     if data.get("original_amt"):
-        product.original_amt = float(data.get("original_amt"))
+#      if data.get("original_amt"):
+#         product.original_amt = float(data.get("original_amt"))
 
-     if data.get("short_desc"):
-        product.short_desc = data.get("short_desc")   
+#      if data.get("short_desc"):
+#         product.short_desc = data.get("short_desc")   
 
-     if data.get("reward_type"):
-        product.reward_type = data.get("reward_type")
+#      if data.get("reward_type"):
+#         product.reward_type = data.get("reward_type")
 
-     if data.get("image"):
-         product.image = data.get("image")
+#      if data.get("image"):
+#          product.image = data.get("image")
 
-     product.save()
-     logger.info(f"Product updated successfully with UID: {product.uid}")
-     return jsonify({"success": "true" , "message": "Product updated", "uid": str(product.uid)}), 200
+#      product.save()
+#      logger.info(f"Product updated successfully with UID: {product.product_uid}")
+#      return jsonify({"success": "true" , "message": "Product updated", "product_uid": str(product.product_uid)}), 200
 
-  except Exception as e:
-     logger.error(f"Product update failed : {str(e)}")
-     return jsonify({"errro": "Internal server error"}), 500
+#   except Exception as e:
+#      logger.error(f"Product update failed : {str(e)}")
+#      return jsonify({"errro": "Internal server error"}), 500
+
+def update_product(product_uid):
+    try:
+        logger.info(f"Update Product API called for UID: {product_uid}")
+        data = request.get_json()
+        admin_uid = data.get("admin_uid")
+
+        if not data or not admin_uid:
+            logger.warning("Missing admin_uid or update fields")
+            return jsonify({"message": "Missing required data"}), 400
+
+        # Find document with matching admin and embedded product_uid
+        product_doc = Product.objects(admin_uid=admin_uid, products__product_uid=product_uid).first()
+        if not product_doc:
+            logger.warning(f"Product not found for UID: {product_uid}")
+            return jsonify({"message": "Product not found"}), 400
+
+        # Loop through embedded products and update the matching one
+        updated = False
+        for product in product_doc.products:
+            if product.get("product_uid") == product_uid:
+                if data.get("product_name"):
+                    product["product_name"] = data["product_name"]
+                if data.get("original_amt"):
+                    try:
+                        product["original_amt"] = float(data["original_amt"])
+                    except ValueError:
+                        return jsonify({"message": "Amount must be numeric"}), 400
+                if data.get("short_desc"):
+                    product["short_desc"] = data["short_desc"]
+                if data.get("reward_type"):
+                    product["reward_type"] = data["reward_type"]
+                if data.get("image"):
+                    product["image"] = data["image"]
+                updated = True
+                logger.info(f"Product updated successfully with UID: {product_uid}")
+                break
+
+        if not updated:
+            logger.warning(f"Product with UID {product_uid} not found in list")
+            return jsonify({"message": "Product not found"}), 400
+
+        # Save document after editing the embedded product
+        product_doc.save()
+
+        return jsonify({
+            "success": True,
+            "message": "Product updated",
+            "product_uid": product_uid
+        }), 200
+
+    except Exception as e:
+        logger.error(f"Product update failed : {str(e)}")
+        return jsonify({"error": "Internal Server Error"}), 500
+
+# -----------------------------------------------------------------------------------------------------------
 
 
+def delete_product(product_uid):
+    try:
+        logger.info(f"Delete Product API called for UID: {product_uid}")
+        data = request.get_json()
+        admin_uid = data.get("admin_uid")
+
+        if not admin_uid:
+            return jsonify({"message": "Missing admin_uid"}), 400
+
+        product_doc = Product.objects(admin_uid=admin_uid, products__product_uid=product_uid).first()
+        if not product_doc:
+            logger.warning(f"No product found for UID: {product_uid}")
+            return jsonify({"message": "Product not found"}), 404
+
+        original_count = len(product_doc.products)
+        product_doc.products = [p for p in product_doc.products if p.get("product_uid") != product_uid]
+
+        if len(product_doc.products) == original_count:
+            logger.warning("No product matched for deletion")
+            return jsonify({"message": "Product not found in list"}), 404
+
+        product_doc.save()
+        logger.info(f"Product deleted successfully: {product_uid}")
+
+        return jsonify({"success": True, "message": "Product deleted", "deleted_uid": product_uid}), 200
+
+    except Exception as e:
+        logger.error(f"Product deletion failed: {str(e)}")
+        return jsonify({"error": "Internal server error"}), 500
 
 
 
