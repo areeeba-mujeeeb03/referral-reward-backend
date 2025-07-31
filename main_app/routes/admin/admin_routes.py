@@ -593,14 +593,14 @@ def admin_create_exclusive_perks():
 
 # ==================
 
-@admin_bp.route("/admin/update-footer", methods=["POST"])
-def admin_create_footer():
-    """
-    Handle password reset using code(otp) from email
-    Accepts: POST request with new password and reset
-    Returns: Password reset confirmation response
-    """
-    return edit_footer()
+# @admin_bp.route("/admin/update-footer", methods=["POST"])
+# def admin_create_footer():
+#     """
+#     Handle password reset using code(otp) from email
+#     Accepts: POST request with new password and reset
+#     Returns: Password reset confirmation response
+#     """
+#     return edit_footer()
 
 # ===================
 

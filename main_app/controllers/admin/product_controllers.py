@@ -42,25 +42,25 @@ def add_product():
 
          exist = Admin.objects(admin_uid=admin_uid).first()
 
-         if not exist:
-             return jsonify({"success": False, "message": "User does not exist"}), 400
+        #  if not exist:
+        #      return jsonify({"success": False, "message": "User does not exist"}), 400
 
-         if not access_token or not session_id:
-             return jsonify({"message": "Missing token or session", "success": False}), 400
+        #  if not access_token or not session_id:
+        #      return jsonify({"message": "Missing token or session", "success": False}), 400
 
-         if exist.access_token != access_token:
-             return ({"success": False,
-                      "message": "Invalid access token"}), 401
+        #  if exist.access_token != access_token:
+        #      return ({"success": False,
+        #               "message": "Invalid access token"}), 401
 
-         if exist.session_id != session_id:
-             return ({"success": False,
-                      "message": "Session mismatch or invalid session"}), 403
+        #  if exist.session_id != session_id:
+        #      return ({"success": False,
+        #               "message": "Session mismatch or invalid session"}), 403
 
-         if hasattr(exist, 'expiry_time') and exist.expiry_time:
-             if datetime.datetime.now() > exist.expiry_time:
-                 return ({"success": False,
-                          "message": "Access token has expired",
-                          "token": "expired"}), 401
+        #  if hasattr(exist, 'expiry_time') and exist.expiry_time:
+        #      if datetime.datetime.now() > exist.expiry_time:
+        #          return ({"success": False,
+        #                   "message": "Access token has expired",
+        #                   "token": "expired"}), 401
 
          if not all([product_name, original_amt, short_desc, admin_uid]):
              return jsonify({"message": "Missing required fields"}), 400
@@ -359,86 +359,92 @@ def update_offer():
         logger.info("Update Offer API called")
         data = request.get_json()
         offer_uid = data.get("offer_uid")
-        data = request.form
         admin_uid = data.get("admin_uid")
         access_token = data.get("mode")
         session_id = data.get("log_alt")
         start = parse_date_flexible(data.get("start_date"))
         expiry = parse_date_flexible(data.get("expiry_date"))
-        uid = data.get("uid")
+        product_uid = data.get("product_uid")
 
-        exist = Admin.objects(admin_uid=admin_uid).first()
+        # exist = Admin.objects(admin_uid=admin_uid).first()
 
-        if not exist:
-            return jsonify({"success": False, "message": "User does not exist"}), 400
+        # if not exist:
+        #     return jsonify({"success": False, "message": "User does not exist"}), 400
 
-        if not access_token or not session_id:
-            return jsonify({"message": "Missing token or session", "success": False}), 400
+        # if not access_token or not session_id:
+        #     return jsonify({"message": "Missing token or session", "success": False}), 400
 
-        if exist.access_token != access_token:
-            return ({"success": False,
-                     "message": "Invalid access token"}), 401
-        if exist.session_id != session_id:
-            return ({"success": False,
-                     "message": "Session mismatch or invalid session"}), 403
+        # if exist.access_token != access_token:
+        #     return ({"success": False,
+        #              "message": "Invalid access token"}), 401
+        # if exist.session_id != session_id:
+        #     return ({"success": False,
+        #              "message": "Session mismatch or invalid session"}), 403
 
-        if hasattr(exist, 'expiry_time') and exist.expiry_time:
-            if datetime.datetime.now() > exist.expiry_time:
-                return ({"success": False,
-                         "message": "Access token has expired",
-                         "token": "expired"}), 401
+        # if hasattr(exist, 'expiry_time') and exist.expiry_time:
+        #     if datetime.datetime.now() > exist.expiry_time:
+        #         return ({"success": False,
+        #                  "message": "Access token has expired",
+        #                  "token": "expired"}), 401
 
         if not data:
             logger.warning("No data or files provided")
             return jsonify({"message": "No fields provided for update"}), 400
 
-        if not offer_uid:
+        if not offer_uid or not admin_uid:
             logger.warning("Missing offer UID")
-            return jsonify({"message": "Offer uid not found"}), 400
+            return jsonify({"message": "Offer uid and admin uid not found"}), 400
 
-        offer = Offer.objects(offer_uid=offer_uid).first()
-        if not offer:
-            logger.warning(f"Product not found for UID: {offer_uid}")
-            return jsonify({"message" : "Product not found"}), 400
+        offer_doc = Offer.objects(admin_uid=admin_uid).first()
+        if not offer_doc:
+            logger.warning(f"Offer not found for UID: {offer_uid}")
+            return jsonify({"message" : "Offer not found"}), 400
+        
+        match_offer = None
+        for off in offer_doc.offers:
+            if off ["offer_uid"] == offer_uid:
+                match_offer = off
+        if not match_offer:
+            return jsonify({"message": "Offer uid not found"}), 400        
         
         if data.get("offer_name"):
-         offer.offer_name = data.get("offer_name")
+         match_offer["offer_name"] = data.get("offer_name")
 
         if data.get("one_liner"):
-         offer.one_liner = data.get("one_liner")
+         match_offer["one_liner"] = data.get("one_liner")
 
         if data.get("button_txt"):
-         offer.button_txt = data.get("button_txt")
+         match_offer["button_txt"] = data.get("button_txt")
 
         if data.get("off_percent"):
           try:
-             offer.off_percent = float(data.get("off_percent"))
+             match_offer["off_percent"] = float(data.get("off_percent"))
           except ValueError:
              return jsonify({"message": "off_percent must be numeric"}), 400
 
         if data.get("status"):
-         offer.status = data.get("status")
+         match_offer["status"] = data.get("status")
 
         if "start_date" in data:
             if not start:
                 return jsonify({"message": "Invalid start_date format"}), 400
-            offer.start_date = start
+            match_offer["start_date"] = start
 
         if "expiry_date" in data:
             if not expiry:
                 return jsonify({"message": "Invalid expiry_date format"}), 400
-            offer.expiry_date = expiry
+            match_offer["expiry_date"] = expiry
 
          #  Determine offer status based on date
         current_date = datetime.datetime.now().date()
         if start.date() > current_date:
-           offer.status = "Upcoming"
+           match_offer["status"] = "Upcoming"
         elif start.date() <= current_date <= expiry.date():
-           offer.status = "Live"
+           match_offer["status"] = "Live"
         else:
-          offer.status = "Pause"
+          match_offer["status"] = "Pause"
 
-        offer.save()
+        offer_doc.save()
 
         logger.info(f"Offer updated successfully for product UID: {offer_uid}")
         return jsonify({"success": "true" , "message": "Offer updated successfully"}), 200
