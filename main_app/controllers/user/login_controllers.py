@@ -145,20 +145,27 @@ def handle_email_login():
                     user.login_count = (user.login_count or 0) + 1
                     user.save()
 
-        # Step 8: Update user session info in DB
-        user.access_token = access_token
-        user.session_id = session_id
-        user.expiry_time = expiry_time
-        user.joining_status = "Completed"
-        user.last_login = datetime.datetime.now()
-        user.login_count = (user.login_count or 0) + 1  # safe increment
+        # # Step 8: Update user session info in DB
+        # user.access_token = access_token
+        # user.session_id = session_id
+        # user.expiry_time = expiry_time
+        # user.joining_status = "Completed"
+        # user.last_login = datetime.datetime.now()
+        # user.login_count = (user.login_count or 0) + 1  # safe increment
 
-        print()
-        user.save()
+        # user.save()
         reward = Reward.objects(user_id = user.user_id).first()
         reward_earn= Participants.objects(admin_uid=user.admin_uid, program_id=user.program_id).first()
         login_reward = reward_earn.login_reward if reward_earn else 0
         date = datetime.datetime.now()
+        reward.reward_history.append({
+            "earned_by_action": "Log In",
+            "earned_meteors": login_reward,
+            "referred_to": user.name,
+            "referral_status": "pending",
+            "referred_on": date.strftime('%d-%m-%y'),
+            "transaction_type": "credit"
+        })
         for referral in reward.reward_history:
             if not referral.get("earned_by_action") == "Log In":
                 reward.reward_history.append({

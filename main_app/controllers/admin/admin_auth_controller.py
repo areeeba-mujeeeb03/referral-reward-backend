@@ -125,6 +125,7 @@ def handle_authentication():
         logger.warning("User not found")
         return jsonify({"message": get_error("user_not_found")}), 404
 
+
     #  Generate tokens
     access_token = generate_access_token(existing.admin_uid)
     session_id = create_user_session(existing.admin_uid)
@@ -136,15 +137,6 @@ def handle_authentication():
     existing.last_login = datetime.datetime.now()
     existing.save()
 
-    # part1 = access_token[:10]
-    # part2 = access_token[10:]
-    #
-    # info = {"access_token": access_token,
-    #         "session_id": session_id}
-    #
-    # fields_to_encode = ["access_token", "session_id",]
-
-    # res = generate_encoded_string(info, fields_to_encode)
     return jsonify({"log_alt" : session_id,
                     "mode" : access_token,
                     "success": True}), 200

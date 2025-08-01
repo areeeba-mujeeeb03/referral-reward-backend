@@ -356,7 +356,6 @@ def admin_list_push_notification():
 # Get by id
 
 # =======
-
 @admin_bp.route('/admin/get-push-notifications/<notification_id>', methods=['GET'])
 def admin_get_push_notification(notification_id):
     """
@@ -367,6 +366,7 @@ def admin_get_push_notification(notification_id):
       - log_alt (as session_id)
     """
     return get_notification(notification_id)
+
 
 # =================
 
@@ -398,16 +398,6 @@ def admin_delete_push_notification(notification_id):
     Returns: Password reset confirmation response
     """
     return delete_push_notification(notification_id)
-
-# ===================
-
-# 24. Get Push Notification Data Campaign
-
-# ==================
-@admin_bp.route("/admin/get-push-notification/<notification_id>", methods=["GET"])
-def admin_get_push_notification(notification_id):
-
-    return get_push_notification(notification_id)
 
 # ==============
 
@@ -530,11 +520,7 @@ def list_campaign():
 
 # ========
 
-@admin_bp.route('/admin/reward-history', methods = ['POST'])
-def user_rewards():
 
-
-    return reward_history()
 
 
 @admin_bp.route('/admin/edit-campaign/<program_id>', methods = ['POST'])
