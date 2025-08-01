@@ -207,10 +207,11 @@ def handle_email_login():
         user.last_login = datetime.datetime.now()
         user.login_count = (user.login_count or 0) + 1  # safe increment
 
+        print()
         user.save()
         reward = Reward.objects(user_id = user.user_id).first()
         reward_earn= Participants.objects(admin_uid=user.admin_uid, program_id=user.program_id).first()
-        login_reward = reward_earn.login_reward
+        login_reward = reward_earn.login_reward if reward_earn else 0
         date = datetime.datetime.now()
         for referral in reward.reward_history:
             if not referral.get("earned_by_action") == "Log In":
@@ -224,7 +225,6 @@ def handle_email_login():
                 })
         app_name = user.joined_via
         update_app_stats(app_name, user)
-
         # Step 9: Return success
         logger.info(f"Successful login for user: {user.user_id}")
         return jsonify({

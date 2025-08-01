@@ -8,7 +8,7 @@ from main_app.controllers.admin.discount_coupons_controllers import create_disco
 from main_app.controllers.admin.forgotpassword_controllers import forgot_otp_email, verify_otp, reset_password
 from main_app.controllers.admin.help_request_controllers import add_faqs, delete_faq, list_contact_messages, update_faqs
 from main_app.controllers.admin.profile_controllers import edit_profile_data
-from main_app.controllers.admin.product_controllers import add_product, update_product, update_offer,delete_product, add_offer
+from main_app.controllers.admin.product_controllers import add_product, update_product, delete_product, add_offer,update_offer, delete_offer
 from main_app.controllers.admin.prize_controller import add_exciting_prizes, check_eligibility
 from main_app.controllers.admin.how_it_work_controller import add_how_it_work, advertisement_card
 from main_app.controllers.admin.referral_controllers import generate_invite_link_with_expiry, sharing_app_stats, \
@@ -173,6 +173,22 @@ def admin_update_offer():
     Return: Success message or error reponse.
     """
     return update_offer()
+
+
+# ================
+
+#  Delete offer
+
+# ================
+
+@admin_bp.route("/admin/delete-offer", methods = ["DELETE"])
+def admin_delete_offer():
+    """
+    Update offers
+    Experts: JSON with offer details including start ans expiry dates.
+    Return: Success message or error reponse.
+    """
+    return delete_offer()
 
 
 # ===========================

@@ -293,12 +293,13 @@ def fetch_data_from_admin():
     admin_uid = user.admin_uid
     program_id = user.program_id
 
-    # FAQs by categories
-    faq_categories = ["Home Screen", "Rewards", "Referrals", "Help and Support FAQs"]
-    faqs = {
-        cat.lower().replace(" ", "_"): get_faqs_by_category_name(admin_uid, cat) or []
-        for cat in faq_categories
-    }
+    # # FAQs by categories
+    # faq_categories = ["Home Screen", "Rewards", "Referrals", "Help and Support FAQs"]
+    # faqs = {
+    #     cat.lower().replace(" ", "_"): get_faqs_by_category_name(admin_uid, cat) or []
+    #     for cat in faq_categories
+    # }
+    # print(faq_categories)
 
     # How it works
     how_it_works_obj = HowItWork.objects(admin_uid=admin_uid, program_id=program_id).first()
@@ -318,7 +319,7 @@ def fetch_data_from_admin():
 
     # Galaxy + milestones
     reward = Reward.objects(user_id=user_id).first()
-    current_galaxy_name = reward.galaxy_name
+    current_galaxy_name = reward.galaxy_name  if reward else None
     galaxy = GalaxyProgram.objects(admin_uid = admin_uid, program_id = user.program_id).first()
     galaxy_data = {}
     for g in galaxy.galaxies:
@@ -330,7 +331,7 @@ def fetch_data_from_admin():
         }
     #
         for m in g.milestones:
-            milestones = {
+            milestones = { 
                 "milestone_name": m['milestone_name'],
                 "milestone_reward": m['milestone_reward'],
                 "meteors_required_to_unlock": m['meteors_required_to_unlock'],
@@ -414,7 +415,7 @@ def fetch_data_from_admin():
         "success": True,
         "how_it_works": how_it_works,
         "exciting_prizes": prize_data,
-        **faqs,
+        # **faqs,
         "galaxy_data": galaxy_data,
         "advertisement_cards": ad_data,
         "exclusive_perks": {},

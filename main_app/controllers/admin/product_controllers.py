@@ -237,6 +237,7 @@ def update_product(product_uid):
 
 # -----------------------------------------------------------------------------------------------------------
 
+# ----Delete Product
 
 def delete_product(product_uid):
     try:
@@ -270,12 +271,9 @@ def delete_product(product_uid):
 
 
 
-# --------------------------------------------------------------------------------------------
+# ==============================================================================================
 
 # Add Offer
-
-UPLOAD_FOLDER = "uploads/offers"
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 def add_offer():
  try:
@@ -322,7 +320,6 @@ def add_offer():
         "off_percent": off_percent,
         "status": status,
         "product_uid": product_id,
-        # "admin_uid": admin_uid,
         "start_date": start_date,
         "expiry_date": expiry_date
         }
@@ -452,3 +449,39 @@ def update_offer():
     except Exception as e:
         logger.error(f"offer updated failed: {str(e)}")
         return jsonify({"error": "Internal server error"}), 500
+
+# -----------------------------------------------------------------------------------------
+
+# ---Delete Product
+
+def delete_offer():
+    try:
+        logger.info("Delete Offer API called")
+        data = request.get_json()
+        admin_uid = data.get("admin_uid")
+        offer_uid = data.get("offer_uid")
+
+        if not admin_uid or not offer_uid:
+             logger.warning(f"admin uid and offer uid required")
+             return jsonify({"Admin uid and offer uid are required"}), 400
+
+        offer_doc = Offer.objects(admin_uid=admin_uid).first()
+        if not offer_doc:
+            logger.warning(f"offer document not found")
+            return jsonify({"message": "Offer document not found"}), 400
+        
+        original_count = len(offer_doc.offers)
+        offer_doc.offers = [off for off in offer_doc.offers if off["offer_uid"] != offer_uid]
+
+        if len(offer_doc.offers) == original_count:
+            logger.warning(f"offer_uid not found")
+            return jsonify({"message" : "Offer uid not found"}), 400
+        
+        offer_doc.save()
+        
+        logger.info(f"Offer deleted")
+        return jsonify({"success": True, "message": "Offer deleted successfully"}), 200
+    
+    except Exception as e:
+        logger.error(f"Offer delete failed: {str(e)}")
+        return jsonify({"error": "Internal Server Error"}), 500

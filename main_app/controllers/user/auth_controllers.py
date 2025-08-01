@@ -63,9 +63,9 @@ def handle_registration():
 
         url = data.get('url')
         find_url = Campaign.objects(base_url = url).first()
-        # if not find_url:
-        #     return jsonify({"message" : "URL not found", "success" : False}),400
-
+        if not find_url:
+            return jsonify({"message" : "URL not found", "success" : False}),400
+         
         hashed_password = hash_password(data['password'])
         user = User(
             name = data['name'],
