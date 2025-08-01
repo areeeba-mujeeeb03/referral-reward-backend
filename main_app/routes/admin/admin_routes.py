@@ -8,15 +8,18 @@ from main_app.controllers.admin.discount_coupons_controllers import create_disco
 from main_app.controllers.admin.forgotpassword_controllers import forgot_otp_email, verify_otp, reset_password
 from main_app.controllers.admin.help_request_controllers import list_contact_messages
 from main_app.controllers.admin.profile_controllers import edit_profile_data
-from main_app.controllers.admin.product_controllers import add_product, update_product, update_offer, add_offer
-from main_app.controllers.admin.prize_controller import add_exciting_prizes
-from main_app.controllers.admin.referral_controllers import generate_invite_link_with_expiry
+from main_app.controllers.admin.product_controllers import add_product, update_product, delete_product, add_offer,update_offer, delete_offer
+from main_app.controllers.admin.prize_controller import add_exciting_prizes, check_eligibility
+from main_app.controllers.admin.how_it_work_controller import add_how_it_work, advertisement_card
+from main_app.controllers.admin.referral_controllers import generate_invite_link_with_expiry, sharing_app_stats, \
+    save_referral_data
+from main_app.controllers.admin.rewards_controllers import create_galaxy,set_reward_settings
 from main_app.controllers.admin.dashboard_controllers import error_table, dashboard_participants, dashboard_stats, \
     graph_data, dashboard_all_campaigns, reward_history
 from main_app.controllers.admin.email_controller import create_email
 from main_app.controllers.admin.notification_controller import create_push_notification, list_push_notifications, \
-    update_push_notification, delete_push_notification, get_push_notification
-from main_app.controllers.admin.perks_controller import create_exclusive_perks
+    update_push_notification, delete_push_notification, get_notification
+from main_app.controllers.admin.perks_controller import create_exclusive_perks,ExclusivePerks,Perks
 from main_app.controllers.admin.special_off_controllers import create_special_offer
 
 admin_bp = Blueprint("admin_routes", __name__)
@@ -118,15 +121,26 @@ def admin_add_product():
 
 # ========================
 
-@admin_bp.route("/admin/update-product/<string:uid>", methods = ["PUT"])
-def update_add_product(uid):
+@admin_bp.route("/admin/update-product/<string:product_uid>", methods = ["PUT"])
+def update_add_product(product_uid):
     """
     Updates an existing product in the database.
     Expects: JSON body with updated product details.
     Returns: Success message or error response.
     """
-    return update_product(uid)
+    return update_product(product_uid)
 
+# ===========
+
+# Delete product
+
+# ============
+@admin_bp.route("/admin/delete-product/<product_uid>", methods=["DELETE"])
+def admin_delete_product(product_uid):
+    """
+
+    """
+    return delete_product(product_uid)
 
 # ==================
 
@@ -158,6 +172,22 @@ def admin_update_offer():
     Return: Success message or error reponse.
     """
     return update_offer()
+
+
+# ================
+
+#  Delete offer
+
+# ================
+
+@admin_bp.route("/admin/delete-offer", methods = ["DELETE"])
+def admin_delete_offer():
+    """
+    Update offers
+    Experts: JSON with offer details including start ans expiry dates.
+    Return: Success message or error reponse.
+    """
+    return delete_offer()
 
 
 # ===========================
@@ -320,6 +350,24 @@ def admin_list_push_notification():
     """
     return list_push_notifications()
 
+
+# ======
+
+# Get by id
+
+# =======
+
+@admin_bp.route('/admin/get-push-notifications/<notification_id>', methods=['GET'])
+def admin_get_push_notification(notification_id):
+    """
+     Get a single push notification by its ID.
+    Expects query parameters:
+      - admin_uid
+      - mode (as access_token)
+      - log_alt (as session_id)
+    """
+    return get_notification(notification_id)
+
 # =================
 
 # 22. Update Notification
@@ -480,11 +528,15 @@ def list_campaign():
     """
     return dashboard_all_campaigns()
 
-# ===================
+# ========
 
-# 33. Fetch Campaign Data
+@admin_bp.route('/admin/reward-history', methods = ['POST'])
+def user_rewards():
 
-# ==================
+
+    return reward_history()
+
+
 @admin_bp.route('/admin/edit-campaign/<program_id>', methods = ['POST'])
 def edit_program(program_id):
 

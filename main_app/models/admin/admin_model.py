@@ -2,10 +2,10 @@ from mongoengine import StringField, Document, EmailField, DateTimeField, ListFi
 
 
 class Admin(Document):
-    admin_uid = StringField(required=True, unique=True)
-    username = StringField(required=True, unique=True)
-    email = EmailField(required=True, unique=True)
-    mobile_number = StringField(required = True, unique=True)
+    admin_uid = StringField(required=True)
+    username = StringField(required=True)
+    email = EmailField(required=True)
+    mobile_number = StringField(required = True)
     password = StringField(required=True)
     access_token = StringField()
     session_id = StringField()

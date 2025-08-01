@@ -1,5 +1,4 @@
 from flask import jsonify
-
 from main_app.models.admin.discount_coupon_model import ProductDiscounts
 from main_app.models.admin.error_model import Errors
 from main_app.models.admin.galaxy_model import Galaxy, GalaxyProgram
@@ -10,7 +9,6 @@ import logging
 import random
 from main_app.models.user.user import User
 
-# Configure logging for OTP operations
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -41,6 +39,7 @@ def update_planet_and_galaxy(user_id):
                     "total_meteors": reward.total_meteors_earned,
                     "success": True
                 }), 200
+
             if galaxy.galaxy_name in current_galaxy_name:
                 current_galaxy = galaxy
                 for milestone in current_galaxy.milestones:
