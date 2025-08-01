@@ -35,98 +35,96 @@ def handle_registration():
     logger.info("Starting user registration process")
 
     data = request.get_json()
-    try :
-        if not data:
-            logger.warning("Registration attempt with empty request body")
-            return jsonify({"error": get_error("invalid_data")}), 400
+    if not data:
+        logger.warning("Registration attempt with empty request body")
+        return jsonify({"error": get_error("invalid_data")}), 400
 
-        required_fields = ['name', 'email', 'mobile_number', 'password', 'confirm_password']
+    required_fields = ['name', 'email', 'mobile_number', 'password', 'confirm_password']
 
-        validation_result = _validate_required_fields(data, required_fields)
-        if validation_result:
-            return validation_result
+    validation_result = _validate_required_fields(data, required_fields)
+    if validation_result:
+        return validation_result
 
-        if validate_email_format(data['email']):
-            return validate_email_format(data['email'])
+    if validate_email_format(data['email']):
+        return validate_email_format(data['email'])
 
-        if not re.match(r'^\d{10}$', str(data["mobile_number"])):
-            return jsonify({"error": "Mobile must be 10 digits"}), 400
+    if not re.match(r'^\d{10}$', str(data["mobile_number"])):
+        return jsonify({"error": "Mobile must be 10 digits"}), 400
 
-        if data['password'] != data['confirm_password']:
-            return jsonify({"error": "Password and Confirm Password do not match"}), 400
+    if data['password'] != data['confirm_password']:
+        return jsonify({"error": "Password and Confirm Password do not match"}), 400
 
-        if validate_password_strength(data['password']):
-            return validate_password_strength(data['password'])
-        conflict_check = _check_user_conflicts(data['email'], data['mobile_number'])
-        if conflict_check:
-            return conflict_check
+    if validate_password_strength(data['password']):
+        return validate_password_strength(data['password'])
+    conflict_check = _check_user_conflicts(data['email'], data['mobile_number'])
+    if conflict_check:
+        return conflict_check
 
-        url = data.get('url')
-        find_url = Campaign.objects(base_url = url).first()
-        # if not find_url:
-        #     return jsonify({"message" : "URL not found", "success" : False}),400
+    url = data.get('url')
+    find_url = Campaign.objects(base_url = url).first()
+    if not find_url:
+        return jsonify({"message" : "URL not found", "success" : False}),400
 
-        hashed_password = hash_password(data['password'])
-        user = User(
-            name = data['name'],
-            email=data['email'],
-            mobile_number=data['mobile_number'],
-            program_id = find_url.program_id,
-            password=hashed_password,
-            created_at=datetime.datetime.now(),
-            admin_uid = find_url.admin_uid
-        )
+    hashed_password = hash_password(data['password'])
+    user = User(
+        name = data['name'],
+        email=data['email'],
+        mobile_number=data['mobile_number'],
+        program_id = find_url.program_id,
+        password=hashed_password,
+        created_at=datetime.datetime.now(),
+        admin_uid = find_url.admin_uid
+    )
+    user.save()
+
+    # Save user early if referral via tag_id
+    tag_id = data.get("tag_id")
+    if tag_id:
+        inviter = User.objects(tag_id=data["tag_id"]).first()
+        if not inviter:
+            return jsonify({"error": "Invalid referral link"}), 400
         user.save()
+        process_referrer_by_tag_id(tag_id, user.user_id, user.name)
 
-        # Save user early if referral via tag_id
-        tag_id = data.get("tag_id")
-        if tag_id:
-            inviter = User.objects(tag_id=data["tag_id"]).first()
-            if not inviter:
-                return jsonify({"error": "Invalid referral link"}), 400
-            user.save()
-            process_referrer_by_tag_id(tag_id, user.user_id, user.name)
+    referral_code = data.get('referral_code')
+    if referral_code:
+        inviter = User.objects(invitation_code=referral_code).first()
+        if not inviter:
+            return jsonify({"error": "Invalid referral code"}), 400
+        user.save()
+        update_referral_status_and_reward(inviter.user_id, user.user_id)
+        process_referrer_by_tag_id(inviter.tag_id, user.user_id, user.name)
 
-        referral_code = data.get('referral_code')
-        if referral_code:
-            inviter = User.objects(invitation_code=referral_code).first()
-            if not inviter:
-                return jsonify({"error": "Invalid referral code"}), 400
-            user.save()
-            update_referral_status_and_reward(inviter.user_id, user.user_id)
-            process_referrer_by_tag_id(inviter.tag_id, user.user_id, user.name)
+    # if not user.pk:
+    #     user.save()
 
-        # if not user.pk:
-        #     user.save()
+    app = data.get("accepted_via")
+    if app:
+        user.update(
+            set__joined_via = app
+        )
+        update_app_stats(app, user)
 
-        app = data.get("accepted_via")
-        if app:
-            user.update(
-                set__joined_via = app
-            )
-            update_app_stats(app, user)
+    rates = ReferralReward.objects(admin_uid=user.admin_uid, program_id = user.program_id).first() or {}
+    rewards_info = Participants.objects(admin_uid=user.admin_uid, program_id = user.program_id).first()
 
-        rates = ReferralReward.objects(admin_uid=user.admin_uid, program_id = user.program_id).first() or {}
-        rewards_info = Participants.objects(admin_uid=user.admin_uid, program_id = user.program_id).first()
+    rewards = {
+        "signup_reward" : rewards_info.signup_reward,
+        "login_reward": rewards_info.login_reward
 
-        rewards = {
-            "signup_reward" : rewards_info.signup_reward,
-            "login_reward": rewards_info.login_reward
+    }
 
-        }
+    initialize_user_records(user.user_id)
 
-        initialize_user_records(user.user_id)
+    return jsonify({
+        "message": "User registered successfully",
+        "user_id": user.user_id,
+        "registration_date": user.created_at.isoformat(),
+        "rewards": [rewards]
+    }), 200
 
-        return jsonify({
-            "message": "User registered successfully",
-            "user_id": user.user_id,
-            "registration_date": user.created_at.isoformat(),
-            "rewards": [rewards]
-        }), 200
-
-    except Exception as e:
-        logger.info(f"Registration failed as {str(e)}")
-        return jsonify({"error" : "Registration Failed", "success" : False}), 400
+    # except Exception as e:
+logger.info(f"Registration failed")
 
 
 # ==================

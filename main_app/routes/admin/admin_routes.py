@@ -522,4 +522,3 @@ def remove_campaign(program_id):
 def view_all(program_id):
 
     return all_products(program_id)
-

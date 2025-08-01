@@ -28,7 +28,7 @@ def update_planet_and_galaxy(user_id):
         galaxy_program = GalaxyProgram.objects().first()
         current_galaxy = None
         for galaxy in galaxy_program.galaxies:
-            if galaxy.galaxy_name not in current_galaxy_name:
+            if galaxy.galaxy_name not in reward.galaxy_name and total_meteors >= galaxy.milestones[0].meteors_required_to_unlock:
                 reward.update(
                     push__galaxy_name = galaxy.galaxy_name,
                     push__current_planet = galaxy.milestones[0].milestone_name
@@ -44,7 +44,7 @@ def update_planet_and_galaxy(user_id):
             if galaxy.galaxy_name in current_galaxy_name:
                 current_galaxy = galaxy
                 for milestone in current_galaxy.milestones:
-                    if milestone.milestone_name not in reward.current_planet:
+                    if reward.current_planet and milestone.milestone_name not in reward.current_planet:
                         if total_meteors >= milestone.meteors_required_to_unlock:
                             reward.update(push__current_planet=milestone.milestone_name)
                             reward.reload()
@@ -55,6 +55,7 @@ def update_planet_and_galaxy(user_id):
                                 "meteors": reward.current_meteors,
                                 "success": True
                             }), 200
+                        break
 
         if not milestone_unlocked:
             return jsonify({

@@ -14,5 +14,7 @@ class Reward(Document):
     unused_vouchers = IntField(default=0)
     discount_coupons = ListField(DictField())
     reward_history = ListField(DictField())
+    redeem_history = ListField(DictField())
+    product_history = ListField(DictField())
 
     meta = {"db" : "user_db", 'collection' : 'rewards'}
