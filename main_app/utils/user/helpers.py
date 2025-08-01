@@ -19,7 +19,10 @@ def hash_tag_id(username, mobile_number):
     byte_tag_id = tag_id.encode('utf-8')
     salt = bcrypt.gensalt()
     hashed_tag_id = bcrypt.hashpw(byte_tag_id, salt)
-    return hashed_tag_id.decode('utf-8') , tag_id
+    return hashed_tag_id.decode('utf-8'), tag_id
+
+def verify_tag_id(tag_id: str, hashed: str) -> bool:
+    return bcrypt.checkpw(tag_id.encode('utf-8'), hashed.encode('utf-8'))
 
 def hash_password(password):
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
@@ -29,7 +32,7 @@ def check_password(input_password, stored_hashed_password):
 
 ##---------------------------------GENERATION OF INVITATION LINK---------------------------------------##
 def generate_invite_link(hashed_tag_id):
-    return f"http://127.0.0.1:4000/wealth-elite/invite_link/{hashed_tag_id}"
+    return f"https://siwtestpanel.com/invite-link/{hashed_tag_id}"
 
 ##---------------------------CREATE SESSION AND TOKEN FOR USER WITH EXPIRY----------------------------------##
 
@@ -37,7 +40,6 @@ def create_user_session(user_id):
     session_id = str(uuid.uuid4())
     session['session_id'] = session_id
     session['user_id'] = user_id
-
 
     session_data = {
         "session_id": session_id,

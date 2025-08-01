@@ -6,6 +6,7 @@ class Referral(Document):
     total_referrals = IntField(default=0)
     referral_earning = IntField(default=0)
     pending_referrals = IntField(default=0)
+    successful_referrals = IntField(default=0)
     all_referrals = ListField(DictField())
 
-    meta = {'collection': 'referrals'}
+    meta = {"db" : "user-db", 'collection': 'referrals'}

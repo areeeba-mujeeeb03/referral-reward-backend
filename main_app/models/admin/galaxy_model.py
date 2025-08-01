@@ -1,11 +1,25 @@
-from mongoengine import StringField, Document, EmailField, DateTimeField, ListField, DictField
-import datetime
+from mongoengine import StringField, Document, ListField, IntField, \
+EmbeddedDocumentField, EmbeddedDocument
 
-class Galaxy(Document):
-    total_galaxies = StringField(required=True, unique=True)
-    all_galaxies = ListField(DictField)
+class Milestone(EmbeddedDocument):
+    milestone_name = StringField()
+    meteors_required_to_unlock = IntField()
+    milestone_reward = IntField()
+    milestone_description = StringField()
 
-    meta = {'collection': 'galaxy_milestones'}
+class Galaxy(EmbeddedDocument):
+    galaxy_id = StringField(required=True)
+    galaxy_name = StringField()
+    total_meteors_required = IntField()
+    highest_reward = StringField()
+    total_milestones = IntField()
+    stars_to_be_achieved = IntField()
+    milestones = ListField(EmbeddedDocumentField(Milestone))
+
+class GalaxyProgram(Document):
+    program_id = StringField(required=True)
+    admin_uid = StringField(required=True)
+    galaxies = ListField(EmbeddedDocumentField(Galaxy))
 
 
-
+    meta = {"db_alias" : "admin-db", 'collection': 'galaxy_milestones'}
