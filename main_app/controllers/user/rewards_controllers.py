@@ -9,7 +9,6 @@ import logging
 import random
 from main_app.models.user.user import User
 
-# Configure logging for OTP operations
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -23,17 +22,21 @@ def update_planet_and_galaxy(user_id):
 
         galaxy_program = GalaxyProgram.objects(admin_uid=user.admin_uid, program_id=user.program_id).first()
 
-        current_meteors = reward.current_meteors
+        total_meteors = reward.total_meteors_earned
         galaxy_or_milestone_unlocked = False
         update_messages = []
         current_active_galaxy = None
 
         for program_galaxy in galaxy_program.galaxies:
-            user_galaxy = next((g for g in reward.galaxies if g.galaxy_name == program_galaxy.galaxy_name), None)
+            user_galaxy = None
+            for g in reward.galaxies:
+                if g.galaxy_name == program_galaxy.galaxy_name:
+                    user_galaxy = g.galaxy_name
+                    break
 
             if not user_galaxy:
                 first_milestone = program_galaxy.milestones[0]
-                if current_meteors >= first_milestone.meteors_required_to_unlock:
+                if total_meteors >= first_milestone.meteors_required_to_unlock:
                     unlocked_milestone = Milestone(
                         milestone_name=first_milestone.milestone_name,
                         milestone_status='unlocked'
@@ -55,12 +58,11 @@ def update_planet_and_galaxy(user_id):
                     update_messages.append(f"Unlocked galaxy '{program_galaxy.galaxy_name}' with milestone '{first_milestone.milestone_name}'")
                     current_active_galaxy = program_galaxy.galaxy_name
                     break
-
             else:
                 unlocked_names = [m.milestone_name for m in user_galaxy.milestones]
                 for prog_milestone in program_galaxy.milestones:
                     if prog_milestone.milestone_name not in unlocked_names:
-                        if current_meteors >= prog_milestone.meteors_required_to_unlock:
+                        if total_meteors >= prog_milestone.meteors_required_to_unlock:
                             new_milestone = Milestone(
                                 milestone_name=prog_milestone.milestone_name,
                                 milestone_status='unlocked'
@@ -84,12 +86,10 @@ def update_planet_and_galaxy(user_id):
                 if galaxy_or_milestone_unlocked:
                     break
 
-        # ✅ If nothing was unlocked, still get the latest active galaxy
         if not current_active_galaxy:
             if reward.galaxies:
-                current_active_galaxy = reward.galaxies[-1].galaxy_name  # last one added
+                current_active_galaxy = reward.galaxies[-1].galaxy_name
 
-        # ✅ Build galaxy_display for current active galaxy
         galaxy_display = []
         if current_active_galaxy:
             pg = next((g for g in galaxy_program.galaxies if g.galaxy_name == current_active_galaxy), None)
@@ -127,10 +127,7 @@ def update_planet_and_galaxy(user_id):
             "message": f"Error: {str(e)}",
             "success": False
         }), 500
-
-
-
-
+        
 
 def win_voucher(user_id):
     if not user_id:

@@ -328,25 +328,25 @@ def fetch_data_from_admin():
 
     # Galaxy and milestones
     reward = Reward.objects(user_id=user_id).first()
-    current_galaxy_name = reward.galaxy_name
+    current_galaxy_name = reward.galaxies[-1].galaxy_name
     galaxy = GalaxyProgram.objects(admin_uid = admin_uid, program_id = user.program_id).first()
     galaxy_data = {}
-    # for g in galaxy.galaxies:
-    #     galaxy_data = {
-    #         "galaxy_name": g['galaxy_name'],
-    #         "total_meteors_required_in_this_galaxy": g['total_meteors_required'],
-    #         "total_milestones": g['total_milestones'],
-    #         "milestones": []
-    #     }
-    # #
-    #     for m in g.milestones:
-    #         milestones = {
-    #             "milestone_name": m['milestone_name'],
-    #             "milestone_reward": m['milestone_reward'],
-    #             "meteors_required_to_unlock": m['meteors_required_to_unlock'],
-    #             "milestone_description": m['milestone_description']
-    #         }
-    #         galaxy_data["milestones"].append(milestones)
+    for g in galaxy.galaxies:
+        galaxy_data = {
+            "galaxy_name": g['galaxy_name'],
+            "total_meteors_required_in_this_galaxy": g['total_meteors_required'],
+            "total_milestones": g['total_milestones'],
+            "milestones": []
+        }
+    #
+        for m in g.milestones:
+            milestones = {
+                "milestone_name": m['milestone_name'],
+                "milestone_reward": m['milestone_reward'],
+                "meteors_required_to_unlock": m['meteors_required_to_unlock'],
+                "milestone_description": m['milestone_description']
+            }
+            galaxy_data["milestones"].append(milestones)
 
     # Advertisement cards
     ad_data = []
@@ -414,153 +414,3 @@ def fetch_data_from_admin():
         "special_offer": special_offer,
         # "exclusive_offers": offer_data,
     "success": True}, 200
-
-
-
-# def fetch_data_from_admin():
-#     data = request.get_json()
-#     user_id = data.get("user_id")
-#     user = User.objects(user_id = user_id).first()
-#     admin = Participants.objects(admin_uid = user.admin_uid, program_id = user.program_id).first()
-#
-#
-#     # if not user:
-#     #     return jsonify({"success": False, "message" : "User does not exist"}),400
-#
-#     admin_uid = user.admin_uid
-#     home_faqs = get_faqs_by_category_name(admin_uid, "Home Screen") or []
-#     rewards_faqs = get_faqs_by_category_name(admin_uid, "Rewards") or []
-#     referrals_faqs = get_faqs_by_category_name(admin_uid, "Referrals") or []
-#     help_faqs = get_faqs_by_category_name(admin_uid, "Help and Support FAQs") or []
-#
-#     how_it_works_text = HowItWork.objects(admin_uid=admin_uid, program_id = user.program_id).first()
-#
-#     # if not how_it_works_text:
-#     #     return ({"message": "No 'how it works' data found", "success": False}), 404
-#
-#     # how_text = how_it_works_text.to_mongo().to_dict()
-#     # data =[]
-#     # how_text.pop('_id', None)
-#     # how_text.pop('admin_uid', None)
-#     # data.append(how_text)
-#
-#     prize = AdminPrizes.objects(admin_uid=admin_uid, program_id = user.program_id).first()
-#     prize_data = []
-#
-#     for p in prize.prizes:
-#         prize_dict = {}
-#         prize_dict['prize_id'] = p['prize_id']
-#         prize_dict['required_meteors'] = p['required_meteors']
-#         prize_dict['title'] = p['title']
-#         prize_dict['term_conditions'] = p['term_conditions']
-#         prize_data.append(prize_dict)
-#
-#     reward = Reward.objects(user_id=user_id).first()
-#
-#     current_galaxy_name = reward.galaxy_name[-1]
-#     galaxy = GalaxyProgram.objects(admin_uid = admin_uid, program_id = user.program_id).first()
-#     galaxy_data = {}
-#     for g in galaxy.galaxies:
-#         galaxy_data = {
-#             "galaxy_name": g['galaxy_name'],
-#             "total_meteors_required_in_this_galaxy": g['total_meteors_required'],
-#             "total_milestones": g['total_milestones'],
-#             "milestones": []
-#         }
-#     #
-#         for m in g.milestones:
-#             milestones = {
-#                 "milestone_name": m['milestone_name'],
-#                 "milestone_reward": m['milestone_reward'],
-#                 "meteors_required_to_unlock": m['meteors_required_to_unlock'],
-#                 "milestone_description": m['milestone_description']
-#             }
-#             galaxy_data["milestones"].append(milestones)
-#
-#     ad_data = []
-#     ad_record = AdminAdvertisementCard.objects(admin_uid=admin_uid, program_id = user.program_id).first()
-#     if ad_record:
-#         for ad in ad_record.advertisement_cards:
-#             ad_dict = {
-#                 "title": ad.title,
-#                 "description": ad.description,
-#                 "button_txt": ad.button_txt,
-#                 "image": ad.image
-#             }
-#             ad_data.append(ad_dict)
-#
-#     conversion_rate = []
-#     rates = ReferralReward.objects(admin_uid=admin_uid, program_id = user.program_id).first()
-#     conversion_data = {
-#         "conversion_rates" : rates.conversion_rates,
-#         "referrer_reward" : rates.referrer_reward,
-#         "invitee_reward" : rates.invitee_reward,
-#     }
-#     conversion_rate.append(conversion_data)
-#
-#     exclusive_perks = {}
-#
-#     product_data =[]
-#     special_offer = {}
-#     offer = SOffer.objects(admin_uid=admin_uid, program_id = user.program_id).first()
-#     if offer and offer.special_offer:
-#         for offer in offer.special_offer:
-#             if offer['active'] is True:
-#                 special_offer['title'] = offer['offer_title']
-#                 special_offer['tag'] = offer['tag']
-#                 special_offer['offer_code'] = offer['offer_code']
-#                 special_offer['pop_up_text'] = offer['pop_up_text']
-#                 special_offer['offer_desc'] = offer['offer_desc']
-#
-#     offer = Offer.objects(admin_uid=admin_uid, program_id = user.program_id).first()
-#     offer_data = []
-#
-#     for p in offer.offers:
-#         offer_dict = {}
-#         offer_dict['off_percent'] = p['off_percent']
-#         offer_dict['offer_name'] = p['offer_name']
-#         offer_dict['button_txt'] = p['button_txt']
-#         offer_dict['one_liner'] = p['one_liner']
-#         offer_dict['product_id'] = p['product_id']
-#         offer_data.append(offer_dict)
-#
-#     reward = Reward.objects(user_id=user_id).first()
-#
-#     diction = {
-#             "success" : True ,
-#             "how_it_works" : data,
-#             "exciting_prizes" : prize_data,
-#             "home_faqs" : home_faqs,
-#             "rewards_faqs" : rewards_faqs,
-#             "referrals_faqs" : referrals_faqs,
-#             "help_and_support" : help_faqs,
-#             "galaxy_data" : galaxy_data,
-#             "advertisement_cards" : ad_data,
-#             "exclusive_perks" : exclusive_perks,
-#             "conversion_data"  :conversion_rate,
-#             "product_offer" : product_data,
-#             "special_offer" : special_offer,
-#             "exclusive_offers" : offer_data
-#             }
-#
-#     if user:
-#         return jsonify({
-#             "success" : True ,
-#             "how_it_works" : data,
-#             "exciting_prizes" : prize_data,
-#             "home_faqs" : home_faqs,
-#             "rewards_faqs" : rewards_faqs,
-#             "referrals_faqs" : referrals_faqs,
-#             "help_and_support" : help_faqs,
-#             "galaxy_data" : galaxy_data,
-#             "advertisement_cards" : ad_data,
-#             "exclusive_perks" : exclusive_perks,
-#             "conversion_data"  :conversion_rate,
-#             "product_offer" : product_data,
-#             "special_offer" : special_offer,
-#             "exclusive_offers" : offer_data
-#             }),200
-#
-#     return ({"message": "An Unexpected error occurred",
-#              "success" : False,
-#              }), 400
