@@ -1,9 +1,8 @@
 from flask import jsonify
-
 from main_app.models.admin.discount_coupon_model import ProductDiscounts
 from main_app.models.admin.error_model import Errors
 from main_app.models.admin.galaxy_model import Galaxy, GalaxyProgram
-from main_app.models.user.reward import Reward
+from main_app.models.user.reward import Reward, Milestone, Galaxy
 from main_app.models.admin.product_model import Product
 import datetime
 import logging
@@ -17,56 +16,121 @@ logger = logging.getLogger(__name__)
 def update_planet_and_galaxy(user_id):
     try:
         reward = Reward.objects(user_id=user_id).first()
+        user = User.objects(user_id=user_id).first()
+
         if not reward:
-            return jsonify({"message": "Reward data not found", "success": False}), 404
+            return jsonify({"message": "User reward not found", "success": False}), 404
 
-        all_galaxies = reward.galaxy_name
-        current_galaxy_name = all_galaxies
-        total_meteors = reward.current_meteors
-        milestone_unlocked = False
+        galaxy_program = GalaxyProgram.objects(admin_uid=user.admin_uid, program_id=user.program_id).first()
 
-        galaxy_program = GalaxyProgram.objects().first()
-        current_galaxy = None
-        for galaxy in galaxy_program.galaxies:
-            if galaxy.galaxy_name not in current_galaxy_name:
-                reward.update(
-                    push__galaxy_name = galaxy.galaxy_name,
-                    push__current_planet = galaxy.milestones[0].milestone_name
-                )
-                reward.reload()
-                return jsonify({
-                    "milestones": reward.current_planet,
-                    "galaxy": reward.galaxy_name,
-                    "meteors": reward.current_meteors,
-                    "total_meteors": reward.total_meteors_earned,
-                    "success": True
-                }), 200
-            if galaxy.galaxy_name in current_galaxy_name:
-                current_galaxy = galaxy
-                for milestone in current_galaxy.milestones:
-                    if milestone.milestone_name not in reward.current_planet:
-                        if total_meteors >= milestone.meteors_required_to_unlock:
-                            reward.update(push__current_planet=milestone.milestone_name)
-                            reward.reload()
-                            milestone_unlocked = True
-                            return jsonify({
-                                "milestones": reward.current_planet,
-                                "galaxy": reward.galaxy_name,
-                                "meteors": reward.current_meteors,
-                                "success": True
-                            }), 200
+        current_meteors = reward.current_meteors
+        galaxy_or_milestone_unlocked = False
+        update_messages = []
+        current_active_galaxy = None
 
-        if not milestone_unlocked:
-            return jsonify({
-                "milestones": reward.current_planet,
-                "galaxy": reward.galaxy_name,
-                "meteors": reward.current_meteors,
-                "total_meteors": reward.total_meteors_earned,
-                "success": True
-            }), 200
+        for program_galaxy in galaxy_program.galaxies:
+            user_galaxy = next((g for g in reward.galaxies if g.galaxy_name == program_galaxy.galaxy_name), None)
+
+            if not user_galaxy:
+                first_milestone = program_galaxy.milestones[0]
+                if current_meteors >= first_milestone.meteors_required_to_unlock:
+                    unlocked_milestone = Milestone(
+                        milestone_name=first_milestone.milestone_name,
+                        milestone_status='unlocked'
+                    )
+                    new_galaxy = Galaxy(
+                        galaxy_name=program_galaxy.galaxy_name,
+                        milestones=[unlocked_milestone]
+                    )
+                    reward.galaxies.append(new_galaxy)
+                    reward.total_meteors_earned += first_milestone.milestone_reward
+                    reward.reward_history.append({
+                        "reward_type": 'milestone_reward',
+                        "date": datetime.datetime.now(),
+                        "meteor": first_milestone.milestone_reward,
+                        "transaction_type": "credit"
+                    })
+
+                    galaxy_or_milestone_unlocked = True
+                    update_messages.append(f"Unlocked galaxy '{program_galaxy.galaxy_name}' with milestone '{first_milestone.milestone_name}'")
+                    current_active_galaxy = program_galaxy.galaxy_name
+                    break
+
+            else:
+                unlocked_names = [m.milestone_name for m in user_galaxy.milestones]
+                for prog_milestone in program_galaxy.milestones:
+                    if prog_milestone.milestone_name not in unlocked_names:
+                        if current_meteors >= prog_milestone.meteors_required_to_unlock:
+                            new_milestone = Milestone(
+                                milestone_name=prog_milestone.milestone_name,
+                                milestone_status='unlocked'
+                            )
+                            user_galaxy.milestones.append(new_milestone)
+                            reward.total_meteors_earned += prog_milestone.milestone_reward
+                            reward.reward_history.append({
+                                "reward_type": 'milestone_reward',
+                                "date": datetime.datetime.now(),
+                                "meteor": prog_milestone.milestone_reward,
+                                "transaction_type": "credit"
+                            })
+
+                            galaxy_or_milestone_unlocked = True
+                            update_messages.append(f"Unlocked milestone '{prog_milestone.milestone_name}' in galaxy '{program_galaxy.galaxy_name}'")
+                            current_active_galaxy = program_galaxy.galaxy_name
+                            break
+                        else:
+                            break
+
+                if galaxy_or_milestone_unlocked:
+                    break
+
+        # ✅ If nothing was unlocked, still get the latest active galaxy
+        if not current_active_galaxy:
+            if reward.galaxies:
+                current_active_galaxy = reward.galaxies[-1].galaxy_name  # last one added
+
+        # ✅ Build galaxy_display for current active galaxy
+        galaxy_display = []
+        if current_active_galaxy:
+            pg = next((g for g in galaxy_program.galaxies if g.galaxy_name == current_active_galaxy), None)
+            user_g = next((g for g in reward.galaxies if g.galaxy_name == current_active_galaxy), None)
+
+            if pg:
+                galaxy_entry = {
+                    "galaxy_name": pg.galaxy_name,
+                    "milestones": []
+                }
+
+                user_milestone_names = [m.milestone_name for m in user_g.milestones] if user_g else []
+
+                for pm in pg.milestones:
+                    milestone_entry = {
+                        "milestone_name": pm.milestone_name,
+                        "milestone_status": "unlocked" if pm.milestone_name in user_milestone_names else "locked"
+                    }
+                    galaxy_entry["milestones"].append(milestone_entry)
+
+                galaxy_display.append(galaxy_entry)
+
+        if galaxy_or_milestone_unlocked:
+            reward.save()
+
+        return jsonify({
+            "total_meteors": reward.total_meteors_earned,
+            "meteors": reward.current_meteors,
+            "galaxies": galaxy_display,
+            "success": True
+        }), 200
 
     except Exception as e:
-        return jsonify({"message": f"Failed to update progress: {str(e)}", "success": False}), 500
+        return jsonify({
+            "message": f"Error: {str(e)}",
+            "success": False
+        }), 500
+
+
+
+
 
 def win_voucher(user_id):
     if not user_id:

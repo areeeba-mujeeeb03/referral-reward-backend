@@ -1,5 +1,4 @@
 import datetime
-from main_app.controllers.admin.help_request_controllers import get_faqs_by_category_name
 from main_app.controllers.user.rewards_controllers import update_planet_and_galaxy
 from main_app.models.admin.admin_model import Admin
 from main_app.models.admin.error_model import Errors
@@ -90,29 +89,34 @@ def my_rewards():
         if not user:
             return jsonify({"success" : False, "message" : "User does not exist"}),400
 
-        # if not access_token or not session_id:
-        #     return jsonify({"message": "Missing token or session", "success": False}), 400
-        #
-        # if user.access_token != access_token:
-        #     return ({"success": False,
-        #              "message": "Invalid access token"}), 401
-        #
-        # if user.session_id != session_id:
-        #     return ({"success": False,
-        #              "message": "Session mismatch or invalid session"}), 403
-        #
-        # if hasattr(user, 'expiry_time') and user.expiry_time:
-        #     if datetime.datetime.now() > user.expiry_time:
-        #         return ({"success": False,
-        #                  "message": "Access token has expired",
-        #                     "token"  : "expired"}), 401
+        if not access_token or not session_id:
+            return jsonify({"message": "Missing token or session", "success": False}), 400
+        
+        if user.access_token != access_token:
+            return ({"success": False,
+                     "message": "Invalid access token"}), 401
+        
+        if user.session_id != session_id:
+            return ({"success": False,
+                     "message": "Session mismatch or invalid session"}), 403
+        
+        if hasattr(user, 'expiry_time') and user.expiry_time:
+            if datetime.datetime.now() > user.expiry_time:
+                return ({"success": False,
+                         "message": "Access token has expired",
+                            "token"  : "expired"}), 401
 
         # validate_session_token(user, access_token, session_id)
         reward = Reward.objects(user_id = user_id).first()
         admin_uid = user.admin_uid
         # update_planet_and_galaxy(user_id)
 
+        products = {"product_name" : "Sales Ninja", "date" : datetime.datetime.now().strftime('%d-%m-%y'), "price" : 1200, "expires_in" : "3 months"}
+        referrals = {"referred_to" : "Areeba", "date" : datetime.datetime.now().strftime('%d-%m-%y'), "earning" : 400, "status" : "completed"}
+        reedemption = [{"Type" : "Meteors", "Desc" : "Exciting Prize","date" : datetime.datetime.now().strftime('%d-%m-%y'), "meteors_debited" : 400},
+                       {"Type" : "Exclusive Perks", "Desc" : "One-on-One Product Demo","date" : datetime.datetime.now().strftime('%d-%m-%y'), "meteors_debited" : 400}]
         user_reward = Reward.objects(user_id = user_id).first()
+        referral = Referral.objects(user_id = user_id).first()
         if user :
             info = {
                 "invitation_link": user.invitation_link,
@@ -121,10 +125,13 @@ def my_rewards():
                 "total_vouchers": user_reward.total_vouchers,
                 "invite_code": user.invitation_code,
                 "reward_history": user_reward.reward_history,
+                # "reward_history" : reedemption,
                  "redeemed_meteors" : reward.redeemed_meteors,
                 "redeemed_vouchers": reward.used_vouchers,
                 "total_meteors_earned": reward.total_meteors_earned,
-                "discount_coupons" : reward.discount_coupons
+                "discount_coupons" : reward.discount_coupons,
+                "product_history" : [products],
+                "all_referrals": [referrals]
             }
 
             fields_to_encode = ["total_stars",
@@ -136,11 +143,11 @@ def my_rewards():
                                 "redeemed_meteors",
                                 "redeemed_vouchers"
                                 "total_meteors_earned",
-                                "discount_coupons"
+                                "discount_coupons",
+                                "product_history",
+                                "all_referrals"
                                 ]
-
-
-
+            
             encoded_str = generate_encoded_string(info, fields_to_encode)
             return encoded_str, 200
 
@@ -319,27 +326,27 @@ def fetch_data_from_admin():
                 "term_conditions": p.get('term_conditions', '')
             })
 
-    # Galaxy + milestones
+    # Galaxy and milestones
     reward = Reward.objects(user_id=user_id).first()
     current_galaxy_name = reward.galaxy_name
     galaxy = GalaxyProgram.objects(admin_uid = admin_uid, program_id = user.program_id).first()
     galaxy_data = {}
-    for g in galaxy.galaxies:
-        galaxy_data = {
-            "galaxy_name": g['galaxy_name'],
-            "total_meteors_required_in_this_galaxy": g['total_meteors_required'],
-            "total_milestones": g['total_milestones'],
-            "milestones": []
-        }
-    #
-        for m in g.milestones:
-            milestones = {
-                "milestone_name": m['milestone_name'],
-                "milestone_reward": m['milestone_reward'],
-                "meteors_required_to_unlock": m['meteors_required_to_unlock'],
-                "milestone_description": m['milestone_description']
-            }
-            galaxy_data["milestones"].append(milestones)
+    # for g in galaxy.galaxies:
+    #     galaxy_data = {
+    #         "galaxy_name": g['galaxy_name'],
+    #         "total_meteors_required_in_this_galaxy": g['total_meteors_required'],
+    #         "total_milestones": g['total_milestones'],
+    #         "milestones": []
+    #     }
+    # #
+    #     for m in g.milestones:
+    #         milestones = {
+    #             "milestone_name": m['milestone_name'],
+    #             "milestone_reward": m['milestone_reward'],
+    #             "meteors_required_to_unlock": m['meteors_required_to_unlock'],
+    #             "milestone_description": m['milestone_description']
+    #         }
+    #         galaxy_data["milestones"].append(milestones)
 
     # Advertisement cards
     ad_data = []
