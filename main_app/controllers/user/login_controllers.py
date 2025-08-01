@@ -98,7 +98,6 @@ def handle_email_login():
             return jsonify({"success": False, "error": "Need to purchase before logging in!"}), 400
 
         # Step 4: Check if account is active
-
         if hasattr(user, "is_active") and not user.is_active:
             logger.warning(f"Inactive account login attempt: {email}")
             return jsonify({"error": "Account is deactivated"}), 403
@@ -106,6 +105,7 @@ def handle_email_login():
         if not user.password.startswith("$2"):
             logger.warning("Invalid or corrupt password hash")
             return jsonify({"success": False, "error": "Something went wrong. Please reset your password."}), 400
+
         # Step 5: Verify password
         if not check_password(password, user.password):
             Errors(name=user.name, email=email,
@@ -113,10 +113,10 @@ def handle_email_login():
             logger.warning(f"Incorrect password attempt for: {email}")
             return jsonify({"error": get_error("incorrect_password")}), 400
 
-        # Step 6: Generate tokens
-        access_token = generate_access_token(user.user_id)
-        session_id = create_user_session(user.user_id)
-        expiry_time = datetime.datetime.now() + datetime.timedelta(minutes=SESSION_EXPIRY_MINUTES)
+        # # Step 6: Generate tokens
+        # access_token = generate_access_token(user.user_id)
+        # session_id = create_user_session(user.user_id)
+        # expiry_time = datetime.datetime.now() + datetime.timedelta(minutes=SESSION_EXPIRY_MINUTES)
 
         # Step 7: Update referral status
         referred_by = user['referred_by']
@@ -126,34 +126,26 @@ def handle_email_login():
             referrer = referrer_obj.user_id
             update_referral_status_and_reward(referrer, user.user_id)
 
-        if not user.access_token and not user.session_id:
-            user.access_token = access_token
-            user.session_id = session_id
-            user.expiry_time = expiry_time
-            user.joining_status = "Completed"
-            user.last_login = datetime.datetime.now()
-            user.login_count = (user.login_count or 0) + 1
-            user.save()
+        print("working upto referr")
+        if hasattr(user, 'expiry_time') and user.expiry_time:
+            print("in if condition")
+            if datetime.datetime.now() > user.expiry_time:
+                print("in 2nd if condition")
+                # Step 6: Generate tokens
+                access_token = generate_access_token(user.user_id)
+                session_id = create_user_session(user.user_id)
+                expiry_time = datetime.datetime.now() + datetime.timedelta(minutes=SESSION_EXPIRY_MINUTES)
+                user.access_token = access_token
+                user.session_id = session_id
+                user.expiry_time = expiry_time
+                user.last_login = datetime.datetime.now()
+                user.login_count = (user.login_count or 0) + 1
+                user.save()
 
-        else:
-            if hasattr(user, 'expiry_time') and user.expiry_time:
-                if datetime.datetime.now() > user.expiry_time:
-                    user.access_token = access_token
-                    user.session_id = session_id
-                    user.expiry_time = expiry_time
-                    user.last_login = datetime.datetime.now()
-                    user.login_count = (user.login_count or 0) + 1
-                    user.save()
+        ## Return already saved access token and session ID
+        access_token = user.access_token
+        session_id = user.session_id
 
-        # # Step 8: Update user session info in DB
-        # user.access_token = access_token
-        # user.session_id = session_id
-        # user.expiry_time = expiry_time
-        # user.joining_status = "Completed"
-        # user.last_login = datetime.datetime.now()
-        # user.login_count = (user.login_count or 0) + 1  # safe increment
-
-        # user.save()
         reward = Reward.objects(user_id = user.user_id).first()
         reward_earn= Participants.objects(admin_uid=user.admin_uid, program_id=user.program_id).first()
         login_reward = reward_earn.login_reward if reward_earn else 0
