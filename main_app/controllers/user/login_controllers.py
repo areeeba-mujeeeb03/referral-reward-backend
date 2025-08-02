@@ -126,7 +126,6 @@ def handle_email_login():
             referrer = referrer_obj.user_id
             update_referral_status_and_reward(referrer, user.user_id)
 
-        print("working upto referr")
         if hasattr(user, 'expiry_time') and user.expiry_time:
             print("in if condition")
             if datetime.datetime.now() > user.expiry_time:

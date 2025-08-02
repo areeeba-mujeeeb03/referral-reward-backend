@@ -41,7 +41,7 @@ def create_new_campaign():
         # Required basic fields
         admin_uid = data.get("admin_uid")
         campaign_name = data.get("campaign_name")
-        base_url = data.get("url")
+        base_url = data.get("base_url")
         image = data.get("image")
         access_token = data.get("mode")
         session_id = data.get("log_alt")

@@ -125,17 +125,21 @@ def handle_authentication():
         logger.warning("User not found")
         return jsonify({"message": get_error("user_not_found")}), 404
 
+    if hasattr(existing, 'expiry_time') and existing.expiry_time:
+        if datetime.datetime.now() > existing.expiry_time:
+            # Step 6: Generate tokens
+            access_token = generate_access_token(existing.admin_uid)
+            session_id = create_user_session(existing.admin_uid)
+            expiry_time = datetime.datetime.now() + datetime.timedelta(minutes=SESSION_EXPIRY_MINUTES)
+            existing.access_token = access_token
+            existing.session_id = session_id
+            existing.expiry_time = expiry_time
+            existing.last_login = datetime.datetime.now()
+            existing.save()
 
-    #  Generate tokens
-    access_token = generate_access_token(existing.admin_uid)
-    session_id = create_user_session(existing.admin_uid)
-    expiry_time = datetime.datetime.now() + datetime.timedelta(minutes=SESSION_EXPIRY_MINUTES)
-    #  Update user session info in DB
-    existing.access_token = access_token
-    existing.session_id = session_id
-    existing.expiry_time = expiry_time
-    existing.last_login = datetime.datetime.now()
-    existing.save()
+    ## Return already saved access token and session ID
+    access_token = existing.access_token
+    session_id = existing.session_id
 
     return jsonify({"log_alt" : session_id,
                     "mode" : access_token,
